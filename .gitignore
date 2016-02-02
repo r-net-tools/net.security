@@ -5,3 +5,4 @@
 
 # downloaded data
 data/**/*.*
+.Rproj.user

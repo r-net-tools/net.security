@@ -1,3 +1,7 @@
+# ================
+# Public Functions
+# ================
+
 #' UpdateCVEData download CVE information from public databases such as MITRE and NIST
 #'
 #' @param Boolean value, if true it will download all data base, if false it will only download last updates.
@@ -15,8 +19,61 @@ UpdateCVEData <- function(all = FALSE, lang = "EN") {
     UncompressFiles()
 }
 
-## CVE DB from MITRE
+#' GetSummaryByCVE returns a string with the description of the vulneravility and language
+#'
+#' @param String with CVE code in standrad mode (CVE-YYYY-XXXX)
+#' @param It's implemented for EN(glish) or ES(pañol)
+#' @export
+#' @examples
+#' description <- GetSummaryByCVE(cve = "CVE-2015-0002", lang = "ES")
+GetSummaryByCVE <- function(cve = "CVE-2016-0002", lang = "EN") {
+    # Load each source file
+    if (lang == "ES") {
+        nist.name <- paste("nvdcve-", substr(cve,5,8), "trans.xml", sep = "")
+        nist.file <- paste(getwd(), "data/nist", nist.name, sep = "/")
+    } else {
+        nist.name   <- paste("nvdcve-2.0-", substr(cve,5,8), ".xml", sep = "")
+        nist.file   <- paste(getwd(), "data/nist", nist.name, sep = "/")
+    }
+    
+    # Parse NIST file
+    nist  <- XML::htmlTreeParse(nist.file,  useInternalNodes = TRUE)
+    
+    # Select desired element from NIST
+    if (lang == "ES") {
+        nist.xpath <- paste("//entry[@name='", cve, "']/child::desc", sep = "")
+        node.nist  <- XML::getNodeSet(nist, nist.xpath)
+        nist.desc <- XML::xmlValue(node.nist[[1]])
+    } else {
+        nist.xpath <- paste("//entry[@id='", cve, "']", sep = "")
+        node.nist  <- XML::getNodeSet(nist, nist.xpath)
+        nist.desc  <- XML::xmlValue(XML::xmlChildren(node.nist[[1]])["summary"][[1]])
+    }
+    
+    
+    # MITRE
+    #mitre.name  <- paste("allitems-cvrf-year-", substr(cve,5,8), ".xml", sep = "")
+    #mitre.file  <- paste(getwd(), "data/mitre", mitre.name, sep = "/")
+    #mitre <- XML::htmlTreeParse(mitre.file, useInternalNodes = TRUE)
+    #node.mitre <- XML::getNodeSet(mitre, mitre.xpath)
+    #mitre.desc <- GetDescriptionMitre(mitre.vuln)
+    
+    summary <- data.frame(nist = nist.desc,
+                          stringsAsFactors = FALSE)
+    
+    return(summary)
+}
+
+# =================
+# Private Functions
+# =================
+
+#' UpdateMITRE Update CVE DB from MITRE
 #' Reference: http://cve.mitre.org/data/downloads/index.html#download
+#'
+#' @param all
+#' @examples 
+#' UpdateMITRE(FALSE) 
 UpdateMITRE <- function(all = FALSE) {
     if (all == TRUE) {
         ## All and schema
@@ -68,8 +125,14 @@ UpdateMITRE <- function(all = FALSE) {
     }
 }
 
-## CVE DB from NIST
+#' UpdateNIST Update CVE DB from NIST
 #' Reference: https://nvd.nist.gov/download.cfm
+#'
+#' @param all 
+#' @param spanish 
+#' @examples
+#' UpdateNIST(all = TRUE)
+#' UpdateNIST(all = TRUE, spanish = TRUE)
 UpdateNIST <- function(all = FALSE, spanish = FALSE) {
     if (all == TRUE) {
         ### CVE's by year from 2002 to 2016
@@ -165,7 +228,10 @@ UpdateNIST <- function(all = FALSE, spanish = FALSE) {
     }
 }
 
-## Uncompress files on data/ folder
+#' UncompressFiles on data/ folder
+#'
+#' @examples
+#' UncompressFiles()
 UncompressFiles <- function() {
     # Uncompress gzip XML files
     gzs <- list.files(path = "data/", pattern = "*.xml.gz", full.names = TRUE, recursive = TRUE)
@@ -175,50 +241,4 @@ UncompressFiles <- function() {
               R.utils::gunzip(paste(getwd(), x, sep = ""))
               } 
           )
-}
-
-
-#' GetSummaryByCVE returns a string with the description of the vulneravility and language
-#'
-#' @param String with CVE code in standrad mode (CVE-YYYY-XXXX)
-#' @param It's implemented for EN(glish) or ES(pañol)
-#' @export
-#' @examples
-#' description <- GetSummaryByCVE(cve = "CVE-2015-0002", lang = "ES")
-GetSummaryByCVE <- function(cve = "CVE-2016-0002", lang = "EN") {
-    # Load each source file
-    if (lang == "ES") {
-        nist.name <- paste("nvdcve-", substr(cve,5,8), "trans.xml", sep = "")
-        nist.file <- paste(getwd(), "data/nist", nist.name, sep = "/")
-    } else {
-        nist.name   <- paste("nvdcve-2.0-", substr(cve,5,8), ".xml", sep = "")
-        nist.file   <- paste(getwd(), "data/nist", nist.name, sep = "/")
-    }
-    
-    # Parse NIST file
-    nist  <- XML::htmlTreeParse(nist.file,  useInternalNodes = TRUE)
-    
-    # Select desired element from NIST
-    if (lang == "ES") {
-        nist.xpath <- paste("//entry[@name='", cve, "']/child::desc", sep = "")
-        node.nist  <- XML::getNodeSet(nist, nist.xpath)
-        nist.desc <- XML::xmlValue(node.nist[[1]])
-    } else {
-        nist.xpath <- paste("//entry[@id='", cve, "']", sep = "")
-        node.nist  <- XML::getNodeSet(nist, nist.xpath)
-        nist.desc  <- XML::xmlValue(XML::xmlChildren(node.nist[[1]])["summary"][[1]])
-    }
-    
-
-    # MITRE
-    #mitre.name  <- paste("allitems-cvrf-year-", substr(cve,5,8), ".xml", sep = "")
-    #mitre.file  <- paste(getwd(), "data/mitre", mitre.name, sep = "/")
-    #mitre <- XML::htmlTreeParse(mitre.file, useInternalNodes = TRUE)
-    #node.mitre <- XML::getNodeSet(mitre, mitre.xpath)
-    #mitre.desc <- GetDescriptionMitre(mitre.vuln)
-    
-    summary <- data.frame(nist = nist.desc,
-                          stringsAsFactors = FALSE)
-    
-    return(summary)
 }
