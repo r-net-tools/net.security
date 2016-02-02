@@ -1,9 +1,12 @@
-Package: net-security
+Package: net.security
 Title: Just playing with R and security tools
 Version: 0.1
 Authors@R: person("Humbert", "Costas", email = "humbert.costas@gmail.com",
                   role = c("aut", "cre"))
 Description: Functions and tools related to network security.
 Depends: R (>= 3.2.3)
+Imports:
+    R.utils,
+    XML
 License: MIT
 LazyData: true

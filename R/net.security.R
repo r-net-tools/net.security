@@ -16,9 +16,9 @@
 InfoASN <- function(asn)
 {
     asn.url <- paste("http://bgp.he.net/",asn,"#_prefixes", sep = "")
-    asn.html <- htmlParse(readLines(asn.url), asText = TRUE)
-    asn.info <- getNodeSet(asn.html, "//table[@id='table_prefixes4']")
-    asn.info <- readHTMLTable(asn.info[[1]])
+    asn.html <- XML::htmlParse(readLines(asn.url), asText = TRUE)
+    asn.info <- XML::getNodeSet(asn.html, "//table[@id='table_prefixes4']")
+    asn.info <- XML::readHTMLTable(asn.info[[1]])
     asn.info[] <- lapply(asn.info, as.character)
     return(asn.info)
 }
@@ -35,9 +35,9 @@ InfoASN <- function(asn)
 ParseNMAP <- function(file.input, file.output.header = "")
 {
     # Parse input data
-    xmlfile = xmlParse(file.input)
-    root <- xmlRoot(xmlfile)
-    nmap.info <- xmlChildren(root)
+    xmlfile = XML::xmlParse(file.input)
+    root <- XML::xmlRoot(xmlfile)
+    nmap.info <- XML::xmlChildren(root)
     
     # Get scan information
     # scan.info <- as.data.frame(t(xmlAttrs(root)))
@@ -46,16 +46,17 @@ ParseNMAP <- function(file.input, file.output.header = "")
     i = 1
     dns.info <- data.frame()
     nmap.data <- data.frame()
-    while (i <= xmlSize(nmap.info))
+    while (i <= XML::xmlSize(nmap.info))
     {
-        if (xmlName(nmap.info[[i]]) == "host")
+        if (XML::xmlName(nmap.info[[i]]) == "host")
         {
-            host.status <- as.data.frame(t(xmlAttrs(xmlChildren(nmap.info[[i]])$status)))
+            host.status <- as.data.frame(t(XML::xmlAttrs(XML::xmlChildren(nmap.info[[i]])$status)))
             names(host.status) <- c("h.state","h.reason","h.reason_ttl")
-            host.address <- as.data.frame(t(xmlAttrs(xmlChildren(nmap.info[[i]])$address)))
-            if ("hostnames" %in% names(xmlChildren(nmap.info[[i]])) & xmlValue(xmlChildren(nmap.info[[i]])$hostnames) != "\n")
+            host.address <- as.data.frame(t(XML::xmlAttrs(XML::xmlChildren(nmap.info[[i]])$address)))
+            if ("hostnames" %in% names(XML::xmlChildren(nmap.info[[i]])) & 
+                XML::xmlValue(XML::xmlChildren(nmap.info[[i]])$hostnames) != "\n")
             {
-                hostnames <- xmlChildren(xmlChildren(nmap.info[[i]])$hostnames)
+                hostnames <- XML::xmlChildren(XML::xmlChildren(nmap.info[[i]])$hostnames)
                 j = 1
                 while (j <= length(hostnames))
                 {
@@ -65,18 +66,18 @@ ParseNMAP <- function(file.input, file.output.header = "")
                     j = j + 1
                 }
             }
-            if ("ports" %in% names(xmlChildren(nmap.info[[i]])))
+            if ("ports" %in% names(XML::xmlChildren(nmap.info[[i]])))
             {
-                ports <- xmlChildren(xmlChildren(nmap.info[[i]])$ports)
+                ports <- XML::xmlChildren(XML::xmlChildren(nmap.info[[i]])$ports)
                 j = 1
                 while (j <= length(ports))
                 {
-                    if (xmlName(ports[[j]]) == "port")
+                    if (XML::xmlName(ports[[j]]) == "port")
                     {
-                        host.port <- as.data.frame(t(xmlAttrs(ports[[j]])))
-                        port.info <- xmlChildren(ports[[j]])
-                        port.detail <- cbind(as.data.frame(t(xmlAttrs(port.info$state))),
-                                             as.data.frame(t(xmlAttrs(port.info$service))))
+                        host.port <- as.data.frame(t(XML::xmlAttrs(ports[[j]])))
+                        port.info <- XML::xmlChildren(ports[[j]])
+                        port.detail <- cbind(as.data.frame(t(XML::xmlAttrs(port.info$state))),
+                                             as.data.frame(t(XML::xmlAttrs(port.info$service))))
                         host.port <- cbind(host.port,port.detail)
                         nmap.data <- rbind.fill(nmap.data, cbind(host.address, host.status, host.port))
                     }
