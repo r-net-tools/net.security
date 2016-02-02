@@ -1,0 +1,7 @@
+# RStudio
+.RData
+.Rhistory
+.Rproj.user/
+
+# downloaded data
+data/**/*.*
