@@ -2,17 +2,17 @@ Package: net.security
 Title: Just playing with R and security tools
 Version: 0.1.1
 Authors@R: c(
-    person("Humbert", "Costas", email = "humbert.costas@gmail.com", role = c("aut", "cre")),
-    person("Arnau", "Sangrà", email = "arnsangra@gmail.com", role = "aut")
-            )
+  person("Humbert", "Costas", email = "humbert.costas@gmail.com", role = c("aut", "cre")),
+  person("Arnau", "Sangrà", email = "arnsangra@gmail.com", role = "aut")
+)
 Description: Functions and tools related to network security for R.
 Depends: R (>= 3.2.2)
 Imports:
-    R.utils,
-    XML,
-    plyr
+  R.utils,
+  XML,
+  plyr
 Suggests:
-    testthat
+  testthat
 License: NA
 LazyData: true
 URL: https://github.com/r-net-tools/net-security
