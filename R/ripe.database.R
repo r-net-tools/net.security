@@ -1,6 +1,4 @@
 # Ref: https://www.ripe.net/manage-ips-and-asns/db/support/documentation/ripe-database-documentation/rpsl-object-types/4-2-descriptions-of-primary-objects/4-2-4-description-of-the-inetnum-object
-suppressMessages(library("R.utils"))
-suppressMessages(library("plyr"))
 
 # RIPE path and local file
 ripe.path <- "ftp://ftp.ripe.net/ripe/dbase/split/ripe.db.inetnum.gz"
