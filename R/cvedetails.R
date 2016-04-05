@@ -10,6 +10,7 @@
 #' @examples
 #' UpdateCVEData(all = TRUE, lang = "ES")
 UpdateCVEData <- function(all = FALSE, lang = "EN") {
+    CheckDataFolders()
     UpdateMITRE(all = all)
     if (lang == "EN") {
         UpdateNIST(all = all, spanish = FALSE)
@@ -67,6 +68,16 @@ GetSummaryByCVE <- function(cve = "CVE-2016-0002", lang = "EN") {
 # =================
 # Private Functions
 # =================
+
+#' CheckDataFolders
+#'
+#' @return
+#' @examples
+CheckDataFolders <- function() {
+    dir.create(path = "data", showWarnings = FALSE)
+    dir.create(path = "data/mitre", showWarnings = FALSE)
+    dir.create(path = "data/nist", showWarnings = FALSE)
+}
 
 #' UpdateMITRE Update CVE DB from MITRE
 #' Reference: http://cve.mitre.org/data/downloads/index.html#download
@@ -234,11 +245,7 @@ UpdateNIST <- function(all = FALSE, spanish = FALSE) {
 #' UncompressFiles()
 UncompressFiles <- function() {
     # Uncompress gzip XML files
-    gzs <- list.files(path = "data/", pattern = "*.xml.gz", full.names = TRUE, recursive = TRUE)
-    apply(X = data.frame(gzs = gzs, stringsAsFactors = F), 
-          MARGIN = 1, 
-          FUN = function(x) {
-              R.utils::gunzip(paste(getwd(), x, sep = ""))
-              } 
-          )
+    gzs <- list.files(path = paste(getwd(),"data", sep="/"), pattern = "*.xml.gz", 
+                      full.names = TRUE, recursive = TRUE)
+    apply(X = data.frame(gzs = gzs, stringsAsFactors = F), 1, function(x) R.utils::gunzip(x))
 }
