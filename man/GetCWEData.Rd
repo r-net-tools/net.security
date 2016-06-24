@@ -2,20 +2,21 @@
 % Please edit documentation in R/cwe.R
 \name{GetCWEData}
 \alias{GetCWEData}
-\title{GetCWEData, parse xml.path}
+\title{GetCWEData Download current CWE definitions, parse them and return the info as data frame}
 \usage{
-GetCWEData(xml.path = "inst/tmpdata/2000.xml")
+GetCWEData(path = "inst/tmpdata")
 }
 \arguments{
-\item{xml.path, }{absolute path. Default = "inst/tmpdata/2000.xml"}
+\item{path}{where MITRE CWE definitions will be downloaded and unziped (don't finish with /). Default set as inst/tmpdata}
 }
 \value{
-"XMLInternalDocument" "XMLAbstractDocument"
+data frame
 }
 \description{
-GetCWEData, parse xml.path
+GetCWEData Download current CWE definitions, parse them and return the info as data frame
 }
 \examples{
-doc <- GetCWEData()
+df <- GetCWEData()
+df <- GetCWEData("/tmp")
 }
 

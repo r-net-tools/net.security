@@ -10,7 +10,8 @@ Depends:
 Imports:
     R.utils,
     XML,
-    plyr
+    plyr,
+    jsonlite
 Suggests:
     testthat
 License: NA

@@ -10,6 +10,9 @@ DownloadCWEData(path = "inst/tmpdata")
 \arguments{
 \item{destfile, }{path where the file will be stored}
 }
+\value{
+XML path
+}
 \description{
 DownloadCWEData, it downloads https://cwe.mitre.org/data/xml/views/2000.xml.zip
 that containts all kind of information related with CWE
