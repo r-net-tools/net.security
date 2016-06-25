@@ -1,6 +1,7 @@
 #' GetCWEData Download current CWE definitions, parse them and return the info as data frame
 #'
 #' @param path where MITRE CWE definitions will be downloaded and unziped (don't finish with /). Default set as inst/tmpdata
+#' @param download TRUE if you want to update the source data, default set as FALSE
 #'
 #' @return data frame
 #' @export
@@ -8,8 +9,8 @@
 #' @examples
 #' df <- GetCWEData()
 #' df <- GetCWEData("/tmp")
-GetCWEData <- function(path = "inst/tmpdata"){
-  path <- DownloadCWEData(path)
+GetCWEData <- function(path = "inst/tmpdata", download = FALSE){
+  path <- ifelse(download, DownloadCWEData(path), paste(path, "2000.xml", sep = "/"))
   doc <- XML::xmlParse(path)
   raw.cwes <- XML::xpathApply(doc, "//Weakness")
   cwes <- as.data.frame(t(XML::xmlSApply(raw.cwes, XML::xmlAttrs)), stringsAsFactors = FALSE)

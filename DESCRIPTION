@@ -6,7 +6,7 @@ Authors@R: c(
   person("Arnau", "Sangrà", email = "arnsangra@gmail.com", role = "aut"))
 Description: Functions and tools related to network security for R.
 Depends:
-    R (>= 3.2.2)
+    R (>= 3.3.1)
 Imports:
     R.utils,
     XML,
