@@ -1,9 +1,9 @@
 Package: net.security
-Title: Just playing with R and security tools
-Version: 0.1.1
+Title: Security Standards to DataFrames
+Version: 0.2.0
 Authors@R: c(
   person("Humbert", "Costas", email = "humbert.costas@gmail.com", role = c("aut", "cre")),
-  person("Arnau", "Sangrà", email = "arnsangra@gmail.com", role = "aut"))
+  person("Arnau", "Sangra", email = "arnsangra@gmail.com", role = "aut"))
 Description: Functions and tools related to network security for R.
 Depends:
     R (>= 3.3.1)

@@ -2,4 +2,5 @@
 
 export(GetCVEData)
 export(GetCWEData)
+export(GetRIPE.ASN)
 export(ParseNMAP)
