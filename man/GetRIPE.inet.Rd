@@ -10,6 +10,8 @@ GetRIPE.inet(path = "inst/tmpdata", download = FALSE, use.cached = FALSE)
 \item{path}{where RIPE files will be downloaded and unziped (don't finish with /). Default set as inst/tmpdata}
 
 \item{download}{TRUE if you want to update the source data, default set as FALSE}
+
+\item{use.cached}{if you want to load from internal rds file}
 }
 \value{
 data frame

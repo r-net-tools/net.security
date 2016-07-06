@@ -1,5 +1,7 @@
 #' InfoASN based on public information provided by http://bgp.he.net/
 #' Don't abuse, this is just for test purposes.
+#'
+#' @param asn number
 InfoASN <- function(asn)
 {
   asn.url <- paste("http://bgp.he.net/",asn,"#_prefixes", sep = "")

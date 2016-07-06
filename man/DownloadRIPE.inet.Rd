@@ -15,7 +15,4 @@ path of asn file unziped
 \description{
 DownloadRIPE.inet
 }
-\examples{
-path <- DownloadRIPE.inet()
-}
 

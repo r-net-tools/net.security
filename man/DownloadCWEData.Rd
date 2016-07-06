@@ -7,6 +7,9 @@ that containts all kind of information related with CWE}
 \usage{
 DownloadCWEData(path = "inst/tmpdata")
 }
+\arguments{
+\item{path}{where the files will be stored}
+}
 \description{
 DownloadCWEData, it downloads https://cwe.mitre.org/data/xml/views/2000.xml.zip
 that containts all kind of information related with CWE

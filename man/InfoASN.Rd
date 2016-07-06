@@ -8,18 +8,10 @@ Don't abuse, this is just for test purposes.}
 InfoASN(asn)
 }
 \arguments{
-\item{asn}{ASN number with letters, i.e.: "AS12345"}
-
-\item{output_file}{is the path where asn info will be stored}
-}
-\value{
-list of asn information
+\item{asn}{number}
 }
 \description{
 InfoASN based on public information provided by http://bgp.he.net/
 Don't abuse, this is just for test purposes.
-}
-\examples{
-asn <- GetASN(asn = "AS12345")
 }
 

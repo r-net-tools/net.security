@@ -2,11 +2,18 @@
 % Please edit documentation in R/cwe.R
 \name{GetParents}
 \alias{GetParents}
-\title{Given a CWE code it returns its direct parents, set compact=T and results will be dotcomma-separated}
+\title{GetParents, Given a CWE code it returns its direct parents, set compact=T and results will be dotcomma-separated}
 \usage{
 GetParents(cwes, CWE = "", compact = FALSE)
 }
+\arguments{
+\item{cwes}{data frame}
+
+\item{CWE}{number}
+
+\item{compact}{boolean}
+}
 \description{
-Given a CWE code it returns its direct parents, set compact=T and results will be dotcomma-separated
+GetParents, Given a CWE code it returns its direct parents, set compact=T and results will be dotcomma-separated
 }
 

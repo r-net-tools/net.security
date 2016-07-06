@@ -128,6 +128,7 @@ ListNodesToXML <- function(doc){
 
 #' DownloadCWEData, it downloads https://cwe.mitre.org/data/xml/views/2000.xml.zip
 #' that containts all kind of information related with CWE
+#' @param path where the files will be stored
 DownloadCWEData <- function(path = "inst/tmpdata") {
   dir.create(paste(path, "cwe", sep = "/"), showWarnings = FALSE)
   destfile <- paste(path, "cwe/2000.xml.zip", sep = "/")
@@ -137,7 +138,11 @@ DownloadCWEData <- function(path = "inst/tmpdata") {
   return(paste(path, "cwe/2000.xml", sep = "/"))
 }
 
-#' Given a CWE code it returns its direct parents, set compact=T and results will be dotcomma-separated
+#' GetParents, Given a CWE code it returns its direct parents, set compact=T and results will be dotcomma-separated
+#'
+#' @param cwes data frame
+#' @param CWE number
+#' @param compact boolean
 GetParents <- function(cwes, CWE = "", compact = FALSE) {
   parents <- ""
   relations <- jsonlite::fromJSON(dplyr::filter(cwes, ID == CWE)[["relationships"]])

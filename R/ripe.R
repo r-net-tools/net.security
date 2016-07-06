@@ -34,7 +34,9 @@ GetRIPE.ASN <- function(path = "inst/tmpdata", download = FALSE){
 #' GetRIPE.inet
 #'
 #' @param path where RIPE files will be downloaded and unziped (don't finish with /). Default set as inst/tmpdata
+#' @param use.cached if you want to load from internal rds file
 #' @param download TRUE if you want to update the source data, default set as FALSE
+#'
 #' @return data frame
 #' @export
 #'
@@ -77,11 +79,9 @@ GetRIPE.inet <- function(path = "inst/tmpdata", download = FALSE, use.cached = F
 #'
 #' @param path where files will be stored
 #' @return path of asn file unziped
-#' @examples
-#' path <- DownloadRIPE.ASN()
 DownloadRIPE.ASN <- function(path = "inst/tmpdata") {
   url <- "ftp://ftp.ripe.net/ripe/dbase/split/ripe.db.aut-num.gz"
-  path <- paste(path, "ripe", sep="/")
+  path <- paste(path, "ripe", sep = "/")
   dir.create(path, showWarnings = FALSE)
   destfile <- paste(path, "ripe.db.aut-num.gz", sep = "/")
   download.file(url, destfile)
@@ -93,11 +93,9 @@ DownloadRIPE.ASN <- function(path = "inst/tmpdata") {
 #'
 #' @param path where files will be stored
 #' @return path of asn file unziped
-#' @examples
-#' path <- DownloadRIPE.inet()
 DownloadRIPE.inet <- function(path = "inst/tmpdata") {
   url <- "ftp://ftp.ripe.net/ripe/dbase/split/ripe.db.inetnum.gz"
-  path <- paste(path, "ripe", sep="/")
+  path <- paste(path, "ripe", sep = "/")
   dir.create(path, showWarnings = FALSE)
   destfile <- paste(path, "ripe.db.inetnum.gz", sep = "/")
   download.file(url, destfile)
