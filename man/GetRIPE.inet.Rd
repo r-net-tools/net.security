@@ -4,7 +4,7 @@
 \alias{GetRIPE.inet}
 \title{GetRIPE.inet}
 \usage{
-GetRIPE.inet(path = "inst/tmpdata", download = FALSE)
+GetRIPE.inet(path = "inst/tmpdata", download = FALSE, use.cached = FALSE)
 }
 \arguments{
 \item{path}{where RIPE files will be downloaded and unziped (don't finish with /). Default set as inst/tmpdata}

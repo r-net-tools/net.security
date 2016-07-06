@@ -128,10 +128,6 @@ ListNodesToXML <- function(doc){
 
 #' DownloadCWEData, it downloads https://cwe.mitre.org/data/xml/views/2000.xml.zip
 #' that containts all kind of information related with CWE
-#'
-#' @param destfile, path where the file will be stored
-#' @return XML path
-#' @examples DownloadCWEData()
 DownloadCWEData <- function(path = "inst/tmpdata") {
   dir.create(paste(path, "cwe", sep = "/"), showWarnings = FALSE)
   destfile <- paste(path, "cwe/2000.xml.zip", sep = "/")
