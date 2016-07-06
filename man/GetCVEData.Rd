@@ -9,7 +9,7 @@ GetCVEData(path = "inst/tmpdata", download = FALSE)
 \arguments{
 \item{path}{where Standard CVE definitions will be downloaded and unziped (don't finish with /). Default set as inst/tmpdata}
 
-\item{download}{}
+\item{download}{TRUE if you want to download source files}
 }
 \value{
 data frame
@@ -18,7 +18,6 @@ data frame
 GetCVEData
 }
 \examples{
-cves <- GetCVEData()
 cves <- GetCVEData(download = TRUE)
 }
 
