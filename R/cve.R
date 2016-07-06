@@ -2,32 +2,37 @@
 #'
 #' @param path where Standard CVE definitions will be downloaded and unziped (don't finish with /). Default set as inst/tmpdata
 #' @param download TRUE if you want to download source files
+#' @param cached TRUE if you want to load saved dataframe, it won't download anything
 #'
 #' @return data frame
 #' @export
 #'
 #' @examples
-#' cves <- GetCVEData(download = TRUE)
-GetCVEData <- function(path = "inst/tmpdata", download = FALSE) {
-  path <- ifelse(download, DownloadCVEData(path), path)
-  cves <- read.csv(file = "inst/tmpdata/cve/mitre/allitems.csv", skip = 9,
-                   col.names = c("cve","status","description","references","phase","votes","comments"),
-                   colClasses = c("character","factor","character","character","character","character","character"))
+#' cves <- GetCVEData(cached = TRUE)
+GetCVEData <- function(path = "inst/tmpdata", download = FALSE, cached = TRUE) {
+  if (cached) {
+    return(cves)
+  } else {
+    path <- ifelse(download, DownloadCVEData(path), path)
+    cves <- read.csv(file = "inst/tmpdata/cve/mitre/allitems.csv", skip = 9,
+                     col.names = c("cve","status","description","references","phase","votes","comments"),
+                     colClasses = c("character","factor","character","character","character","character","character"))
+  }
   return(cves)
 }
 
 DownloadCVEData <- function(path = "inst/tmpdata") {
   UnzipDataFiles <- function(path = "inst/tmpdata") {
     # Uncompress gzip XML files
-    gzs <- list.files(path = paste(path,"cve", sep="/"), pattern = "*.(xml|csv).gz",
+    gzs <- list.files(path = paste(path,"cve", sep = "/"), pattern = "*.(xml|csv).gz",
                       full.names = TRUE, recursive = TRUE)
     apply(X = data.frame(gzs = gzs, stringsAsFactors = F), 1, function(x) R.utils::gunzip(x, overwrite = TRUE, remove = TRUE))
   }
 
   # Create data folders
-  dir.create(paste(path, "cve", sep="/"), showWarnings = FALSE)
-  dir.create(paste(path, "cve","mitre", sep="/"), showWarnings = FALSE)
-  dir.create(paste(path, "cve","nist", sep="/"), showWarnings = FALSE)
+  dir.create(paste(path, "cve", sep = "/"), showWarnings = FALSE)
+  dir.create(paste(path, "cve","mitre", sep = "/"), showWarnings = FALSE)
+  dir.create(paste(path, "cve","nist", sep = "/"), showWarnings = FALSE)
 
   # Download MITRE data
   # Reference: http://cve.mitre.org/data/downloads/index.html#download
@@ -41,7 +46,7 @@ DownloadCVEData <- function(path = "inst/tmpdata") {
   # Download NIST data
   # Reference: https://nvd.nist.gov/download.cfm
   cve.years <- 2002:as.integer(format(Sys.Date(), "%Y"))
-  for(year in cve.years){
+  for (year in cve.years) {
     url <- paste("http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-", year, ".xml.gz", sep = "")
     destfile <- paste(path, "/cve/nist/nvdcve-2.0-", year, ".xml.gz", sep = "")
     download.file(url, destfile)
