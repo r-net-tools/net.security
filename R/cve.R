@@ -17,6 +17,13 @@ GetCVEData <- function(path = "inst/tmpdata", download = FALSE) {
 }
 
 DownloadCVEData <- function(path = "inst/tmpdata") {
+  UnzipDataFiles <- function(path = "inst/tmpdata") {
+    # Uncompress gzip XML files
+    gzs <- list.files(path = paste(path,"cve", sep="/"), pattern = "*.(xml|csv).gz",
+                      full.names = TRUE, recursive = TRUE)
+    apply(X = data.frame(gzs = gzs, stringsAsFactors = F), 1, function(x) R.utils::gunzip(x, overwrite = TRUE, remove = TRUE))
+  }
+
   # Create data folders
   dir.create(paste(path, "cve", sep="/"), showWarnings = FALSE)
   dir.create(paste(path, "cve","mitre", sep="/"), showWarnings = FALSE)
@@ -49,12 +56,7 @@ DownloadCVEData <- function(path = "inst/tmpdata") {
                 destfile = paste(path, "/cve/nist/vendorstatements.xml.gz", sep = ""))
 
   UnzipDataFiles(path)
+  path <- paste(path, "cve/mitre/allitems.csv", sep = "/" )
   return(path)
 }
 
-UnzipDataFiles <- function(path = "inst/tmpdata") {
-  # Uncompress gzip XML files
-  gzs <- list.files(path = paste(path,"cve", sep="/"), pattern = "*.(xml|csv).gz",
-                    full.names = TRUE, recursive = TRUE)
-  apply(X = data.frame(gzs = gzs, stringsAsFactors = F), 1, function(x) R.utils::gunzip(x))
-}
