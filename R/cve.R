@@ -1,13 +1,12 @@
 #' GetCVEData
 #'
 #' @param path where Standard CVE definitions will be downloaded and unziped (don't finish with /). Default set as inst/tmpdata
-#' @param download
+#' @param download TRUE if you want to download source files
 #'
 #' @return data frame
 #' @export
 #'
 #' @examples
-#' cves <- GetCVEData()
 #' cves <- GetCVEData(download = TRUE)
 GetCVEData <- function(path = "inst/tmpdata", download = FALSE) {
   path <- ifelse(download, DownloadCVEData(path), path)
