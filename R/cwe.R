@@ -10,7 +10,7 @@
 #' df <- GetCWEData()
 #' df <- GetCWEData("/tmp")
 GetCWEData <- function(path = "inst/tmpdata", download = FALSE){
-  path <- ifelse(download, DownloadCWEData(path), paste(path, "2000.xml", sep = "/"))
+  path <- ifelse(download, DownloadCWEData(path), paste(path, "cwe/2000.xml", sep = "/"))
   doc <- XML::xmlParse(path)
   raw.cwes <- XML::xpathApply(doc, "//Weakness")
   cwes <- as.data.frame(t(XML::xmlSApply(raw.cwes, XML::xmlAttrs)), stringsAsFactors = FALSE)
@@ -28,6 +28,7 @@ GetCWEData <- function(path = "inst/tmpdata", download = FALSE){
   #Relationships
   raw.cwes.rels <- GetListNodes(raw.cwes, "Relationships")
   cwes$relationships <- ListNodesToJson(raw.cwes.rels)
+  cwes$cwe.parents <- sapply(cwes$ID, function(x) GetParents(cwes, x, compact = T))
 
   #Weakness_Ordinalities
   raw.cwes.ord <- GetListNodes(raw.cwes, "Weakness_Ordinalities")
@@ -107,7 +108,7 @@ GetCWEData <- function(path = "inst/tmpdata", download = FALSE){
   return(cwes)
 }
 
-# functions helpers for data parsing
+# Functions helpers for data parsing -------------------------------------------
 GetListNodes <- function(doc, node){
   return(sapply(doc, function(x) x[[node]]))
 }
@@ -117,6 +118,7 @@ ListNodesToJson <- function(doc){
                                         no = jsonlite::toJSON(XML::xmlToDataFrame(x))))
   )
 }
+
 ListNodesToXML <- function(doc){
   return(sapply(doc, function(x) ifelse(test = is.null(x),
                                         yes = "[]",
@@ -131,9 +133,26 @@ ListNodesToXML <- function(doc){
 #' @return XML path
 #' @examples DownloadCWEData()
 DownloadCWEData <- function(path = "inst/tmpdata") {
-  destfile <- paste(path, "2000.xml.zip", sep = "/")
+  dir.create(paste(path, "cwe", sep = "/"), showWarnings = FALSE)
+  destfile <- paste(path, "cwe/2000.xml.zip", sep = "/")
   download.file(url = "https://cwe.mitre.org/data/xml/views/2000.xml.zip",
                 destfile = destfile)
   unzip(zipfile = destfile, exdir = path)
-  return(paste(path, "2000.xml", sep = "/"))
+  return(paste(path, "cwe/2000.xml", sep = "/"))
+}
+
+#' Given a CWE code it returns its direct parents, set compact=T and results will be dotcomma-separated
+GetParents <- function(cwes, CWE = "", compact = FALSE) {
+  parents <- ""
+  relations <- jsonlite::fromJSON(dplyr::filter(cwes, ID == CWE)[["relationships"]])
+  if (length(relations) > 0) {
+    x <- dplyr::filter(relations, Relationship_Target_Form == "Weakness" & Relationship_Nature == "ChildOf") %>% dplyr::select(Relationship_Target_ID)
+    if (nrow(x) > 0) {
+      parents <- x[,c("Relationship_Target_ID")]
+    }
+  }
+  if (compact) {
+    parents <- paste(parents, sep = ";", collapse = ";")
+  }
+  return(parents)
 }
