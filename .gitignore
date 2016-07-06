@@ -4,7 +4,7 @@
 .Rproj.user/
 
 # downloaded data
-inst/tmpdata/
+inst/tmpdata/*
 # produced vignettes
 vignettes/*.html
 vignettes/*.pdf

@@ -7,7 +7,6 @@
 #' @export
 #'
 #' @examples
-#' cves <- GetCVEData()
 #' cves <- GetCVEData(download = TRUE)
 GetCVEData <- function(path = "inst/tmpdata", download = FALSE) {
   path <- ifelse(download, DownloadCVEData(path), path)
