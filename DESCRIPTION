@@ -11,6 +11,8 @@ Imports:
     R.utils,
     XML,
     plyr,
+    dplyr,
+    stringr,
     jsonlite
 Suggests:
     testthat
