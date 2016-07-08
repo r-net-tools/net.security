@@ -11,9 +11,9 @@ Imports:
     R.utils,
     XML,
     plyr,
-    jsonlite,
     dplyr,
-    stringr
+    stringr,
+    jsonlite
 Suggests:
     testthat
 License: NA
