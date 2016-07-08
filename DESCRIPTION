@@ -15,7 +15,8 @@ Imports:
     stringr,
     jsonlite
 Suggests:
-    testthat
+    testthat,
+    covr
 License: GPL-3
 LazyData: true
 URL: https://github.com/r-net-tools/net-security
