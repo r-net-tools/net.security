@@ -2,6 +2,7 @@
 
 export(GetCVEData)
 export(GetCWEData)
+export(GetNISTvulns)
 export(GetRIPE.ASN)
 export(GetRIPE.inet)
 export(ParseNMAP)
