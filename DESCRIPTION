@@ -1,18 +1,24 @@
 Package: net.security
-Title: Just playing with R and security tools
-Version: 0.1.1
-Authors@R:c(
+Title: Security Standards to DataFrames
+Version: 0.0.0.9000
+Authors@R: c(
   person("Humbert", "Costas", email = "humbert.costas@gmail.com", role = c("aut", "cre")),
-  person("Arnau", "Sangrà", email = "arnsangra@gmail.com", role = "aut"))
+  person("Arnau", "Sangra", email = "arnsangra@gmail.com", role = "aut"))
 Description: Functions and tools related to network security for R.
-Depends: R (>= 3.2.2)
+Depends:
+    R (>= 3.3.0)
 Imports:
-  R.utils,
-  XML,
-  plyr
+    R.utils,
+    XML,
+    plyr,
+    dplyr,
+    stringr,
+    jsonlite
 Suggests:
-  testthat
-License: NA
+    testthat,
+    covr
+License: GPL-3
 LazyData: true
 URL: https://github.com/r-net-tools/net-security
 BugReports: https://github.com/r-net-tools/net-security/issues
+RoxygenNote: 5.0.1
