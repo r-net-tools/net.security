@@ -4,21 +4,12 @@
 \alias{GetCWEData}
 \title{GetCWEData Download current CWE definitions, parse them and return the info as data frame}
 \usage{
-GetCWEData(path = "inst/tmpdata", download = FALSE)
-}
-\arguments{
-\item{path}{where MITRE CWE definitions will be downloaded and unziped (don't finish with /). Default set as inst/tmpdata}
-
-\item{download}{TRUE if you want to update the source data, default set as FALSE}
+GetCWEData()
 }
 \value{
 data frame
 }
 \description{
 GetCWEData Download current CWE definitions, parse them and return the info as data frame
-}
-\examples{
-df <- GetCWEData()
-df <- GetCWEData("/tmp")
 }
 

@@ -64,8 +64,6 @@ DownloadCVEData <- function(dest) {
 #' Title
 #'
 #' @param path String, the directory containing the files to be extracted
-#'
-#' @return
 UnzipDataFiles <- function(path) {
   # Uncompress gzip XML files
   gzs <- list.files(path = paste(path,"cve", sep = "/"), pattern = ".gz",
