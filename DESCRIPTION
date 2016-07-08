@@ -1,6 +1,6 @@
 Package: net.security
 Title: Security Standards to DataFrames
-Version: 0.2.0
+Version: 0.0.0.9000
 Authors@R: c(
   person("Humbert", "Costas", email = "humbert.costas@gmail.com", role = c("aut", "cre")),
   person("Arnau", "Sangra", email = "arnsangra@gmail.com", role = "aut"))
@@ -15,8 +15,9 @@ Imports:
     stringr,
     jsonlite
 Suggests:
-    testthat
-License: NA
+    testthat,
+    covr
+License: GPL-3
 LazyData: true
 URL: https://github.com/r-net-tools/net-security
 BugReports: https://github.com/r-net-tools/net-security/issues
