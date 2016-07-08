@@ -1,19 +1,46 @@
+#### Exported Functions ----------------------------------------------------------------------------
+
 #' GetCWEData Download current CWE definitions, parse them and return the info as data frame
-#'
-#' @param path where MITRE CWE definitions will be downloaded and unziped (don't finish with /). Default set as inst/tmpdata
-#' @param download TRUE if you want to update the source data, default set as FALSE
 #'
 #' @return data frame
 #' @export
+GetCWEData <- function() {
+  DownloadCWEData(dest = tempdir())
+
+  utils::unzip(zipfile = "cwe/2000.xml.zip", exdir = "cwe")
+  cwe.source.file <- paste(tempdir(), "cwe/2000.xml", sep = "/")
+  cwes <- ParseCWEData(cwe.source.file)
+  return(cwes)
+}
+
+
+#### Private Functions -----------------------------------------------------------------------------
+
+#' Title
 #'
-#' @examples
-#' df <- GetCWEData()
-#' df <- GetCWEData("/tmp")
-GetCWEData <- function(path = "inst/tmpdata", download = FALSE){
-  path <- ifelse(download, DownloadCWEData(path), paste(path, "cwe/2000.xml", sep = "/"))
-  doc <- XML::xmlParse(path)
+#' @param dest. String
+DownloadCWEData <- function(dest) {
+  curdir <- setwd(dest)
+  if (!dir.exists("cwe")) {
+    dir.create("cwe")
+  }
+  cwe.url  <- "https://cwe.mitre.org/data/xml/views/2000.xml.zip"
+  destfile <- "cwe/2000.xml.zip"
+  utils::download.file(url = cwe.url, destfile = destfile)
+  setwd(curdir)
+}
+
+#' Title
+#'
+#' @param cwe.file String
+#'
+#' @return Data frame
+ParseCWEData <- function(cwe.file) {
+
+  doc <- XML::xmlParse(cwe.file)
   raw.cwes <- XML::xpathApply(doc, "//Weakness")
-  cwes <- as.data.frame(t(XML::xmlSApply(raw.cwes, XML::xmlAttrs)), stringsAsFactors = FALSE)
+  cwes <- as.data.frame(t(XML::xmlSApply(raw.cwes, XML::xmlAttrs)),
+                        stringsAsFactors = FALSE)
   cwes$code_standard <- paste("CWE-", cwes$ID, sep = "")
   cwes.basic <- XML::xmlToDataFrame(raw.cwes)
 
@@ -21,10 +48,10 @@ GetCWEData <- function(path = "inst/tmpdata", download = FALSE){
   raw.cwes.descr <- XML::xpathSApply(doc, "//Weakness/Description")
   cwes$descr.summary <- sapply(raw.cwes.descr,
                                function(x)
-                               XML::xmlValue(x[["Description_Summary"]]))
+                                 XML::xmlValue(x[["Description_Summary"]]))
   cwes$descr.details <- sapply(raw.cwes.descr,
                                function(x)
-                               XML::xmlValue(x[["Extended_Description"]]))
+                                 XML::xmlValue(x[["Extended_Description"]]))
   #Relationships
   raw.cwes.rels <- GetListNodes(raw.cwes, "Relationships")
   cwes$relationships <- ListNodesToJson(raw.cwes.rels)
@@ -108,10 +135,11 @@ GetCWEData <- function(path = "inst/tmpdata", download = FALSE){
   return(cwes)
 }
 
-# Functions helpers for data parsing -------------------------------------------
+######## Functions helpers for data parsing -------------------------------------------
 GetListNodes <- function(doc, node){
   return(sapply(doc, function(x) x[[node]]))
 }
+
 ListNodesToJson <- function(doc){
   return(sapply(doc, function(x) ifelse(test = is.null(x),
                                         yes = "[]",
@@ -126,18 +154,6 @@ ListNodesToXML <- function(doc){
          )
 }
 
-#' DownloadCWEData, it downloads https://cwe.mitre.org/data/xml/views/2000.xml.zip
-#' that containts all kind of information related with CWE
-#' @param path where the files will be stored
-DownloadCWEData <- function(path = "inst/tmpdata") {
-  dir.create(paste(path, "cwe", sep = "/"), showWarnings = FALSE)
-  destfile <- paste(path, "cwe/2000.xml.zip", sep = "/")
-  download.file(url = "https://cwe.mitre.org/data/xml/views/2000.xml.zip",
-                destfile = destfile)
-  unzip(zipfile = destfile, exdir = path)
-  return(paste(path, "cwe/2000.xml", sep = "/"))
-}
-
 #' GetParents, Given a CWE code it returns its direct parents, set compact=T and results will be dotcomma-separated
 #'
 #' @param cwes data frame
@@ -147,7 +163,10 @@ GetParents <- function(cwes, CWE = "", compact = FALSE) {
   parents <- ""
   relations <- jsonlite::fromJSON(dplyr::filter(cwes, ID == CWE)[["relationships"]])
   if (length(relations) > 0) {
-    x <- dplyr::filter(relations, Relationship_Target_Form == "Weakness" & Relationship_Nature == "ChildOf") %>% dplyr::select(Relationship_Target_ID)
+    filtered <- dplyr::filter(relations,
+                              Relationship_Target_Form == "Weakness" & Relationship_Nature == "ChildOf")
+    x <- dplyr::select(filtered, Relationship_Target_ID)
+    # x <- dplyr::filter(relations, Relationship_Target_Form == "Weakness" & Relationship_Nature == "ChildOf") %>% dplyr::select(Relationship_Target_ID)
     if (nrow(x) > 0) {
       parents <- x[,c("Relationship_Target_ID")]
     }
