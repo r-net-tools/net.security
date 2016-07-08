@@ -14,7 +14,4 @@ data frame
 user  system elapsed
 394.63    8.24  435.69
 }
-\examples{
-cve.nist <- GetNISTvulns()
-}
 

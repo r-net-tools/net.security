@@ -15,33 +15,6 @@ GetCVEData <- function() {
   return(cves)
 }
 
-#' GetNISTvulns
-#'
-#' > system.time({cve.nist <- GetNISTvulns()})
-#' user  system elapsed
-#' 394.63    8.24  435.69
-#'
-#' @return data frame
-#' @export
-#'
-#' @examples
-#' cve.nist <- GetNISTvulns()
-GetNISTvulns <- function() {
-  # Reference: https://scap.nist.gov/schema/nvd/vulnerability_0.4.xsd
-  # Output: XMLDocument -> "as list"
-  doc <- XML::xmlTreeParse(file = "inst/tmpdata/cve/nist/nvdcve-2.0-2005.xml", useInternalNodes = T)
-  entries <- XML::xmlChildren(XML::xmlRoot(doc))
-  lentries <- lapply(entries, GetNISTEntry)
-  df <- plyr::ldply(lentries, data.frame)
-
-  # Tidy Data
-  df$.id <- NULL
-  df$cve.id <- as.character(df$cve.id)
-  df$cwe <- as.character(sapply(as.character(df$cwe), function(x) jsonlite::fromJSON(x)))
-  df$cwe <- sub(pattern = "list()",replacement = NA, x = df$cwe)
-
-  return(df)
-}
 
 
 #### Private Functions -----------------------------------------------------------------------------
@@ -90,68 +63,34 @@ DownloadCVEData <- function(dest) {
 }
 
 
-#' Title
+#' GetNISTvulns
 #'
-#' @param path String, the directory containing the files to be extracted
-UnzipDataFiles <- function(path) {
-  # Uncompress gzip XML files
-  gzs <- list.files(path = paste(path,"cve", sep = "/"), pattern = ".gz",
-                    full.names = TRUE, recursive = TRUE)
-  apply(X = data.frame(gzs = gzs, stringsAsFactors = F),
-        1,
-        function(x) {
-          R.utils::gunzip(x, overwrite = TRUE, remove = TRUE)
-        })
-
-}
-
-
-#' Title
-#'
-#' @param cve.file String
-#'
-#' @return Data frame
-ParseCVEData <- function(cve.file) {
-  column.names <- c("cve","status","description","references","phase","votes","comments")
-  column.classes <- c("character","factor","character","character","character","character","character")
-  cves <- utils::read.csv(file = cve.file,
-                          skip = 9,
-                          col.names = column.names,
-                          colClasses = column.classes)
-  return(cves)
-}
-
-
-#' Title
+#' > system.time({cve.nist <- GetNISTvulns()})
+#' user  system elapsed
+#' 394.63    8.24  435.69
 #'
 #' @return data frame
-NewNISTEntry <- function() {
-  return(data.frame(osvdb.ext = character(),
-                    vulnerable.configuration = character(),
-                    vulnerable.software.list = character(),
-                    cve.id = character(),
-                    discovered.datetime = character(),
-                    disclosure.datetime = character(),
-                    exploit.publish.datetime = character(),
-                    published.datetime = character(),
-                    last.modified.datetime = character(),
-                    cvss = character(),
-                    security.protection = character(),
-                    assessment.check = character(),
-                    cwe = character(),
-                    references = character(),
-                    fix.action = character(),
-                    scanner = character(),
-                    summary = character(),
-                    technical.description = character(),
-                    attack.scenario = character(),
-                    stringsAsFactors = FALSE)
-  )
+#' @export
+GetNISTvulns <- function() {
+  # Reference: https://scap.nist.gov/schema/nvd/vulnerability_0.4.xsd
+  # Output: XMLDocument -> "as list"
+  doc <- XML::xmlTreeParse(file = "inst/tmpdata/cve/nist/nvdcve-2.0-2005.xml", useInternalNodes = T)
+  entries <- XML::xmlChildren(XML::xmlRoot(doc))
+  lentries <- lapply(entries, GetNISTEntry)
+  df <- plyr::ldply(lentries, data.frame)
+
+  # Tidy Data
+  df$.id <- NULL
+  df$cve.id <- as.character(df$cve.id)
+  df$cwe <- as.character(sapply(as.character(df$cwe), function(x) jsonlite::fromJSON(x)))
+  df$cwe <- sub(pattern = "list()",replacement = NA, x = df$cwe)
+
+  return(df)
 }
 
 #' Title
 #'
-#' @param node
+#' @param node XML Node
 #'
 #' @return data frame
 GetNISTEntry <- function(node) {
@@ -207,12 +146,29 @@ GetNISTEntry <- function(node) {
 
 #' Title
 #'
-#' @param x
-#'
-#' @return json
-NodeToJson <- function(x) {
-  if (is.null(x)) x <- "<xml></xml>"
-  return(jsonlite::toJSON(XML::xmlToList(x)))
+#' @return data frame
+NewNISTEntry <- function() {
+  return(data.frame(osvdb.ext = character(),
+                    vulnerable.configuration = character(),
+                    vulnerable.software.list = character(),
+                    cve.id = character(),
+                    discovered.datetime = character(),
+                    disclosure.datetime = character(),
+                    exploit.publish.datetime = character(),
+                    published.datetime = character(),
+                    last.modified.datetime = character(),
+                    cvss = character(),
+                    security.protection = character(),
+                    assessment.check = character(),
+                    cwe = character(),
+                    references = character(),
+                    fix.action = character(),
+                    scanner = character(),
+                    summary = character(),
+                    technical.description = character(),
+                    attack.scenario = character(),
+                    stringsAsFactors = FALSE)
+  )
 }
 
 #' Title
@@ -223,4 +179,45 @@ NodeToJson <- function(x) {
 NodeToChar <- function(x) {
   if (is.null(x)) x <- ""
   return(as.character(unlist(XML::xmlToList(x))))
+}
+
+#' Title
+#'
+#' @param x XML Node
+#'
+#' @return json
+NodeToJson <- function(x) {
+  if (is.null(x)) x <- "<xml></xml>"
+  return(jsonlite::toJSON(XML::xmlToList(x)))
+}
+
+#' Title
+#'
+#' @param path String, the directory containing the files to be extracted
+UnzipDataFiles <- function(path) {
+  # Uncompress gzip XML files
+  gzs <- list.files(path = paste(path,"cve", sep = "/"), pattern = ".gz",
+                    full.names = TRUE, recursive = TRUE)
+  apply(X = data.frame(gzs = gzs, stringsAsFactors = F),
+        1,
+        function(x) {
+          R.utils::gunzip(x, overwrite = TRUE, remove = TRUE)
+        })
+
+}
+
+
+#' Title
+#'
+#' @param cve.file String
+#'
+#' @return Data frame
+ParseCVEData <- function(cve.file) {
+  column.names <- c("cve","status","description","references","phase","votes","comments")
+  column.classes <- c("character","factor","character","character","character","character","character")
+  cves <- utils::read.csv(file = cve.file,
+                          skip = 9,
+                          col.names = column.names,
+                          colClasses = column.classes)
+  return(cves)
 }
