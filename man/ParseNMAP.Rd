@@ -17,7 +17,4 @@ data frame
 \description{
 ParseNMAP Parser for nmap xml output
 }
-\examples{
-df <- ParseNMAP("nmap.xml","my-")
-}
 

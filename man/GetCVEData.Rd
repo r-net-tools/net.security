@@ -2,24 +2,19 @@
 % Please edit documentation in R/cve.R
 \name{GetCVEData}
 \alias{GetCVEData}
-\title{GetCVEData}
+\title{GetCVEData
+#'}
 \usage{
-GetCVEData(path = "inst/tmpdata", download = FALSE, cached = TRUE)
-}
-\arguments{
-\item{path}{where Standard CVE definitions will be downloaded and unziped (don't finish with /). Default set as inst/tmpdata}
-
-\item{download}{TRUE if you want to download source files}
-
-\item{cached}{TRUE if you want to load saved dataframe, it won't download anything}
+GetCVEData()
 }
 \value{
 data frame
 }
 \description{
 GetCVEData
+#'
 }
 \examples{
-cves <- GetCVEData(cached = TRUE)
+cves <- GetCVEData()
 }
 

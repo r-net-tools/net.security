@@ -1,27 +1,130 @@
+#### Exported Functions ----------------------------------------------------------------------------
+
 #' GetCVEData
+#'#'
+#' @return data frame
+#' @export
 #'
-#' @param path where Standard CVE definitions will be downloaded and unziped (don't finish with /). Default set as inst/tmpdata
-#' @param download TRUE if you want to download source files
-#' @param cached TRUE if you want to load saved dataframe, it won't download anything
+#' @examples
+#' cves <- GetCVEData()
+GetCVEData <- function() {
+  DownloadCVEData(dest = tempdir())
+  UnzipDataFiles(path = tempdir())
+  cve.source.file <- paste(tempdir(), "cve/mitre/allitems.csv", sep = "/")
+  cves <- ParseCVEData(cve.source.file)
+  return(cves)
+}
+
+#' GetNISTvulns
+#'
+#' > system.time({cve.nist <- GetNISTvulns()})
+#' user  system elapsed
+#' 394.63    8.24  435.69
 #'
 #' @return data frame
 #' @export
 #'
 #' @examples
-#' cves <- GetCVEData(cached = TRUE)
-GetCVEData <- function(path = "inst/tmpdata", download = FALSE, cached = TRUE) {
-  if (cached) {
-    return(cves)
-  } else {
-    path <- ifelse(download, DownloadCVEData(path), path)
-    cves <- read.csv(file = "inst/tmpdata/cve/mitre/allitems.csv", skip = 9,
-                     col.names = c("cve","status","description","references","phase","votes","comments"),
-                     colClasses = c("character","factor","character","character","character","character","character"))
-    cves$cwe <- GetNISTvulns(2005)
+#' cve.nist <- GetNISTvulns()
+GetNISTvulns <- function() {
+  # Reference: https://scap.nist.gov/schema/nvd/vulnerability_0.4.xsd
+  # Output: XMLDocument -> "as list"
+  doc <- XML::xmlTreeParse(file = "inst/tmpdata/cve/nist/nvdcve-2.0-2005.xml", useInternalNodes = T)
+  entries <- XML::xmlChildren(XML::xmlRoot(doc))
+  lentries <- lapply(entries, GetNISTEntry)
+  df <- plyr::ldply(lentries, data.frame)
+
+  # Tidy Data
+  df$.id <- NULL
+  df$cve.id <- as.character(df$cve.id)
+  df$cwe <- as.character(sapply(as.character(df$cwe), function(x) jsonlite::fromJSON(x)))
+  df$cwe <- sub(pattern = "list()",replacement = NA, x = df$cwe)
+
+  return(df)
+}
+
+
+#### Private Functions -----------------------------------------------------------------------------
+
+#' Title
+#'
+#' @param dest String with directory where to store files to be downloaded.
+DownloadCVEData <- function(dest) {
+  curdir <- setwd(dir = dest)
+
+  # Group downloaded data
+  if (!dir.exists("cve")) {
+    dir.create("cve")
+    dir.create("cve/mitre")
+    dir.create("cve/nist")
   }
+
+  # Download MITRE data (http://cve.mitre.org/data/downloads/index.html#download)
+  utils::download.file(url = "http://cve.mitre.org/data/downloads/allitems.xml.gz",
+                destfile = "cve/mitre/allitems.xml.gz")
+  utils::download.file(url = "http://cve.mitre.org/schema/cve/cve_1.0.xsd",
+                destfile = "cve/mitre/cve_1.0.xsd")
+  utils::download.file(url = "http://cve.mitre.org/data/downloads/allitems.csv.gz",
+                destfile = "cve/mitre/allitems.csv.gz")
+
+  # Download NIST data (https://nvd.nist.gov/download.cfm)
+  # cve.years             <- 2002:as.integer(format(Sys.Date(), "%Y"))
+  # base.url              <- "http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-"
+  # base.url.translation  <- "https://nvd.nist.gov/download/nvdcve-"
+  # for (year in cve.years) {
+  #   url <- paste(base.url, year, ".xml.gz", sep = "")
+  #   destfile <- paste("cve/nist/nvdcve-2.0-", year, ".xml.gz", sep = "")
+  #   utils::download.file(url, destfile)
+  #
+  #   # Spanish translations
+  #   url.translation <- paste(base.url.translation, year, "trans.xml.gz", sep = "")
+  #   destfile <- paste("cve/nist/nvdcve-", year, "trans.xml.gz", sep = "")
+  #   utils::download.file(url.translation, destfile)
+  # }
+
+  # Download NIST Vendor statements
+  utils::download.file(url = "https://nvd.nist.gov/download/vendorstatements.xml.gz",
+                destfile = "cve/nist/vendorstatements.xml.gz")
+
+  setwd(curdir)
+}
+
+
+#' Title
+#'
+#' @param path String, the directory containing the files to be extracted
+UnzipDataFiles <- function(path) {
+  # Uncompress gzip XML files
+  gzs <- list.files(path = paste(path,"cve", sep = "/"), pattern = ".gz",
+                    full.names = TRUE, recursive = TRUE)
+  apply(X = data.frame(gzs = gzs, stringsAsFactors = F),
+        1,
+        function(x) {
+          R.utils::gunzip(x, overwrite = TRUE, remove = TRUE)
+        })
+
+}
+
+
+#' Title
+#'
+#' @param cve.file String
+#'
+#' @return Data frame
+ParseCVEData <- function(cve.file) {
+  column.names <- c("cve","status","description","references","phase","votes","comments")
+  column.classes <- c("character","factor","character","character","character","character","character")
+  cves <- utils::read.csv(file = cve.file,
+                          skip = 9,
+                          col.names = column.names,
+                          colClasses = column.classes)
   return(cves)
 }
 
+
+#' Title
+#'
+#' @return data frame
 NewNISTEntry <- function() {
   return(data.frame(osvdb.ext = character(),
                     vulnerable.configuration = character(),
@@ -43,9 +146,14 @@ NewNISTEntry <- function() {
                     technical.description = character(),
                     attack.scenario = character(),
                     stringsAsFactors = FALSE)
-         )
+  )
 }
 
+#' Title
+#'
+#' @param node
+#'
+#' @return data frame
 GetNISTEntry <- function(node) {
   entry <- NewNISTEntry()
   lnode <- XML::xmlChildren(node)
@@ -91,91 +199,28 @@ GetNISTEntry <- function(node) {
                    summary,
                    technical.description,
                    attack.scenario)
-                 )
+  )
   names(entry) <- names(NewNISTEntry())
 
   return(entry)
 }
 
+#' Title
+#'
+#' @param x
+#'
+#' @return json
 NodeToJson <- function(x) {
   if (is.null(x)) x <- "<xml></xml>"
   return(jsonlite::toJSON(XML::xmlToList(x)))
 }
 
+#' Title
+#'
+#' @param x
+#'
+#' @return character
 NodeToChar <- function(x) {
   if (is.null(x)) x <- ""
   return(as.character(unlist(XML::xmlToList(x))))
 }
-
-#' GetNISTvulns
-#'
-#' > system.time({cve.nist <- GetNISTvulns()})
-#' user  system elapsed
-#' 394.63    8.24  435.69
-#'
-#' @return data frame
-#' @export
-#'
-#' @examples
-#' cve.nist <- GetNISTvulns()
-GetNISTvulns <- function() {
-  # Reference: https://scap.nist.gov/schema/nvd/vulnerability_0.4.xsd
-  # Output: XMLDocument -> "as list"
-  doc <- XML::xmlTreeParse(file = "inst/tmpdata/cve/nist/nvdcve-2.0-2005.xml", useInternalNodes = T)
-  entries <- XML::xmlChildren(XML::xmlRoot(doc))
-  lentries <- lapply(entries, GetNISTEntry)
-  df <- plyr::ldply(lentries, data.frame)
-
-  # Tidy Data
-  df$.id <- NULL
-  df$cve.id <- as.character(df$cve.id)
-  df$cwe <- as.character(sapply(as.character(df$cwe), function(x) jsonlite::fromJSON(x)))
-  df$cwe <- sub(pattern = "list()",replacement = NA, x = df$cwe)
-
-  return(df)
-}
-
-DownloadCVEData <- function(path = "inst/tmpdata") {
-  UnzipDataFiles <- function(path = "inst/tmpdata") {
-    # Uncompress gzip XML files
-    gzs <- list.files(path = paste(path,"cve", sep = "/"), pattern = "*.(xml|csv).gz",
-                      full.names = TRUE, recursive = TRUE)
-    apply(X = data.frame(gzs = gzs, stringsAsFactors = F), 1, function(x) R.utils::gunzip(x, overwrite = TRUE, remove = TRUE))
-  }
-
-  # Create data folders
-  dir.create(paste(path, "cve", sep = "/"), showWarnings = FALSE)
-  dir.create(paste(path, "cve","mitre", sep = "/"), showWarnings = FALSE)
-  dir.create(paste(path, "cve","nist", sep = "/"), showWarnings = FALSE)
-
-  # Download MITRE data
-  # Reference: http://cve.mitre.org/data/downloads/index.html#download
-  download.file(url = "http://cve.mitre.org/data/downloads/allitems.xml.gz",
-                destfile = paste(path, "/cve/mitre/allitems.xml.gz", sep = ""))
-  download.file(url = "http://cve.mitre.org/schema/cve/cve_1.0.xsd",
-                destfile = paste(path, "/cve/mitre/cve_1.0.xsd", sep = ""))
-  download.file(url = "http://cve.mitre.org/data/downloads/allitems.csv.gz",
-                destfile = paste(path, "/cve/mitre/allitems.csv.gz", sep = ""))
-
-  # Download NIST data
-  # Reference: https://nvd.nist.gov/download.cfm
-  cve.years <- 2002:as.integer(format(Sys.Date(), "%Y"))
-  for (year in cve.years) {
-    url <- paste("http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-", year, ".xml.gz", sep = "")
-    destfile <- paste(path, "/cve/nist/nvdcve-2.0-", year, ".xml.gz", sep = "")
-    download.file(url, destfile)
-    # Spanish translations
-    url <- paste("https://nvd.nist.gov/download/nvdcve-", year, "trans.xml.gz", sep = "")
-    destfile <- paste(path, "/cve/nist/nvdcve-", year, "trans.xml.gz", sep = "")
-    download.file(url, destfile)
-  }
-
-  # Download NIST Vendor statements
-  download.file(url = "https://nvd.nist.gov/download/vendorstatements.xml.gz",
-                destfile = paste(path, "/cve/nist/vendorstatements.xml.gz", sep = ""))
-
-  UnzipDataFiles(path)
-  path <- paste(path, "cve/mitre/allitems.csv", sep = "/" )
-  return(path)
-}
-
