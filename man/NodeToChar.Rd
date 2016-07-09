@@ -2,7 +2,7 @@
 % Please edit documentation in R/cve.R
 \name{NodeToChar}
 \alias{NodeToChar}
-\title{Title}
+\title{NodeToChar}
 \usage{
 NodeToChar(x)
 }
@@ -13,6 +13,6 @@ NodeToChar(x)
 character
 }
 \description{
-Title
+NodeToChar
 }
 

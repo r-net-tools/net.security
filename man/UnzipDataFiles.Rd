@@ -2,7 +2,7 @@
 % Please edit documentation in R/cve.R
 \name{UnzipDataFiles}
 \alias{UnzipDataFiles}
-\title{Title}
+\title{UnzipDataFiles}
 \usage{
 UnzipDataFiles(path)
 }
@@ -10,6 +10,6 @@ UnzipDataFiles(path)
 \item{path}{String, the directory containing the files to be extracted}
 }
 \description{
-Title
+UnzipDataFiles
 }
 

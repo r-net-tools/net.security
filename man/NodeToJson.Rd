@@ -2,17 +2,17 @@
 % Please edit documentation in R/cve.R
 \name{NodeToJson}
 \alias{NodeToJson}
-\title{Title}
+\title{NodeToJson}
 \usage{
 NodeToJson(x)
 }
 \arguments{
-\item{x}{}
+\item{x}{XML Node}
 }
 \value{
 json
 }
 \description{
-Title
+NodeToJson
 }
 

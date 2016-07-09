@@ -2,7 +2,7 @@
 % Please edit documentation in R/cve.R
 \name{ParseCVEData}
 \alias{ParseCVEData}
-\title{Title}
+\title{ParseCVEData}
 \usage{
 ParseCVEData(cve.file)
 }
@@ -13,6 +13,6 @@ ParseCVEData(cve.file)
 Data frame
 }
 \description{
-Title
+ParseCVEData
 }
 

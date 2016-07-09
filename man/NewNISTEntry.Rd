@@ -2,7 +2,7 @@
 % Please edit documentation in R/cve.R
 \name{NewNISTEntry}
 \alias{NewNISTEntry}
-\title{Title}
+\title{NewNISTEntry}
 \usage{
 NewNISTEntry()
 }
@@ -10,6 +10,6 @@ NewNISTEntry()
 data frame
 }
 \description{
-Title
+NewNISTEntry
 }
 

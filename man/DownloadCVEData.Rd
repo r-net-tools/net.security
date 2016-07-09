@@ -2,7 +2,7 @@
 % Please edit documentation in R/cve.R
 \name{DownloadCVEData}
 \alias{DownloadCVEData}
-\title{Title}
+\title{DownloadCVEData}
 \usage{
 DownloadCVEData(dest)
 }
@@ -10,6 +10,6 @@ DownloadCVEData(dest)
 \item{dest}{String with directory where to store files to be downloaded.}
 }
 \description{
-Title
+DownloadCVEData
 }
 

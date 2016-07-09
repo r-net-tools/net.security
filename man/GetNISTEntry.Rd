@@ -2,17 +2,17 @@
 % Please edit documentation in R/cve.R
 \name{GetNISTEntry}
 \alias{GetNISTEntry}
-\title{Title}
+\title{GetNISTEntry}
 \usage{
 GetNISTEntry(node)
 }
 \arguments{
-\item{node}{}
+\item{node}{XML Node}
 }
 \value{
 data frame
 }
 \description{
-Title
+GetNISTEntry
 }
 

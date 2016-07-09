@@ -10,71 +10,44 @@
 GetCVEData <- function() {
   DownloadCVEData(dest = tempdir())
   UnzipDataFiles(path = tempdir())
-  cve.source.file <- paste(tempdir(), "cve/mitre/allitems.csv", sep = "/")
+  cve.source.file <- paste(tempdir(), "cve","mitre","allitems.csv",
+                           sep = ifelse (.Platform$OS.type == "windows","\\","/"))
   cves <- ParseCVEData(cve.source.file)
   return(cves)
 }
 
+#### NIST Private Functions -----------------------------------------------------------------------------
 
-
-#### Private Functions -----------------------------------------------------------------------------
-
-#' Title
+#' GetNISTVulns
 #'
-#' @param dest String with directory where to store files to be downloaded.
-DownloadCVEData <- function(dest) {
-  curdir <- setwd(dir = dest)
-
-  # Group downloaded data
-  if (!dir.exists("cve")) {
-    dir.create("cve")
-    dir.create("cve/mitre")
-    dir.create("cve/nist")
-  }
-
-  # Download MITRE data (http://cve.mitre.org/data/downloads/index.html#download)
-  utils::download.file(url = "http://cve.mitre.org/data/downloads/allitems.xml.gz",
-                destfile = "cve/mitre/allitems.xml.gz")
-  utils::download.file(url = "http://cve.mitre.org/schema/cve/cve_1.0.xsd",
-                destfile = "cve/mitre/cve_1.0.xsd")
-  utils::download.file(url = "http://cve.mitre.org/data/downloads/allitems.csv.gz",
-                destfile = "cve/mitre/allitems.csv.gz")
-
-  # Download NIST data (https://nvd.nist.gov/download.cfm)
-  # cve.years             <- 2002:as.integer(format(Sys.Date(), "%Y"))
-  # base.url              <- "http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-"
-  # base.url.translation  <- "https://nvd.nist.gov/download/nvdcve-"
-  # for (year in cve.years) {
-  #   url <- paste(base.url, year, ".xml.gz", sep = "")
-  #   destfile <- paste("cve/nist/nvdcve-2.0-", year, ".xml.gz", sep = "")
-  #   utils::download.file(url, destfile)
-  #
-  #   # Spanish translations
-  #   url.translation <- paste(base.url.translation, year, "trans.xml.gz", sep = "")
-  #   destfile <- paste("cve/nist/nvdcve-", year, "trans.xml.gz", sep = "")
-  #   utils::download.file(url.translation, destfile)
-  # }
-
-  # Download NIST Vendor statements
-  utils::download.file(url = "https://nvd.nist.gov/download/vendorstatements.xml.gz",
-                destfile = "cve/nist/vendorstatements.xml.gz")
-
-  setwd(curdir)
-}
-
-
-#' GetNISTvulns
-#'
-#' > system.time({cve.nist <- GetNISTvulns()})
-#' user  system elapsed
-#' 394.63    8.24  435.69
+#' @param years numeric vector with values between 2002 and current year
 #'
 #' @return data frame
 #' @export
-GetNISTvulns <- function() {
+GetNISTVulns <- function(years = as.integer(format(Sys.Date(), "%Y"))) {
+  years.ok <- 2002:as.integer(format(Sys.Date(), "%Y"))
+  if (any(!(years %in% years.ok))) {
+    # wrong years defined
+    cves <- data.frame(stringsAsFactors = F)
+  } else {
+    cves <- NewNISTEntry()
+    for (year in years) {
+      cves <- rbind(cves, GetNISTvulnsByYear(year))
+    }
+  }
+  return(cves)
+}
+
+#' GetNISTvulnsByYear
+#'
+#' @param year value between 2002 and current year, default value is set as current year
+#' @return data frame
+GetNISTvulnsByYear <- function(year = as.integer(format(Sys.Date(), "%Y"))) {
   # Reference: https://scap.nist.gov/schema/nvd/vulnerability_0.4.xsd
-  # Output: XMLDocument -> "as list"
-  doc <- XML::xmlTreeParse(file = "inst/tmpdata/cve/nist/nvdcve-2.0-2005.xml", useInternalNodes = T)
+  nistfile <- paste("nvdcve-2.0-", year, ".xml", sep = "")
+  nistpath <- paste(tempdir(), "cve","nist", nistfile,
+                    sep = ifelse (.Platform$OS.type == "windows","\\","/"))
+  doc <- XML::xmlTreeParse(file = nistpath, useInternalNodes = T)
   entries <- XML::xmlChildren(XML::xmlRoot(doc))
   lentries <- lapply(entries, GetNISTEntry)
   df <- plyr::ldply(lentries, data.frame)
@@ -88,7 +61,7 @@ GetNISTvulns <- function() {
   return(df)
 }
 
-#' Title
+#' GetNISTEntry
 #'
 #' @param node XML Node
 #'
@@ -144,7 +117,7 @@ GetNISTEntry <- function(node) {
   return(entry)
 }
 
-#' Title
+#' NewNISTEntry
 #'
 #' @return data frame
 NewNISTEntry <- function() {
@@ -171,7 +144,64 @@ NewNISTEntry <- function() {
   )
 }
 
-#' Title
+
+
+#### Private Functions -----------------------------------------------------------------------------
+
+#' DownloadCVEData
+#'
+#' @param dest String with directory where to store files to be downloaded.
+DownloadCVEData <- function(dest) {
+  curdir <- setwd(dir = dest)
+
+  # Group downloaded data
+  if (!dir.exists("cve")) {
+    dir.create("cve")
+    dir.create("cve/mitre")
+    dir.create("cve/nist")
+  }
+
+  # Download MITRE data (http://cve.mitre.org/data/downloads/index.html#download)
+  utils::download.file(url = "http://cve.mitre.org/data/downloads/allitems.xml.gz",
+                destfile = paste(tempdir(), "cve","mitre","allitems.xml.gz",
+                                 sep = ifelse (.Platform$OS.type == "windows","\\","/")))
+  utils::download.file(url = "http://cve.mitre.org/schema/cve/cve_1.0.xsd",
+                destfile = paste(tempdir(), "cve","mitre","cve_1.0.xsd",
+                                 sep = ifelse (.Platform$OS.type == "windows","\\","/")))
+  utils::download.file(url = "http://cve.mitre.org/data/downloads/allitems.csv.gz",
+                destfile = paste(tempdir(), "cve","mitre","allitems.csv.gz",
+                                 sep = ifelse (.Platform$OS.type == "windows","\\","/")))
+
+  # Download NIST data (https://nvd.nist.gov/download.cfm)
+  cve.years             <- 2002:as.integer(format(Sys.Date(), "%Y"))
+  base.url              <- "http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-"
+  base.url.translation  <- "https://nvd.nist.gov/download/nvdcve-"
+  for (year in cve.years) {
+    url <- paste(base.url, year, ".xml.gz", sep = "")
+    nistfile <- paste("nvdcve-2.0-", year, ".xml.gz", sep = "")
+    destfile <- paste(tempdir(), "cve","nist", nistfile,
+                      sep = ifelse (.Platform$OS.type == "windows","\\","/"))
+    utils::download.file(url, destfile)
+
+    # Spanish translations
+    url.translation <- paste(base.url.translation, year, "trans.xml.gz", sep = "")
+    nistfile <- paste("nvdcve-", year, "trans.xml.gz", sep = "")
+    destfile <- paste(tempdir(), "cve","nist", nistfile,
+                      sep = ifelse (.Platform$OS.type == "windows","\\","/"))
+    utils::download.file(url.translation, destfile)
+  }
+
+  # Download NIST Vendor statements
+  url.vendors <- "https://nvd.nist.gov/download/vendorstatements.xml.gz"
+  destfile <- paste(tempdir(), "cve","nist","vendorstatements.xml.gz",
+                    sep = ifelse (.Platform$OS.type == "windows","\\","/"))
+  utils::download.file(url.vendors, destfile)
+
+  setwd(curdir)
+}
+
+
+#' NodeToChar
 #'
 #' @param x
 #'
@@ -181,7 +211,7 @@ NodeToChar <- function(x) {
   return(as.character(unlist(XML::xmlToList(x))))
 }
 
-#' Title
+#' NodeToJson
 #'
 #' @param x XML Node
 #'
@@ -191,7 +221,7 @@ NodeToJson <- function(x) {
   return(jsonlite::toJSON(XML::xmlToList(x)))
 }
 
-#' Title
+#' UnzipDataFiles
 #'
 #' @param path String, the directory containing the files to be extracted
 UnzipDataFiles <- function(path) {
@@ -207,7 +237,7 @@ UnzipDataFiles <- function(path) {
 }
 
 
-#' Title
+#' ParseCVEData
 #'
 #' @param cve.file String
 #'
