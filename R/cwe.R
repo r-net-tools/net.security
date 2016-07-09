@@ -116,7 +116,7 @@ ParseCWEData <- function(cwe.file) {
   #Observed_Examples
   #Theoretical_Notes
   #Affected_Resources
-  cwes$aff.resources <- cwes.basic$Causal_Nature
+  cwes$aff.resources <- cwes.basic$Affected_Resources
 
   #Research_Gaps
   #Alternate_Terms
