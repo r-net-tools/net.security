@@ -163,13 +163,13 @@ DownloadCVEData <- function(dest) {
 
   # Download MITRE data (http://cve.mitre.org/data/downloads/index.html#download)
   utils::download.file(url = "http://cve.mitre.org/data/downloads/allitems.xml.gz",
-                destfile = paste(tempdir(), "cve","mitre","allitems.xml.gz",
+                destfile = paste(curdir, "cve","mitre","allitems.xml.gz",
                                  sep = ifelse (.Platform$OS.type == "windows","\\","/")))
   utils::download.file(url = "http://cve.mitre.org/schema/cve/cve_1.0.xsd",
-                destfile = paste(tempdir(), "cve","mitre","cve_1.0.xsd",
+                destfile = paste(curdir, "cve","mitre","cve_1.0.xsd",
                                  sep = ifelse (.Platform$OS.type == "windows","\\","/")))
   utils::download.file(url = "http://cve.mitre.org/data/downloads/allitems.csv.gz",
-                destfile = paste(tempdir(), "cve","mitre","allitems.csv.gz",
+                destfile = paste(curdir, "cve","mitre","allitems.csv.gz",
                                  sep = ifelse (.Platform$OS.type == "windows","\\","/")))
 
   # Download NIST data (https://nvd.nist.gov/download.cfm)
@@ -179,21 +179,21 @@ DownloadCVEData <- function(dest) {
   for (year in cve.years) {
     url <- paste(base.url, year, ".xml.gz", sep = "")
     nistfile <- paste("nvdcve-2.0-", year, ".xml.gz", sep = "")
-    destfile <- paste(tempdir(), "cve","nist", nistfile,
+    destfile <- paste(curdir, "cve","nist", nistfile,
                       sep = ifelse (.Platform$OS.type == "windows","\\","/"))
     utils::download.file(url, destfile)
 
     # Spanish translations
     url.translation <- paste(base.url.translation, year, "trans.xml.gz", sep = "")
     nistfile <- paste("nvdcve-", year, "trans.xml.gz", sep = "")
-    destfile <- paste(tempdir(), "cve","nist", nistfile,
+    destfile <- paste(curdir, "cve","nist", nistfile,
                       sep = ifelse (.Platform$OS.type == "windows","\\","/"))
     utils::download.file(url.translation, destfile)
   }
 
   # Download NIST Vendor statements
   url.vendors <- "https://nvd.nist.gov/download/vendorstatements.xml.gz"
-  destfile <- paste(tempdir(), "cve","nist","vendorstatements.xml.gz",
+  destfile <- paste(curdir, "cve","nist","vendorstatements.xml.gz",
                     sep = ifelse (.Platform$OS.type == "windows","\\","/"))
   utils::download.file(url.vendors, destfile)
 

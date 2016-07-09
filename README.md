@@ -27,7 +27,7 @@ Reference: https://nvd.nist.gov/cpe.cfm
 Raw Data: http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.gz  
 Data Frame:  
 Example: `cpes <- net.security::GetCPEData()`  
-
+ 
 ## ICANN Standards
 References:
  - Crash Course: [slideshare](http://www.slideshare.net/apnic/routing-registry-function-automation-using-rpki-rpsl)
