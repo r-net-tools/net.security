@@ -43,7 +43,7 @@ ParseCPEData <- function(cpe.file) {
 
   # TidyData
   cpes$.id <- NULL
-  cpes$cpe.22 <- as.character(cpes$cpe.22)
+  cpes$Title <- as.character(cpes$cpe.22)
   cpes$cpe.23 <- as.character(cpes$cpe.23)
   cpes$cpe.ref <- as.character(cpes$cpe.ref)
 
