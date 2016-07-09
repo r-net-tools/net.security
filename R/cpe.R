@@ -41,6 +41,12 @@ ParseCPEData <- function(cpe.file) {
   lcpes <- lapply(cpes.raw, GetCPEItem)
   cpes <- plyr::ldply(lcpes, data.frame)
 
+  # TidyData
+  cpes$.id <- NULL
+  cpes$cpe.22 <- as.character(cpes$cpe.22)
+  cpes$cpe.23 <- as.character(cpes$cpe.23)
+  cpes$cpe.ref <- as.character(cpes$cpe.ref)
+
   return(cpes)
 
 }
@@ -66,11 +72,7 @@ GetCPEItem <- function(cpe.raw) {
   cpe.ref <- as.character(jsonlite::toJSON(as.list(cpe.ref)))
 
   cpe <- rbind(cpe, c(cpe.22, cpe.23, cpe.ref))
-  if (length(names(cpe)) == length(names(NewCPEItem()))) {
-    names(cpe) <- names(NewCPEItem())
-  } else {
-    k <- cpe
-  }
+  names(cpe) <- names(NewCPEItem())
 
   return(cpe)
 }
