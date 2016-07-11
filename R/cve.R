@@ -170,6 +170,7 @@ DownloadCVEData <- function(dest) {
                 destfile = paste(tempdir(), "cve", "mitre","allitems.csv.gz",
                                  sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
 
+
   setwd(curdir)
 }
 
