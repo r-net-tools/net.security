@@ -2,7 +2,8 @@
 % Please edit documentation in R/cwe.R
 \name{GetParents}
 \alias{GetParents}
-\title{GetParents, Given a CWE code it returns its direct parents, set compact=T and results will be dotcomma-separated}
+\title{Get parents from a given CWE
+Given a CWE code, returns its direct parents.set compact=T and results will be semicolon-separated}
 \usage{
 GetParents(cwes, CWE = "", compact = FALSE)
 }
@@ -14,6 +15,7 @@ GetParents(cwes, CWE = "", compact = FALSE)
 \item{compact}{boolean}
 }
 \description{
-GetParents, Given a CWE code it returns its direct parents, set compact=T and results will be dotcomma-separated
+Get parents from a given CWE
+Given a CWE code, returns its direct parents.set compact=T and results will be semicolon-separated
 }
 

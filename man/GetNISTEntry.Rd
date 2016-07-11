@@ -2,7 +2,7 @@
 % Please edit documentation in R/cve.R
 \name{GetNISTEntry}
 \alias{GetNISTEntry}
-\title{GetNISTEntry}
+\title{Get CVE entry from downloaded NIST information}
 \usage{
 GetNISTEntry(node)
 }
@@ -13,6 +13,6 @@ GetNISTEntry(node)
 data frame
 }
 \description{
-GetNISTEntry
+Get CVE entry from downloaded NIST information
 }
 

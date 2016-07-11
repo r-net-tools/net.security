@@ -2,7 +2,7 @@
 % Please edit documentation in R/cve.R
 \name{GetNISTVulns}
 \alias{GetNISTVulns}
-\title{GetNISTVulns}
+\title{Download CVE information from NIST}
 \usage{
 GetNISTVulns(years = as.integer(format(Sys.Date(), "\%Y")))
 }
@@ -13,6 +13,6 @@ GetNISTVulns(years = as.integer(format(Sys.Date(), "\%Y")))
 data frame
 }
 \description{
-GetNISTVulns
+Download CVE information from NIST
 }
 

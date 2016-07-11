@@ -2,7 +2,7 @@
 % Please edit documentation in R/cwe.R
 \name{ParseCWEData}
 \alias{ParseCWEData}
-\title{Title}
+\title{Arrange CWE information into data frame}
 \usage{
 ParseCWEData(cwe.file)
 }
@@ -13,6 +13,6 @@ ParseCWEData(cwe.file)
 Data frame
 }
 \description{
-Title
+Arrange CWE information into data frame
 }
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/ddsecuriy.R
 \name{GetCVE2CWE}
 \alias{GetCVE2CWE}
-\title{GetCVE2CWE}
+\title{Match CVE with CWE}
 \usage{
 GetCVE2CWE()
 }
@@ -10,7 +10,7 @@ GetCVE2CWE()
 data frame
 }
 \description{
-GetCVE2CWE
+Match CVE with CWE
 }
 \examples{
 cve2cwe <- GetCVE2CWE()

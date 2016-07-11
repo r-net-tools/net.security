@@ -2,17 +2,17 @@
 % Please edit documentation in R/cve.R
 \name{NodeToChar}
 \alias{NodeToChar}
-\title{NodeToChar}
+\title{Transform XML node as string}
 \usage{
 NodeToChar(x)
 }
 \arguments{
-\item{x}{}
+\item{x}{XML Node}
 }
 \value{
-character
+Character
 }
 \description{
-NodeToChar
+Transform XML node as string
 }
 

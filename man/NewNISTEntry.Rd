@@ -2,7 +2,7 @@
 % Please edit documentation in R/cve.R
 \name{NewNISTEntry}
 \alias{NewNISTEntry}
-\title{NewNISTEntry}
+\title{Create empty data frame for CVE NIST information}
 \usage{
 NewNISTEntry()
 }
@@ -10,6 +10,6 @@ NewNISTEntry()
 data frame
 }
 \description{
-NewNISTEntry
+Create empty data frame for CVE NIST information
 }
 

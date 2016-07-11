@@ -2,7 +2,7 @@
 % Please edit documentation in R/cve.R
 \name{GetNISTvulnsByYear}
 \alias{GetNISTvulnsByYear}
-\title{GetNISTvulnsByYear}
+\title{Download CVE information from NIST for specified year}
 \usage{
 GetNISTvulnsByYear(year = as.integer(format(Sys.Date(), "\%Y")))
 }
@@ -13,6 +13,6 @@ GetNISTvulnsByYear(year = as.integer(format(Sys.Date(), "\%Y")))
 data frame
 }
 \description{
-GetNISTvulnsByYear
+Download CVE information from NIST for specified year
 }
 

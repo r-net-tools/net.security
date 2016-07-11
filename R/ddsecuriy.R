@@ -1,6 +1,6 @@
 # Data Driven Security Functions -----------------------------------------------
 
-#' GetCVE2CWE
+#' Match CVE with CWE
 #'
 #' @return data frame
 #' @export

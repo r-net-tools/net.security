@@ -2,7 +2,7 @@
 % Please edit documentation in R/cve.R
 \name{NodeToJson}
 \alias{NodeToJson}
-\title{NodeToJson}
+\title{Transform XML node as JSON string}
 \usage{
 NodeToJson(x)
 }
@@ -13,6 +13,6 @@ NodeToJson(x)
 json
 }
 \description{
-NodeToJson
+Transform XML node as JSON string
 }
 

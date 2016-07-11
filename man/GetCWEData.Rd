@@ -2,7 +2,7 @@
 % Please edit documentation in R/cwe.R
 \name{GetCWEData}
 \alias{GetCWEData}
-\title{GetCWEData Download current CWE definitions, parse them and return the info as data frame}
+\title{Get data frame with CWE information}
 \usage{
 GetCWEData()
 }
@@ -10,6 +10,6 @@ GetCWEData()
 data frame
 }
 \description{
-GetCWEData Download current CWE definitions, parse them and return the info as data frame
+Get data frame with CWE information
 }
 

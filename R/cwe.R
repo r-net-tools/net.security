@@ -1,6 +1,6 @@
 #### Exported Functions ----------------------------------------------------------------------------
 
-#' GetCWEData Download current CWE definitions, parse them and return the info as data frame
+#' Get data frame with CWE information
 #'
 #' @return data frame
 #' @export
@@ -16,7 +16,7 @@ GetCWEData <- function() {
 
 #### Private Functions -----------------------------------------------------------------------------
 
-#' Title
+#' Download CWE information
 #'
 #' @param dest. String
 DownloadCWEData <- function(dest) {
@@ -30,7 +30,7 @@ DownloadCWEData <- function(dest) {
   setwd(curdir)
 }
 
-#' Title
+#' Arrange CWE information into data frame
 #'
 #' @param cwe.file String
 #'
@@ -154,7 +154,8 @@ ListNodesToXML <- function(doc){
          )
 }
 
-#' GetParents, Given a CWE code it returns its direct parents, set compact=T and results will be dotcomma-separated
+#' Get parents from a given CWE
+#' Given a CWE code, returns its direct parents.set compact=T and results will be semicolon-separated
 #'
 #' @param cwes data frame
 #' @param CWE number
