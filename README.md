@@ -1,8 +1,6 @@
 # net.security
 
-[![Build Status](https://travis-ci.org/r-net-tools/net.security.svg?branch=master)](https://travis-ci.org/r-net-tools/net.security)
-
-[![Coverage Status](https://img.shields.io/coveralls/r-net-tools/net-security.svg)](https://coveralls.io/r/r-net-tools/net-security?branch=master)
+[![Build Status](https://travis-ci.org/r-net-tools/net.security.svg?branch=master)](https://travis-ci.org/r-net-tools/net.security)  [![Coverage Status](https://coveralls.io/repos/github/r-net-tools/net.security/badge.svg?branch=master)](https://coveralls.io/github/r-net-tools/net.security?branch=master)
 
 Package for Data Driven Security purposes.
 

@@ -11,8 +11,8 @@
 GetCVEData <- function() {
   DownloadCVEData(dest = tempdir())
   ExtractDataFiles(path = tempdir())
-  cve.source.file <- paste(tempdir(), "cve","mitre","allitems.csv",
-                           sep = ifelse(.Platform$OS.type == "windows","\\","/"))
+  cve.source.file <- paste(tempdir(), "cve", "mitre", "allitems.csv",
+                           sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
   cves <- ParseCVEData(cve.source.file)
   return(cves)
 }
@@ -147,7 +147,6 @@ NewNISTEntry <- function() {
 }
 
 
-
 #### Private Functions -----------------------------------------------------------------------------
 
 #' Download CVE information
@@ -199,7 +198,7 @@ DownloadCVEData <- function(dest) {
   #                   sep = ifelse(.Platform$OS.type == "windows","\\","/"))
   # utils::download.file(url.vendors, destfile)
   #
-  # setwd(curdir)
+  setwd(curdir)
 }
 
 

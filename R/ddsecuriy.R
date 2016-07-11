@@ -8,7 +8,7 @@
 #' @examples
 #' cve2cwe <- GetCVE2CWE()
 GetCVE2CWE <- function() {
-  x <- cves.nist[,c("cve.id","cwe")]
+  x <- cves.nist[, c("cve.id", "cwe")]
   x$cwe <- as.factor(x$cwe)
   return(x)
 }
