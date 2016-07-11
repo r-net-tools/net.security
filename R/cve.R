@@ -5,9 +5,6 @@
 #'
 #' @return Data frame
 #' @export
-#'
-#' @examples
-#' GetCVEData()
 GetCVEData <- function() {
   DownloadCVEData(dest = tempdir())
   ExtractDataFiles(path = tempdir())
@@ -164,44 +161,31 @@ DownloadCVEData <- function(dest) {
 
   # Download MITRE data (http://cve.mitre.org/data/downloads/index.html#download)
   utils::download.file(url = "http://cve.mitre.org/data/downloads/allitems.xml.gz",
-                destfile = paste(tempdir(), "cve","mitre","allitems.xml.gz",
-                                 sep = ifelse(.Platform$OS.type == "windows","\\","/")))
+                destfile = paste(tempdir(), "cve", "mitre", "allitems.xml.gz",
+                                 sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
   utils::download.file(url = "http://cve.mitre.org/schema/cve/cve_1.0.xsd",
-                destfile = paste(tempdir(), "cve","mitre","cve_1.0.xsd",
-                                 sep = ifelse(.Platform$OS.type == "windows","\\","/")))
+                destfile = paste(tempdir(), "cve", "mitre", "cve_1.0.xsd",
+                                 sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
   utils::download.file(url = "http://cve.mitre.org/data/downloads/allitems.csv.gz",
-                destfile = paste(tempdir(), "cve","mitre","allitems.csv.gz",
-                                 sep = ifelse(.Platform$OS.type == "windows","\\","/")))
+                destfile = paste(tempdir(), "cve", "mitre","allitems.csv.gz",
+                                 sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
 
-  # Download NIST data (https://nvd.nist.gov/download.cfm)
-  # cve.years             <- 2002:as.integer(format(Sys.Date(), "%Y"))
-  # base.url              <- "http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-"
-  # base.url.translation  <- "https://nvd.nist.gov/download/nvdcve-"
-  # for (year in cve.years) {
-  #   url <- paste(base.url, year, ".xml.gz", sep = "")
-  #   nistfile <- paste("nvdcve-2.0-", year, ".xml.gz", sep = "")
-  #   destfile <- paste(tempdir(), "cve","nist", nistfile,
-  #                     sep = ifelse(.Platform$OS.type == "windows","\\","/"))
-  #   utils::download.file(url, destfile)
-  #
-  #   # Spanish translations
-  #   url.translation <- paste(base.url.translation, year, "trans.xml.gz", sep = "")
-  #   nistfile <- paste("nvdcve-", year, "trans.xml.gz", sep = "")
-  #   destfile <- paste(tempdir(), "cve","nist", nistfile,
-  #                     sep = ifelse(.Platform$OS.type == "windows","\\","/"))
-  #   utils::download.file(url.translation, destfile)
-  # }
-  #
-  # # Download NIST Vendor statements
-  # url.vendors <- "https://nvd.nist.gov/download/vendorstatements.xml.gz"
-  # destfile <- paste(tempdir(), "cve","nist","vendorstatements.xml.gz",
-  #                   sep = ifelse(.Platform$OS.type == "windows","\\","/"))
-  # utils::download.file(url.vendors, destfile)
-  #
   setwd(curdir)
 }
 
-
+#' Extract compressed files
+#'
+#' @param path String, the directory containing the files to be extracted
+ExtractDataFiles <- function(path) {
+  # Uncompress gzip XML files
+  gzs <- list.files(path = paste(path,"cve", sep = "/"), pattern = ".gz",
+                    full.names = TRUE, recursive = TRUE)
+  apply(X = data.frame(gzs = gzs, stringsAsFactors = F),
+        1,
+        function(x) {
+          R.utils::gunzip(x, overwrite = TRUE, remove = TRUE)
+        })
+}
 
 #' Transform XML node as string
 #'
@@ -222,22 +206,6 @@ NodeToJson <- function(x) {
   if (is.null(x)) x <- "<xml></xml>"
   return(jsonlite::toJSON(XML::xmlToList(x)))
 }
-
-#' Extract compressed files
-#'
-#' @param path String, the directory containing the files to be extracted
-ExtractDataFiles <- function(path) {
-  # Uncompress gzip XML files
-  gzs <- list.files(path = paste(path,"cve", sep = "/"), pattern = ".gz",
-                    full.names = TRUE, recursive = TRUE)
-  apply(X = data.frame(gzs = gzs, stringsAsFactors = F),
-        1,
-        function(x) {
-          R.utils::gunzip(x, overwrite = TRUE, remove = TRUE)
-        })
-
-}
-
 
 #' Arrange CVE information into data frame
 #'

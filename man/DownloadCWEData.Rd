@@ -7,7 +7,7 @@
 DownloadCWEData(dest)
 }
 \arguments{
-\item{dest.}{String}
+\item{dest}{String}
 }
 \description{
 Download CWE information

@@ -12,7 +12,4 @@ Data frame
 \description{
 Get data frame with CVE information
 }
-\examples{
-GetCVEData()
-}
 

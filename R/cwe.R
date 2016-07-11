@@ -18,7 +18,7 @@ GetCWEData <- function() {
 
 #' Download CWE information
 #'
-#' @param dest. String
+#' @param dest String
 DownloadCWEData <- function(dest) {
   curdir <- setwd(dest)
   if (!dir.exists("cwe")) {
