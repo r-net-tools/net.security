@@ -1,5 +1,7 @@
 language: r
 warnings_are_errors: false
 sudo: required
+git:
+  depth: 3
 after_success:
   - Rscript -e 'covr::coveralls()'
