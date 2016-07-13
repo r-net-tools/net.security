@@ -27,6 +27,12 @@ Raw Data: http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dicti
 Data Frame:  
 Example: `cpes <- net.security::GetCPEData()`  
  
+### CAPEC
+Reference: https://capec.mitre.org/data/xsd/ap_schema_v2.7.1.xsd
+Raw Data: https://capec.mitre.org/data/xml/capec_v2.8.xml
+Data Frame:
+Example: `capec <- net.security::GetCAPECData()`
+
 ## ICANN Standards
 References:
  - Crash Course: [slideshare](http://www.slideshare.net/apnic/routing-registry-function-automation-using-rpki-rpsl)
