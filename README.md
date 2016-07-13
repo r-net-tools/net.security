@@ -28,10 +28,10 @@ Data Frame:
 Example: `cpes <- net.security::GetCPEData()`  
  
 ### CAPEC
-Reference: https://capec.mitre.org/data/xsd/ap_schema_v2.7.1.xsd
-Raw Data: https://capec.mitre.org/data/xml/capec_v2.8.xml
-Data Frame:
-Example: `capec <- net.security::GetCAPECData()`
+Reference: https://capec.mitre.org/data/xsd/ap_schema_v2.7.1.xsd  
+Raw Data: https://capec.mitre.org/data/xml/capec_v2.8.xml  
+Data Frame:  
+Example: `capec <- net.security::GetCAPECData()`  
 
 ## ICANN Standards
 References:
