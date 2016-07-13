@@ -7,7 +7,7 @@
 #' \describe{
 #'   \item{cpe.22}{Title of the platform}
 #'   \item{cpe.23}{Identifier for given platform}
-#'   \item{cpe.ref}{URLs with additional information}
+#'   \item{cpe.ref}{URLs encoded as json with additional information regarding the cpe entry}
 #'   ...
 #' }
 #' @source \url{https://cpe.mitre.org}
