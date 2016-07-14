@@ -5,6 +5,14 @@
 
 Package for Data Driven Security purposes.
 
+## Installation
+
+From R console just type:  
+`devtools::install_github(repo = "r-net-tools/net.security")`  
+
+If you want to test future features, just add branch as parameter:  
+`devtools::install_github(repo = "r-net-tools/net.security", ref = "devel")`  
+
 ## MITRE & NIST Standards
 ### CVE
 Reference: http://cve.mitre.org/about/faqs.html  
