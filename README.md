@@ -5,7 +5,7 @@
 
 Package for Data Driven Security purposes.
 
-## Installation
+## Install
 
 From R console just type:  
 `devtools::install_github(repo = "r-net-tools/net.security")`  
