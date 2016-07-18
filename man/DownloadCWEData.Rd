@@ -2,14 +2,14 @@
 % Please edit documentation in R/cwe.R
 \name{DownloadCWEData}
 \alias{DownloadCWEData}
-\title{Title}
+\title{Download CWE information}
 \usage{
 DownloadCWEData(dest)
 }
 \arguments{
-\item{dest.}{String}
+\item{dest}{String}
 }
 \description{
-Title
+Download CWE information
 }
 

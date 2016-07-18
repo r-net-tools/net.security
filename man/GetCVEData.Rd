@@ -2,19 +2,14 @@
 % Please edit documentation in R/cve.R
 \name{GetCVEData}
 \alias{GetCVEData}
-\title{GetCVEData
-#'}
+\title{Get data frame with CVE information}
 \usage{
 GetCVEData()
 }
 \value{
-data frame
+Data frame
 }
 \description{
-GetCVEData
-#'
-}
-\examples{
-cves <- GetCVEData()
+Get data frame with CVE information
 }
 

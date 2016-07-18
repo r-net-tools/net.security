@@ -1,5 +1,4 @@
-# net.security
-
+![net.security R Package](https://github.com/r-net-tools/net.security/blob/devel/img/net.security.tiny.jpg)
 [![Build Status](https://travis-ci.org/r-net-tools/net.security.svg?branch=master)](https://travis-ci.org/r-net-tools/net.security)  [![Coverage Status](https://img.shields.io/coveralls/r-net-tools/net-security.svg)](https://coveralls.io/r/r-net-tools/net-security?branch=master)
 
 Package for Data Driven Security purposes.
@@ -20,6 +19,12 @@ Raw Data: https://cwe.mitre.org/data
 Data Frame:  
 Example: `cwes <- net.security::GetCWEData()`  
 
+### CPE
+Reference: https://nvd.nist.gov/cpe.cfm  
+Raw Data: http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.gz  
+Data Frame:  
+Example: `cpes <- net.security::GetCPEData()`  
+ 
 ## ICANN Standards
 References:
  - Crash Course: [slideshare](http://www.slideshare.net/apnic/routing-registry-function-automation-using-rpki-rpsl)
