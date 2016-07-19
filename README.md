@@ -1,5 +1,4 @@
 ![Alt text](img/net.security.tiny.jpg?raw=true "net.security")
-
 [![Build Status](https://travis-ci.org/r-net-tools/net.security.svg?branch=master)](https://travis-ci.org/r-net-tools/net.security)  [![Coverage Status](https://coveralls.io/repos/github/r-net-tools/net.security/badge.svg?branch=master)](https://coveralls.io/github/r-net-tools/net.security?branch=master)
 
 
