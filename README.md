@@ -44,12 +44,12 @@ Data Frame:
 Example: `capec <- net.security::GetCAPECData()`  
 
 ### OVAL
-Reference: https://oval.cisecurity.org/
-Raw Data: https://oval.cisecurity.org/repository/download/5.11.1/all/oval.xml
-Data Frame:
-Example: `oval.defs <- net.security::GetOVALData()` 
+Reference: https://oval.cisecurity.org/  
+Raw Data: https://oval.cisecurity.org/repository/download/5.11.1/all/oval.xml  
+Data Frame:  
+Example: `oval.defs <- net.security::GetOVALData()`  
 
-## ICANN Standards
+## Internet Standards
 References:
  - Crash Course: [slideshare](http://www.slideshare.net/apnic/routing-registry-function-automation-using-rpki-rpsl)
 
