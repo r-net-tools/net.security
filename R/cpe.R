@@ -1,3 +1,5 @@
+#### Exported Functions ----------------------------------------------------------------------------
+
 #' GetCWEData
 #'
 #' @return
@@ -12,25 +14,57 @@ GetCPEData <- function() {
   #                              "cpe","official-cpe-dictionary_v2.3.xml.zip",
   #                              sep = ifelse (.Platform$OS.type == "windows","\\","/"))
   #              )
+  curdir <- setwd(tempdir())
+  cpe.downloaded.file <- DownloadCPEData()
+  utils::unzip(zipfile = cpe.downloaded.file, exdir = "cpe")
   cpe.source.file <- paste(tempdir(),
-                           "cpe","official-cpe-dictionary_v2.3.xml",
-                           sep = ifelse (.Platform$OS.type == "windows","\\","/"))
+                           "cpe", "official-cpe-dictionary_v2.3.xml",
+                           sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
   cpes <- ParseCPEData(cpe.source.file)
-
+  setwd(curdir)
   return(cpes)
 }
 
+
 #### Private Functions -----------------------------------------------------------------------------
-DownloadCPEData <- function(dest) {
-  curdir <- setwd(dest)
+
+#' Download CPE information from NIST
+#'
+#' @export
+DownloadCPEData <- function() {
   if (!dir.exists("cpe")) {
     dir.create("cpe")
   }
   cwe.url  <- "http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip"
   destfile <- "cpe/official-cpe-dictionary_v2.3.xml.zip"
   utils::download.file(url = cwe.url, destfile = destfile)
+  return(destfile)
+}
 
-  setwd(curdir)
+GetCPEItem <- function(cpe.raw) {
+  cpe <- NewCPEItem()
+  cpe.raw <- XML::xmlToList(cpe.raw)
+
+  cpe.22 <- ifelse(is.null(cpe.raw[["title"]]$text),"",cpe.raw[["title"]]$text)
+  cpe.23 <- ifelse(is.null(cpe.raw[["cpe23-item"]][["name"]]),"",cpe.raw[["cpe23-item"]][["name"]])
+  cpe.ref <- unlist(cpe.raw[["references"]])
+  cpe.ref.names <- cpe.ref[names(cpe.ref) == ""]
+  cpe.ref <- as.character(cpe.ref[names(cpe.ref) == "href"])
+  names(cpe.ref) <- cpe.ref.names
+  cpe.ref <- as.character(jsonlite::toJSON(as.list(cpe.ref)))
+
+  cpe <- rbind(cpe, c(cpe.22, cpe.23, cpe.ref))
+  names(cpe) <- names(NewCPEItem())
+
+  return(cpe)
+}
+
+NewCPEItem <- function(){
+  return(data.frame(cpe.22 = character(),
+                    cpe.23 = character(),
+                    cpe.ref = character(),
+                    stringsAsFactors = FALSE)
+  )
 }
 
 ParseCPEData <- function(cpe.file) {
@@ -51,28 +85,4 @@ ParseCPEData <- function(cpe.file) {
 
 }
 
-NewCPEItem <- function(){
-  return(data.frame(cpe.22 = character(),
-                    cpe.23 = character(),
-                    cpe.ref = character(),
-                    stringsAsFactors = FALSE)
-  )
-}
 
-GetCPEItem <- function(cpe.raw) {
-  cpe <- NewCPEItem()
-  cpe.raw <- XML::xmlToList(cpe.raw)
-
-  cpe.22 <- ifelse(is.null(cpe.raw[["title"]]$text),"",cpe.raw[["title"]]$text)
-  cpe.23 <- ifelse(is.null(cpe.raw[["cpe23-item"]][["name"]]),"",cpe.raw[["cpe23-item"]][["name"]])
-  cpe.ref <- unlist(cpe.raw[["references"]])
-  cpe.ref.names <- cpe.ref[names(cpe.ref) == ""]
-  cpe.ref <- as.character(cpe.ref[names(cpe.ref) == "href"])
-  names(cpe.ref) <- cpe.ref.names
-  cpe.ref <- as.character(jsonlite::toJSON(as.list(cpe.ref)))
-
-  cpe <- rbind(cpe, c(cpe.22, cpe.23, cpe.ref))
-  names(cpe) <- names(NewCPEItem())
-
-  return(cpe)
-}
