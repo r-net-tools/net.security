@@ -8,7 +8,8 @@ GetCWEData <- function() {
   DownloadCWEData(dest = tempdir())
 
   utils::unzip(zipfile = "cwe/2000.xml.zip", exdir = "cwe")
-  cwe.source.file <- paste(tempdir(), "cwe/2000.xml", sep = "/")
+  cwe.source.file <- paste(tempdir(), "cwe", "2000.xml",
+                           sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
   cwes <- ParseCWEData(cwe.source.file)
   return(cwes)
 }
@@ -25,7 +26,8 @@ DownloadCWEData <- function(dest) {
     dir.create("cwe")
   }
   cwe.url  <- "https://cwe.mitre.org/data/xml/views/2000.xml.zip"
-  destfile <- "cwe/2000.xml.zip"
+  destfile <- paste("cwe", "2000.xml",
+                    sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
   utils::download.file(url = cwe.url, destfile = destfile)
   setwd(curdir)
 }

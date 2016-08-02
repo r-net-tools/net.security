@@ -30,7 +30,6 @@ GetCPEData <- function() {
 
 #' Download CPE information from NIST
 #'
-#' @export
 DownloadCPEData <- function() {
   if (!dir.exists("cpe")) {
     dir.create("cpe")
@@ -41,6 +40,13 @@ DownloadCPEData <- function() {
   return(destfile)
 }
 
+#' Title
+#'
+#' @param cpe.raw
+#'
+#' @return
+#'
+#' @examples
 GetCPEItem <- function(cpe.raw) {
   cpe <- NewCPEItem()
   cpe.raw <- XML::xmlToList(cpe.raw)
@@ -59,6 +65,11 @@ GetCPEItem <- function(cpe.raw) {
   return(cpe)
 }
 
+#' Title
+#'
+#' @return
+#'
+#' @examples
 NewCPEItem <- function(){
   return(data.frame(cpe.22 = character(),
                     cpe.23 = character(),
@@ -67,6 +78,13 @@ NewCPEItem <- function(){
   )
 }
 
+#' Title
+#'
+#' @param cpe.file
+#'
+#' @return
+#'
+#' @examples
 ParseCPEData <- function(cpe.file) {
   doc <- XML::xmlTreeParse(cpe.file)
   cpes.raw <- XML::xmlRoot(doc)

@@ -15,7 +15,7 @@ From R console just type:
 If you want to test future features, just add branch as parameter:  
 `devtools::install_github(repo = "r-net-tools/net.security", ref = "devel")`  
 
-## MITRE & NIST Standards
+## Security Standards
 ### CVE
 Reference: http://cve.mitre.org/about/faqs.html  
 Raw Data:
@@ -42,6 +42,12 @@ Reference: https://capec.mitre.org/data/xsd/ap_schema_v2.7.1.xsd
 Raw Data: https://capec.mitre.org/data/xml/capec_v2.8.xml  
 Data Frame:  
 Example: `capec <- net.security::GetCAPECData()`  
+
+### OVAL
+Reference: https://oval.cisecurity.org/
+Raw Data: https://oval.cisecurity.org/repository/download/5.11.1/all/oval.xml
+Data Frame:
+Example: `oval.defs <- net.security::GetOVALData()` 
 
 ## ICANN Standards
 References:

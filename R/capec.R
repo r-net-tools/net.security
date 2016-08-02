@@ -42,7 +42,6 @@ DownloadCAPECData <- function(dest) {
 #' @param doc
 #'
 #' @return
-#' @export
 #'
 #' @examples
 ParseCAPECData.views <- function(doc) {
@@ -88,7 +87,6 @@ ParseCAPECData.categories <- function(doc) {
 #' @param doc
 #'
 #' @return
-#' @export
 #'
 #' @examples
 ParseCAPECData.attacks <- function(doc) {
@@ -224,7 +222,6 @@ GetConsequences <- function(doc, att.id) {
 #' @param xpath.children
 #'
 #' @return
-#' @export
 #'
 #' @examples
 XMLChildren2JSON <- function(doc, xpath.root, root.id, xpath.children, json = TRUE) {

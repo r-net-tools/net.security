@@ -4,7 +4,7 @@
 \alias{ParseCAPECData.categories}
 \title{Title}
 \usage{
-ParseCAPECData.categories(capec.source.file)
+ParseCAPECData.categories(doc)
 }
 \arguments{
 \item{cwe.file}{String}
