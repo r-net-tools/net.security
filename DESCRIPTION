@@ -4,7 +4,7 @@ Version: 0.0.0.9101
 Authors@R: c(
   person("Humbert", "Costas", email = "humbert.costas@gmail.com", role = c("aut", "cre")),
   person("Arnau", "Sangra", email = "arnsangra@gmail.com", role = "aut"))
-Description: Functions and tools related to network security for R.
+Description: Functions and tools related to network security standards for R.
 Depends:
     R (>= 3.3.0)
 Imports:
@@ -13,7 +13,8 @@ Imports:
     plyr,
     dplyr,
     stringr,
-    jsonlite
+    jsonlite,
+    data.table
 Suggests:
     testthat,
     covr

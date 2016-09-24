@@ -2,7 +2,7 @@
 % Please edit documentation in R/cve.R
 \name{GetNISTEntry}
 \alias{GetNISTEntry}
-\title{Get CVE entry from downloaded NIST information}
+\title{Parse from NIST XML CVE entry to data.frame}
 \usage{
 GetNISTEntry(node)
 }
@@ -13,6 +13,6 @@ GetNISTEntry(node)
 data frame
 }
 \description{
-Get CVE entry from downloaded NIST information
+Parse from NIST XML CVE entry to data.frame
 }
 
