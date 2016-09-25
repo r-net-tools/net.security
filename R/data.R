@@ -32,10 +32,10 @@
 
 #' Common Vulnerabilities and Exposures from NIST
 #'
-#' A dataset containing the entries for the details of 77,630 CVE entries obtained from NIST
+#' A dataset containing the entries for the details of more than 79,000 CVE entries obtained from NIST
 #' publicly available database.
 #'
-#' @format A data frame with 77,630 rows and 19 variables
+#' @format A data frame with more than 79,000 rows and 19 variables
 #' \describe{
 #'   \item{osvdb.ext}{}
 #'   \item{vulnerable.configuration}{}

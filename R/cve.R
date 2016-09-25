@@ -156,7 +156,6 @@ osvdb.ext2df <- function(node) {
 #' @param node
 #'
 #' @return
-#' @export
 #'
 #' @examples
 vulnerable.configuration2df <- function(node) {
@@ -434,4 +433,34 @@ NodeToJson <- function(x) {
   return(jsonlite::toJSON(XML::xmlToList(x)))
 }
 
+#### DataSet for data.R -----------------------------------------------------------------------------
 
+#' Common Vulnerabilities and Exposures from NIST
+#'
+#' A dataset containing the entries for the details of more than 79,000 CVE entries obtained from NIST
+#' publicly available database.
+#'
+#' @format A data frame with more than 79,000 rows and 19 variables
+#' \describe{
+#'   \item{osvdb.ext}{}
+#'   \item{vulnerable.configuration}{}
+#'   \item{vulnerable.software.list}{}
+#'   \item{cve.id}{}
+#'   \item{discovered.datetime}{}
+#'   \item{disclosure.datetime}{}
+#'   \item{exploit.publish.datetime}{}
+#'   \item{published.datetime}{}
+#'   \item{last.modified.datetime}{}
+#'   \item{cvss}{}
+#'   \item{security.protection}{}
+#'   \item{assessment.check}{}
+#'   \item{cwe}{}
+#'   \item{references}{}
+#'   \item{fix.action}{}
+#'   \item{scanner}{}
+#'   \item{summary}{}
+#'   \item{technical.description}{}
+#'   \item{attack.scenario}{}
+#' }
+#' @source \url{https://nvd.nist.gov/download.cfm}
+# "cves.nist"
