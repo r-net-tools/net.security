@@ -3,17 +3,38 @@
 
 #' Get data frame with CVE information
 #'
+#' @param origin "all", "mitre", "nist"
+#'
 #' @return Data frame
 #' @export
-GetCVEData <- function() {
+GetCVEData <- function(origin = "all") {
   DownloadCVEData(dest = tempdir())
   ExtractDataFiles(path = tempdir())
 
-  cves.mitre <- ParseCVEMITREData(path = tempdir())
-  cves.nist <- ParseCVENISTData(path = tempdir(), years = "all")
+  # TODO: Tidy data
+  if (origin %in% c("mitre","all")) {
+    if (origin == "all") {
+      # TODO: Unify the data.frames
+      cves.mitre <- ParseCVEMITREData(path = tempdir())
+      cves.nist <- ParseCVENISTData(path = tempdir(), years = "all")
+      cves <- dplyr::left_join(cves.mitre, cves.nist, by = c("cve" = "cve.id"))
+      names(cves) <- c("cve", "status", "description", "ref.mitre", "phase", "votes",
+                       "comments", "osvdb", "cpe.config", "cpe.software", "discovered.datetime",
+                       "disclosure.datetime", "exploit.publish.datetime", "published.datetime",
+                       "last.modified.datetime", "cvss", "security.protection",
+                       "assessment.check", "cwe", "ref.nist", "fix.action",
+                       "scanner", "summary", "technical.description", "attack.scenario")
+    } else {
+      cves <- ParseCVEMITREData(path = tempdir())
+    }
+  }
+  if (origin == "nist") {
+    cves <- ParseCVENISTData(path = tempdir(), years = "all")
+  }
 
-  # TODO: Unify the data.frames
-  cves <- list(mitre = cves.mitre, nist = cves.nist)
+  # TODO: Add spanish translations
+  cves.sp <- ParseCVETranslations(path = tempdir(), years = "all")
+
   return(cves)
 }
 
@@ -38,6 +59,10 @@ ParseCVEMITREData <- function(path) {
   return(cves)
 }
 
+ParseCVETranslations <- function(path, years = as.integer(format(Sys.Date(), "%Y"))) {
+  # TODO: Parse spanish translations
+  return(NA)
+}
 
 #### NIST Private Functions -----------------------------------------------------------------------------
 
@@ -150,17 +175,8 @@ osvdb.ext2df <- function(node) {
   return(NodeToJson(node))
 }
 
-#' Parse vulnerable-configuration node and returns a JSON with simple list of CPE's
-#' or CPE pairs of software, configuration
-#'
-#' @param node
-#'
-#' @return
-#'
-#' @examples
 vulnerable.configuration2df <- function(node) {
   # TODO: Improve parser
-  # i = 418
 
   if (is.null(node)) return(jsonlite::toJSON(node))
   # detect first logical test type
@@ -433,34 +449,3 @@ NodeToJson <- function(x) {
   return(jsonlite::toJSON(XML::xmlToList(x)))
 }
 
-#### DataSet for data.R -----------------------------------------------------------------------------
-
-#' Common Vulnerabilities and Exposures from NIST
-#'
-#' A dataset containing the entries for the details of more than 79,000 CVE entries obtained from NIST
-#' publicly available database.
-#'
-#' @format A data frame with more than 79,000 rows and 19 variables
-#' \describe{
-#'   \item{osvdb.ext}{}
-#'   \item{vulnerable.configuration}{}
-#'   \item{vulnerable.software.list}{}
-#'   \item{cve.id}{}
-#'   \item{discovered.datetime}{}
-#'   \item{disclosure.datetime}{}
-#'   \item{exploit.publish.datetime}{}
-#'   \item{published.datetime}{}
-#'   \item{last.modified.datetime}{}
-#'   \item{cvss}{}
-#'   \item{security.protection}{}
-#'   \item{assessment.check}{}
-#'   \item{cwe}{}
-#'   \item{references}{}
-#'   \item{fix.action}{}
-#'   \item{scanner}{}
-#'   \item{summary}{}
-#'   \item{technical.description}{}
-#'   \item{attack.scenario}{}
-#' }
-#' @source \url{https://nvd.nist.gov/download.cfm}
-# "cves.nist"

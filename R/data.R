@@ -15,6 +15,42 @@
 
 #' Common Vulnerabilities and Exposures
 #'
+#' A dataset containing the entries for the details of more than 92,000 CVE entries obtained from MITRE, NIST and INCIBE
+#' publicly available database.
+#'
+#' @format A data frame with more than 79,000 rows and 25 variables
+#' \describe{
+#'   \item{cve}{}
+#'   \item{status}{}
+#'   \item{description}{}
+#'   \item{ref.mitre}{}
+#'   \item{phase}{}
+#'   \item{votes}{}
+#'   \item{comments}{}
+#'   \item{osvdb}{}
+#'   \item{cpe.config}{}
+#'   \item{cpe.software.list}{}
+#'   \item{discovered.datetime}{}
+#'   \item{disclosure.datetime}{}
+#'   \item{exploit.publish.datetime}{}
+#'   \item{published.datetime}{}
+#'   \item{last.modified.datetime}{}
+#'   \item{cvss}{}
+#'   \item{security.protection}{}
+#'   \item{assessment.check}{}
+#'   \item{cwe}{}
+#'   \item{ref.nist}{}
+#'   \item{fix.action}{}
+#'   \item{scanner}{}
+#'   \item{summary}{}
+#'   \item{technical.description}{}
+#'   \item{attack.scenario}{}
+#' }
+#' @source \url{https://nvd.nist.gov/download.cfm}
+# "cves"
+
+#' Common Vulnerabilities and Exposures from MITRE
+#'
 #' A dataset containing the entries for the details for more than 92,000 CVE entries.
 #'
 #' @format A data frame with 53940 rows and 10 variables:
@@ -28,7 +64,7 @@
 #'  \item{comments}{Additional notes regarding the entry.}
 #' }
 #' @source \url{https://cve.mitre.org}
-"cves"
+"cves.mitre"
 
 #' Common Vulnerabilities and Exposures from NIST
 #'
