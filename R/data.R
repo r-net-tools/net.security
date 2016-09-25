@@ -45,6 +45,7 @@
 #'   \item{summary}{}
 #'   \item{technical.description}{}
 #'   \item{attack.scenario}{}
+#'   \item{descr.sp}{character, spanish description translated by INCIBE colaborators}
 #' }
 #' @source \url{https://nvd.nist.gov/download.cfm}
 # "cves"

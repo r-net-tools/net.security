@@ -14,7 +14,7 @@ GetCVEData <- function(origin = "all") {
   # TODO: Tidy data
   if (origin %in% c("mitre","all")) {
     if (origin == "all") {
-      # TODO: Unify the data.frames
+      # TODO: Unify the data.frames columns (references, ...)
       cves.mitre <- ParseCVEMITREData(path = tempdir())
       cves.nist <- ParseCVENISTData(path = tempdir(), years = "all")
       cves <- dplyr::left_join(cves.mitre, cves.nist, by = c("cve" = "cve.id"))
@@ -32,8 +32,9 @@ GetCVEData <- function(origin = "all") {
     cves <- ParseCVENISTData(path = tempdir(), years = "all")
   }
 
-  # TODO: Add spanish translations
+  # Add spanish translations
   cves.sp <- ParseCVETranslations(path = tempdir(), years = "all")
+  cves <- dplyr::left_join(cves, cves.sp)
 
   return(cves)
 }
@@ -59,10 +60,6 @@ ParseCVEMITREData <- function(path) {
   return(cves)
 }
 
-ParseCVETranslations <- function(path, years = as.integer(format(Sys.Date(), "%Y"))) {
-  # TODO: Parse spanish translations
-  return(NA)
-}
 
 #### NIST Private Functions -----------------------------------------------------------------------------
 
@@ -371,6 +368,27 @@ NewNISTEntry <- function() {
                     attack.scenario = character(),
                     stringsAsFactors = FALSE)
   )
+}
+
+#### INCIBE Private Functions -----------------------------------------------------------------------------
+
+ParseCVETranslations <- function(path, years = as.integer(format(Sys.Date(), "%Y"))) {
+  if (years == "all") years <- 2002:as.integer(format(Sys.Date(), "%Y"))
+  cves.sp <- data.frame(cve = character(), descr.sp = character(), stringsAsFactors = F)
+  for (year in years){
+    nist.file <- paste("nvdcve-", year, "trans.xml", sep = "")
+    nist.path <- paste(path, "cve","nist", nist.file,
+                      sep = ifelse(.Platform$OS.type == "windows","\\","/"))
+    doc <- XML::htmlParse(nist.path, useInternalNodes = T)
+    cves.sp.year <- data.frame(cve = XML::xpathSApply(doc, "//nvdtrans/entry/@name"),
+                               descr.sp = XML::xpathSApply(doc, "//nvdtrans/entry/desc", XML::xmlValue),
+                               stringsAsFactors = F)
+
+    cves.sp <- dplyr::bind_rows(cves.sp, cves.sp.year)
+    # cve.type <- XML::xpathSApply(doc, "//nvdtrans/entry/@type")
+    # cve.desc.date <- XML::xpathSApply(doc, "//nvdtrans/entry/desc/@modified")
+  }
+  return(cves.sp)
 }
 
 
