@@ -4,13 +4,10 @@
 #'
 #' @return data frame
 #' @export
-GetCWEData <- function() {
-  DownloadCWEData(dest = tempdir())
-
-  utils::unzip(zipfile = "cwe/2000.xml.zip", exdir = "cwe")
-  cwe.source.file <- paste(tempdir(), "cwe", "2000.xml",
-                           sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
-  cwes <- ParseCWEData(cwe.source.file)
+GetCWEData <- function(savepath = tempdir()) {
+  DownloadCWEData(savepath)
+  cwes.file <- ExtractCWEFiles(savepath)
+  cwes <- ParseCWEData(cwes.file)
   return(cwes)
 }
 
@@ -20,26 +17,36 @@ GetCWEData <- function() {
 #' Download CWE information
 #'
 #' @param dest String
-DownloadCWEData <- function(dest) {
-  curdir <- setwd(dest)
-  if (!dir.exists("cwe")) {
-    dir.create("cwe")
+DownloadCWEData <- function(savepath) {
+  if (!dir.exists(paste(savepath, "cwe", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
+    dir.create(paste(savepath, "cwe", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
   }
   cwe.url  <- "https://cwe.mitre.org/data/xml/views/2000.xml.zip"
-  destfile <- paste("cwe", "2000.xml",
-                    sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
+  destfile <- paste(savepath, "cwe", "2000.xml.zip",sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
   utils::download.file(url = cwe.url, destfile = destfile)
-  setwd(curdir)
 }
+
+#' Extract compressed files
+#'
+#' @param path String, the directory containing the files to be extracted
+ExtractCWEFiles <- function(savepath) {
+  # Uncompress gzip XML files
+  cwes.zip <- paste(savepath, "cwe", "2000.xml.zip", sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
+  cwes.xml <- paste(savepath, "cwe", "2000.xml", sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
+  utils::unzip(zipfile = cwes.zip, exdir = cwes.xml)
+  cwes.xml <- paste(cwes.xml, "2000.xml", sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
+  return(cwes.xml)
+}
+
 
 #' Arrange CWE information into data frame
 #'
 #' @param cwe.file String
 #'
 #' @return Data frame
-ParseCWEData <- function(cwe.file) {
+ParseCWEData <- function(cwes.file) {
 
-  doc <- XML::xmlParse(cwe.file)
+  doc <- XML::xmlParse(cwes.file)
   raw.cwes <- XML::xpathApply(doc, "//Weakness")
   cwes <- as.data.frame(t(XML::xmlSApply(raw.cwes, XML::xmlAttrs)),
                         stringsAsFactors = FALSE)

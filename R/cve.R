@@ -7,16 +7,16 @@
 #'
 #' @return Data frame
 #' @export
-GetCVEData <- function(origin = "all") {
-  DownloadCVEData(dest = tempdir())
-  ExtractDataFiles(path = tempdir())
+GetCVEData <- function(origin = "all", savepath = tempdir()) {
+  DownloadCVEData(dest = savepath)
+  ExtractCVEFiles(path = savepath)
 
   # TODO: Tidy data
   if (origin %in% c("mitre","all")) {
     if (origin == "all") {
       # TODO: Unify the data.frames columns (references, ...)
-      cves.mitre <- ParseCVEMITREData(path = tempdir())
-      cves.nist <- ParseCVENISTData(path = tempdir(), years = "all")
+      cves.mitre <- ParseCVEMITREData(path = savepath)
+      cves.nist <- ParseCVENISTData(path = savepath, years = "all")
       cves <- dplyr::left_join(cves.mitre, cves.nist, by = c("cve" = "cve.id"))
       names(cves) <- c("cve", "status", "description", "ref.mitre", "phase", "votes",
                        "comments", "osvdb", "cpe.config", "cpe.software", "discovered.datetime",
@@ -25,15 +25,15 @@ GetCVEData <- function(origin = "all") {
                        "assessment.check", "cwe", "ref.nist", "fix.action",
                        "scanner", "summary", "technical.description", "attack.scenario")
     } else {
-      cves <- ParseCVEMITREData(path = tempdir())
+      cves <- ParseCVEMITREData(path = savepath)
     }
   }
   if (origin == "nist") {
-    cves <- ParseCVENISTData(path = tempdir(), years = "all")
+    cves <- ParseCVENISTData(path = savepath, years = "all")
   }
 
   # Add spanish translations
-  cves.sp <- ParseCVETranslations(path = tempdir(), years = "all")
+  cves.sp <- ParseCVETranslations(path = savepath, years = "all")
   cves <- dplyr::left_join(cves, cves.sp)
 
   return(cves)
@@ -439,10 +439,10 @@ DownloadCVEData <- function(dest) {
 #' Extract compressed files
 #'
 #' @param path String, the directory containing the files to be extracted
-ExtractDataFiles <- function(path) {
+ExtractCVEFiles <- function(path) {
   # Uncompress gzip XML files
-  gzs <- list.files(path = paste(path,"cve", sep = "/"), pattern = ".gz",
-                    full.names = TRUE, recursive = TRUE)
+  gzs <- list.files(path = paste(path, "cve", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")),
+                    pattern = ".gz", full.names = TRUE, recursive = TRUE)
   apply(X = data.frame(gzs = gzs, stringsAsFactors = F),
         1, function(x) R.utils::gunzip(x, overwrite = TRUE, remove = TRUE))
 }
