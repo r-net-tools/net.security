@@ -3,7 +3,6 @@
 #' Get data frame with CWE information
 #'
 #' @return data frame
-#' @export
 GetCWEData <- function(savepath = tempdir()) {
   DownloadCWEData(savepath)
   cwes.file <- ExtractCWEFiles(savepath)

@@ -2,13 +2,13 @@
 #' Download, parse and return a tidy data frame with CAPEC information
 #'
 #' @return data frame
-#' @export
 #'
 #' @examples
-GetCAPECData <- function() {
-  DownloadCAPECData(dest = tempdir())
+#' capec <- GetCAPECData()
+GetCAPECData <- function(savepath = tempdir()) {
+  DownloadCAPECData(dest = savepath)
   capec <- data.frame()
-  capec.source.file <- paste(tempdir(), "capec", "capec_v2.8.xml",
+  capec.source.file <- paste(savepath, "capec", "capec_v2.8.xml",
                              sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
   doc <- XML::xmlParse(capec.source.file)
   capec.views <- ParseCAPECData.views(doc)
@@ -23,9 +23,6 @@ GetCAPECData <- function() {
 
 #### Private Functions -----------------------------------------------------------------------------
 
-#' Title
-#'
-#' @param dest. String
 DownloadCAPECData <- function(dest) {
   curdir <- setwd(dest)
   if (!dir.exists("capec")) {
@@ -37,24 +34,13 @@ DownloadCAPECData <- function(dest) {
   setwd(curdir)
 }
 
-#' Title
-#'
-#' @param doc
-#'
-#' @return
-#'
-#' @examples
 ParseCAPECData.views <- function(doc) {
+  # TODO
   raw.capec.views <- XML::xpathApply(doc, "//capec:View")
   views <- data.frame(stringsAsFactors = FALSE)
   return(views)
 }
 
-#' Title
-#'
-#' @param cwe.file String
-#'
-#' @return Data frame
 ParseCAPECData.categories <- function(doc) {
 
   raw.capec.cates <- XML::xmlToDataFrame(XML::xpathApply(doc, "//capec:Category"))
@@ -82,13 +68,6 @@ ParseCAPECData.categories <- function(doc) {
 }
 
 
-#' Title
-#'
-#' @param doc
-#'
-#' @return
-#'
-#' @examples
 ParseCAPECData.attacks <- function(doc) {
   raw.capec.atcks <- XML::xmlToDataFrame(XML::xpathApply(doc, "//capec:Attack_Pattern"))
 
@@ -214,16 +193,6 @@ GetConsequences <- function(doc, att.id) {
 
 # Private functions about data manipulation  -----------------------------------
 
-#' Title
-#'
-#' @param doc
-#' @param root.id
-#' @param xpath.root
-#' @param xpath.children
-#'
-#' @return
-#'
-#' @examples
 XMLChildren2JSON <- function(doc, xpath.root, root.id, xpath.children, json = TRUE) {
   childs     <- sapply(root.id,
                        function(x)

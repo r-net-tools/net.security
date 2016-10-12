@@ -19,4 +19,4 @@ LineEndingConversion: Posix
 BuildType: Package
 PackageUseDevtools: Yes
 PackageInstallArgs: --no-multiarch --with-keep.source
-PackageRoxygenize: namespace
+PackageRoxygenize: namespace,vignette

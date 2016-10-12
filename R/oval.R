@@ -2,32 +2,26 @@
 #' GetOVALData
 #'
 #' @return data frame
-#' @export
 #'
 #' @examples
 #' oval.defs <- net.security::GetOVALData()
-GetOVALData <- function() {
-  DownloadOVALData(dest = tempdir())
-  oval.source.file <- paste(tempdir(), "oval", "oval.xml",
+GetOVALData <- function(savepath = tempdir()) {
+  DownloadOVALData(savepath)
+  oval.source.file <- paste(savepath, "oval", "oval.xml",
                             sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
   ovals <- ParseOVALData(oval.source.file)
   return(ovals)
 }
 
 
-DownloadOVALData <- function(dest) {
-  curdir <- setwd(dir = dest)
-
-  # Create folder
-  if (!dir.exists("oval")) {
-    dir.create("oval")
+DownloadOVALData <- function(savepath) {
+  if (!dir.exists(paste(savepath, "oval", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
+    dir.create(paste(savepath, "oval", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
   }
-
   # Download data (https://oval.cisecurity.org/repository/download)
   utils::download.file(url = "https://oval.cisecurity.org/repository/download/5.11.1/all/oval.xml",
-                       destfile = paste(tempdir(), "oval", "oval.xml",
+                       destfile = paste(savepath, "oval", "oval.xml",
                                         sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
-  setwd(curdir)
 }
 
 NewOVALItem <- function(){

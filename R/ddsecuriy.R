@@ -2,8 +2,8 @@
 
 #' GetCVEInfo
 #'
-#' @param cve.id
-#' @param output "json", "markdown", "html"
+#' @param cve.id character
+#' @param output character "json", "markdown", "html"
 #'
 #' @return
 #'
@@ -14,10 +14,10 @@ GetCVEInfo <- function(cve.id = "CVE-2010-2010", output = "json") {
     cve.info <- jsonlite::toJSON(cve.row)
   }
   if (output == "html") {
-    cve.info <- print(xtable(cve.row), type="html", print.results = T)
+    cve.info <- print(xtable::xtable(cve.row), type="html", print.results = T)
   }
   if (output == "markdown") {
-    cve.info <- print(xtable(cve.row), type = "latex", print.results = T)
+    cve.info <- print(xtable::xtable(cve.row), type = "latex", print.results = T)
   }
   return(cve.info)
 }

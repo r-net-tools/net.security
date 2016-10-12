@@ -1,52 +1,48 @@
 #### Exported Functions ----------------------------------------------------------------------------
 
-#' GetCWEData
+#' GetCPEData
 #'
 #' @return
-#' @export
 #'
 #' @examples
-GetCPEData <- function() {
+#' cpes <- GetCPEData()
+GetCPEData <- function(savepath = tempdir()) {
   # Schema: https://scap.nist.gov/schema/cpe/2.3/cpe-dictionary_2.3.xsd
   # RawData: http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip
-  # DownloadCPEData(dest = tempdir())
-  # utils::unzip(zipfile = paste(tempdir(),
-  #                              "cpe","official-cpe-dictionary_v2.3.xml.zip",
-  #                              sep = ifelse (.Platform$OS.type == "windows","\\","/"))
-  #              )
-  curdir <- setwd(tempdir())
-  cpe.downloaded.file <- DownloadCPEData()
-  utils::unzip(zipfile = cpe.downloaded.file, exdir = "cpe")
-  cpe.source.file <- paste(tempdir(),
-                           "cpe", "official-cpe-dictionary_v2.3.xml",
-                           sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
+  DownloadCPEData(savepath)
+  cpe.source.file <- ExtractCPEFiles(savepath)
   cpes <- ParseCPEData(cpe.source.file)
-  setwd(curdir)
   return(cpes)
 }
 
 
 #### Private Functions -----------------------------------------------------------------------------
 
+ExtractCPEFiles <- function(savepath) {
+  # Uncompress gzip XML files
+  cpes.zip <- paste(savepath, "cpe", "official-cpe-dictionary_v2.3.xml.zip", sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
+  cpes.xml <- paste(savepath, "cpe", "official-cpe-dictionary_v2.3.xml", sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
+  utils::unzip(zipfile = cpes.zip, exdir = cpes.xml)
+  cpes.xml <- paste(cpes.xml, "official-cpe-dictionary_v2.3.xml", sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
+  return(cpes.xml)
+}
+
 #' Download CPE information from NIST
 #'
-DownloadCPEData <- function() {
-  if (!dir.exists("cpe")) {
-    dir.create("cpe")
+DownloadCPEData <- function(savepath) {
+  if (!dir.exists(paste(savepath, "cpe", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
+    dir.create(paste(savepath, "cpe", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
   }
-  cwe.url  <- "http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip"
-  destfile <- "cpe/official-cpe-dictionary_v2.3.xml.zip"
-  utils::download.file(url = cwe.url, destfile = destfile)
-  return(destfile)
+  cpe.url  <- "http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip"
+  cpes.zip <- paste(savepath, "cpe", "official-cpe-dictionary_v2.3.xml.zip", sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
+  utils::download.file(url = cpe.url, destfile = cpes.zip)
 }
 
 #' Title
 #'
 #' @param cpe.raw
 #'
-#' @return
-#'
-#' @examples
+#' @return data.frame
 GetCPEItem <- function(cpe.raw) {
   cpe <- NewCPEItem()
   cpe.raw <- XML::xmlToList(cpe.raw)
@@ -67,9 +63,7 @@ GetCPEItem <- function(cpe.raw) {
 
 #' Title
 #'
-#' @return
-#'
-#' @examples
+#' @return data.frame
 NewCPEItem <- function(){
   return(data.frame(cpe.22 = character(),
                     cpe.23 = character(),
@@ -82,9 +76,7 @@ NewCPEItem <- function(){
 #'
 #' @param cpe.file
 #'
-#' @return
-#'
-#' @examples
+#' @return data.frame
 ParseCPEData <- function(cpe.file) {
   doc <- XML::xmlTreeParse(cpe.file)
   cpes.raw <- XML::xmlRoot(doc)

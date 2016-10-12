@@ -4,7 +4,6 @@
 #' @param file.output.header string as header for output file
 #'
 #' @return data frame
-#' @export
 ParseNMAP <- function(file.input, file.output.header = "") {
 
   # Parse input data

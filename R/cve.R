@@ -7,8 +7,8 @@
 #'
 #' @return Data frame
 GetCVEData <- function(origin = "all", savepath = tempdir()) {
-  DownloadCVEData(dest = savepath)
-  ExtractCVEFiles(path = savepath)
+  #DownloadCVEData(dest = savepath)
+  #ExtractCVEFiles(path = savepath)
 
   # TODO: Tidy data
   if (origin %in% c("mitre","all")) {
@@ -76,6 +76,7 @@ ParseCVENISTData <- function(path, years = as.integer(format(Sys.Date(), "%Y")))
   } else {
     cves <- NewNISTEntry()
     for (year in years) {
+      kk <- years + 0
       cves <- rbind(cves, GetNISTvulnsByYear(path, year))
     }
   }
@@ -396,27 +397,27 @@ ParseCVETranslations <- function(path, years = as.integer(format(Sys.Date(), "%Y
 #' DownloadCVEData, Download CVE information
 #'
 #' @param dest  String with directory where to store files to be downloaded.
-#'
-#' @return
 DownloadCVEData <- function(dest) {
-  curdir <- setwd(dir = dest)
-
   # Data folders
-  if (!dir.exists("cve")) {
-    dir.create("cve")
-    dir.create("cve/mitre")
-    dir.create("cve/nist")
+  if (!dir.exists(paste(dest, "cve", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
+    dir.create(paste(dest, "cve", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
+  }
+  if (!dir.exists(paste(dest, "cve", "mitre", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
+    dir.create(paste(dest, "cve", "mitre", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
+  }
+  if (!dir.exists(paste(dest, "cve", "nist", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
+    dir.create(paste(dest, "cve", "nist", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
   }
 
   # Download MITRE data (http://cve.mitre.org/data/downloads/index.html#download)
   utils::download.file(url = "http://cve.mitre.org/data/downloads/allitems.xml.gz",
-                destfile = paste(tempdir(), "cve", "mitre", "allitems.xml.gz",
+                destfile = paste(dest, "cve", "mitre", "allitems.xml.gz",
                                  sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
   utils::download.file(url = "http://cve.mitre.org/schema/cve/cve_1.0.xsd",
-                destfile = paste(tempdir(), "cve", "mitre", "cve_1.0.xsd",
+                destfile = paste(dest, "cve", "mitre", "cve_1.0.xsd",
                                  sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
   utils::download.file(url = "http://cve.mitre.org/data/downloads/allitems.csv.gz",
-                destfile = paste(tempdir(), "cve", "mitre","allitems.csv.gz",
+                destfile = paste(dest, "cve", "mitre","allitems.csv.gz",
                                  sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
 
   # Download NIST data ()
@@ -424,24 +425,20 @@ DownloadCVEData <- function(dest) {
     nist.file <- paste("nvdcve-2.0-", year, ".xml.gz", sep = "")
     nist.url <- paste("https://static.nvd.nist.gov/feeds/xml/cve/", nist.file, sep = "")
     utils::download.file(url = nist.url,
-                         destfile = paste(tempdir(), "cve", "nist", nist.file,
+                         destfile = paste(dest, "cve", "nist", nist.file,
                                           sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
     # Spanish translations by INCIBE
     nist.file <- paste("nvdcve-", year, "trans.xml.gz", sep = "")
     nist.url <- paste("https://nvd.nist.gov/download/", nist.file, sep = "")
     utils::download.file(url = nist.url,
-                         destfile = paste(tempdir(), "cve", "nist", nist.file,
+                         destfile = paste(dest, "cve", "nist", nist.file,
                                           sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
   }
-
-  setwd(curdir)
 }
 
 #' ExtractCVEFiles, Extract compressed files
 #'
 #' @param dest character, the directory containing the files to be extracted
-#'
-#' @return
 ExtractCVEFiles <- function(path) {
   # Uncompress gzip XML files
   gzs <- list.files(path = paste(path, "cve", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")),
