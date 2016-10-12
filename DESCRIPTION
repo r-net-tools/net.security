@@ -15,7 +15,8 @@ Imports:
     stringr,
     jsonlite,
     data.table,
-    plumber
+    plumber,
+    xtable
 Suggests:
     testthat,
     covr

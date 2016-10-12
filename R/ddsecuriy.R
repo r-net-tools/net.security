@@ -14,7 +14,10 @@ GetCVEInfo <- function(cve.id = "CVE-2010-2010", output = "json") {
     cve.info <- jsonlite::toJSON(cve.row)
   }
   if (output == "html") {
+    cve.head <- "<html><body>"
     cve.info <- print(xtable::xtable(cve.row), type="html", print.results = T)
+    cve.tail <- "</body></html>"
+    cve.info <- paste(cve.head, cve.info, cve.tail, sep = "")
   }
   if (output == "markdown") {
     cve.info <- print(xtable::xtable(cve.row), type = "latex", print.results = T)
