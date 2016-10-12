@@ -24,7 +24,8 @@ It also includes an API server mapping data driven security functions defined in
 Reference: http://cve.mitre.org/about/faqs.html  
 Raw Data:
  - MITRE: http://cve.mitre.org/data/downloads/index.html#download
- - NIST: https://nvd.nist.gov/download.cfm
+ - NIST: https://nvd.nist.gov/download.cfm  
+
 Data Frame: `View(cves)`
 
 #### CWE
@@ -37,22 +38,23 @@ Reference: https://nvd.nist.gov/cpe.cfm
 Raw Data: http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.gz  
 Data Frame: `View(cpes)`  
  
-### CAPEC
+#### CAPEC
 Reference: https://capec.mitre.org/data/xsd/ap_schema_v2.7.1.xsd  
 Raw Data: https://capec.mitre.org/data/xml/capec_v2.8.xml  
 Data Frame: `View(capec$attacks)` or `View(capec$categories)`  
 
-### OVAL
+#### OVAL
 Reference: https://oval.cisecurity.org/  
 Raw Data: https://oval.cisecurity.org/repository/download/5.11.1/all/oval.xml  
 Data Frame: `View(oval)`  
 
 ### API
 #### Start Server
-Ensure that Rscript is in your PATH. Go to command line and run the api.R script.
-```
-> Rscript api.R
+Ensure that Rscript is in your PATH. Open system command line, go to this package and run the api.R script.
+```bash
+net.security$ Rscript api.R
 Starting server to listen on port 8000
 ```
 Then open a browser and go to: [http://127.0.0.1:8000/cveinfo?cve.id=CVE-2010-2010](http://127.0.0.1:8000/cveinfo?cve.id=CVE-2010-2010)
 
+![Alt text](img/api.screenshot.jpg?raw=true "api net.security")
