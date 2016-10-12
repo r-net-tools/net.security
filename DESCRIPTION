@@ -14,7 +14,8 @@ Imports:
     dplyr,
     stringr,
     jsonlite,
-    data.table
+    data.table,
+    plumber
 Suggests:
     testthat,
     covr

@@ -6,7 +6,6 @@
 #' @param origin "all", "mitre", "nist"
 #'
 #' @return Data frame
-#' @export
 GetCVEData <- function(origin = "all", savepath = tempdir()) {
   DownloadCVEData(dest = savepath)
   ExtractCVEFiles(path = savepath)
@@ -394,9 +393,11 @@ ParseCVETranslations <- function(path, years = as.integer(format(Sys.Date(), "%Y
 
 #### Private Functions -----------------------------------------------------------------------------
 
-#' Download CVE information
+#' DownloadCVEData, Download CVE information
 #'
-#' @param dest String with directory where to store files to be downloaded.
+#' @param dest  String with directory where to store files to be downloaded.
+#'
+#' @return
 DownloadCVEData <- function(dest) {
   curdir <- setwd(dir = dest)
 
@@ -436,9 +437,11 @@ DownloadCVEData <- function(dest) {
   setwd(curdir)
 }
 
-#' Extract compressed files
+#' ExtractCVEFiles, Extract compressed files
 #'
-#' @param path String, the directory containing the files to be extracted
+#' @param dest character, the directory containing the files to be extracted
+#'
+#' @return
 ExtractCVEFiles <- function(path) {
   # Uncompress gzip XML files
   gzs <- list.files(path = paste(path, "cve", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")),

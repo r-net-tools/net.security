@@ -2,9 +2,8 @@
 
 export(GetCAPECData)
 export(GetCPEData)
-export(GetCVE2CWE)
-export(GetCVEData)
 export(GetCWEData)
 export(GetExploitDB)
 export(GetOVALData)
 export(ParseNMAP)
+export(UpdateDataSets)

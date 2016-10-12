@@ -1,21 +1,25 @@
 # Data Driven Security Functions -----------------------------------------------
 
-#' Match CVE with CWE
+#' GetCVEInfo
 #'
-#' @return data frame
-#' @export
+#' @param cve.id
+#' @param output "json", "markdown", "html"
 #'
-#' @examples
-#' cve2cwe <- GetCVE2CWE()
-GetCVE2CWE <- function() {
-  x <- cves.nist[, c("cve.id", "cwe")]
-  x$cwe <- as.factor(x$cwe)
-  return(x)
-}
-
-# TODO
-GetCVEInfo <- function(cve.id = "CVE-2010-2010") {
-  return(cve.id)
+#' @return
+#'
+#* @get /cveinfo
+GetCVEInfo <- function(cve.id = "CVE-2010-2010", output = "json") {
+  cve.row <- cves[cves$cve == cve.id,]
+  if (output == "json") {
+    cve.info <- jsonlite::toJSON(cve.row)
+  }
+  if (output == "html") {
+    cve.info <- print(xtable(cve.row), type="html", print.results = T)
+  }
+  if (output == "markdown") {
+    cve.info <- print(xtable(cve.row), type = "latex", print.results = T)
+  }
+  return(cve.info)
 }
 
 # TODO
