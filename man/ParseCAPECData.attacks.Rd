@@ -9,9 +9,12 @@ ParseCAPECData.attacks(doc)
 \arguments{
 \item{doc}{}
 }
+<<<<<<< HEAD
 \value{
 
 }
+=======
+>>>>>>> capec
 \description{
 Title
 }

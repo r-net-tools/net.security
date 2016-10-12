@@ -9,9 +9,12 @@ ParseCAPECData.views(doc)
 \arguments{
 \item{doc}{}
 }
+<<<<<<< HEAD
 \value{
 
 }
+=======
+>>>>>>> capec
 \description{
 Title
 }

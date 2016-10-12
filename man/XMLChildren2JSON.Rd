@@ -9,9 +9,12 @@ XMLChildren2JSON(doc, xpath.root, root.id, xpath.children, json = TRUE)
 \arguments{
 \item{xpath.children}{}
 }
+<<<<<<< HEAD
 \value{
 
 }
+=======
+>>>>>>> capec
 \description{
 Title
 }
