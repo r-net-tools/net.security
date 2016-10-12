@@ -1,10 +1,11 @@
 
 #' GetOVALData
 #'
-#' @return
+#' @return data frame
 #' @export
 #'
 #' @examples
+#' oval.defs <- net.security::GetOVALData()
 GetOVALData <- function() {
   DownloadOVALData(dest = tempdir())
   oval.source.file <- paste(tempdir(), "oval", "oval.xml",
