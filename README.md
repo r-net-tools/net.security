@@ -55,6 +55,17 @@ Ensure that Rscript is in your PATH. Open system command line, go to this packag
 net.security$ Rscript api.R
 Starting server to listen on port 8000
 ```
-Then open a browser and go to: [http://127.0.0.1:8000/cveinfo?cve.id=CVE-2010-2010](http://127.0.0.1:8000/cveinfo?cve.id=CVE-2010-2010)
+Then open a browser and serach info for:
 
-![Alt text](img/api.screenshot.jpg?raw=true "api net.security")
+**CVE**  
+
+[http://127.0.0.1:8000/cveinfo/CVE-2010-2012](http://127.0.0.1:8000/cveinfo/CVE-2010-2012)
+
+![Alt text](img/api.screenshot.cve.jpg?raw=true "api net.security")
+
+**CWE**
+
+[http://127.0.0.1:8000/cweinfo/CWE-200](http://127.0.0.1:8000/cweinfo/CWE-200)
+
+![Alt text](img/api.screenshot.cwe.jpg?raw=true "api net.security")
+

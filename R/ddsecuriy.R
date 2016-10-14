@@ -1,4 +1,5 @@
 # Data Driven Security Functions -----------------------------------------------
+# Ref: http://plumber.trestletech.com/docs/routing/
 
 #' GetCVEInfo
 #'
@@ -7,27 +8,41 @@
 #'
 #' @return
 #'
-#* @get /cveinfo
+#* @get /cveinfo/<cve.id>
 GetCVEInfo <- function(cve.id = "CVE-2010-2010", output = "json") {
   cve.row <- cves[cves$cve == cve.id,]
   if (output == "json") {
-    cve.info <- jsonlite::toJSON(cve.row)
+    cve.info <- cve.row
   }
-  if (output == "html") {
-    cve.head <- "<html><body>"
-    cve.info <- print(xtable::xtable(cve.row), type="html", print.results = T)
-    cve.tail <- "</body></html>"
-    cve.info <- paste(cve.head, cve.info, cve.tail, sep = "")
-  }
-  if (output == "markdown") {
-    cve.info <- print(xtable::xtable(cve.row), type = "latex", print.results = T)
-  }
+  # TODO: Implement other output types
+  # if (output == "html") {
+  #   cve.head <- "<html><body>"
+  #   cve.info <- print(xtable::xtable(cve.row), type="html", print.results = T)
+  #   cve.tail <- "</body></html>"
+  #   cve.info <- paste(cve.head, cve.info, cve.tail, sep = "")
+  # }
+  # if (output == "markdown") {
+  #   cve.info <- print(xtable::xtable(cve.row), type = "latex", print.results = T)
+  # }
   return(cve.info)
 }
 
-# TODO
-GetCWEInfo <- function(cwe.id) {
-  return(cwe.id)
+
+#' GetCWEInfo
+#'
+#' @param cwe.id
+#' @param output
+#'
+#' @return
+#'
+#* @get /cweinfo/<cwe.id>
+GetCWEInfo <- function(cwe.id = "CWE-250", output = "json") {
+  cwe.row <- cwes[cwes$code_standard == cwe.id,]
+  if (output == "json") {
+    cwe.info <- cwe.row
+  }
+  # TODO: Implement other output types
+  return(cwe.info)
 }
 
 # TODO
