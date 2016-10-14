@@ -39,9 +39,9 @@ API: `/cweinfo/<cwe-code>`
 Reference: https://capec.mitre.org/data/xsd/ap_schema_v2.7.1.xsd  
 Raw Data: https://capec.mitre.org/data/xml/capec_v2.8.xml  
 Data Frame: `View(capec$attacks)` or `View(capec$categories)`  
-API: `/capec/view/<number>`
-API: `/capec/category/<number>`
-API: `/capec/attack/<number>`
+API: `/capec/view/<number>`  
+API: `/capec/category/<number>`  
+API: `/capec/attack/<number>`  
 
 #### CPE
 Reference: https://nvd.nist.gov/cpe.cfm  
