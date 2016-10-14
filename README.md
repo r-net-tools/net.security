@@ -26,23 +26,28 @@ Raw Data:
  - MITRE: http://cve.mitre.org/data/downloads/index.html#download
  - NIST: https://nvd.nist.gov/download.cfm  
 
-Data Frame: `View(cves)`
+Data Frame: `View(cves)`  
+API: `/cveinfo/<cve-code>`   
 
 #### CWE
 Reference: http://cwe.mitre.org/data/index.html#documentation  
 Raw Data: https://cwe.mitre.org/data  
 Data Frame: `View(cwes)`  
+API: `/cweinfo/<cwe-code>`
+
+#### CAPEC
+Reference: https://capec.mitre.org/data/xsd/ap_schema_v2.7.1.xsd  
+Raw Data: https://capec.mitre.org/data/xml/capec_v2.8.xml  
+Data Frame: `View(capec$attacks)` or `View(capec$categories)`  
+API: `/capec/view/<number>`
+API: `/capec/category/<number>`
+API: `/capec/attack/<number>`
 
 #### CPE
 Reference: https://nvd.nist.gov/cpe.cfm  
 Raw Data: http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.gz  
 Data Frame: `View(cpes)`  
  
-#### CAPEC
-Reference: https://capec.mitre.org/data/xsd/ap_schema_v2.7.1.xsd  
-Raw Data: https://capec.mitre.org/data/xml/capec_v2.8.xml  
-Data Frame: `View(capec$attacks)` or `View(capec$categories)`  
-
 #### OVAL
 Reference: https://oval.cisecurity.org/  
 Raw Data: https://oval.cisecurity.org/repository/download/5.11.1/all/oval.xml  
@@ -55,7 +60,8 @@ Ensure that Rscript is in your PATH. Open system command line, go to this packag
 net.security$ Rscript api.R
 Starting server to listen on port 8000
 ```
-Then open a browser and serach info for:
+
+#### Examples
 
 **CVE**  
 
@@ -69,3 +75,20 @@ Then open a browser and serach info for:
 
 ![Alt text](img/api.screenshot.cwe.jpg?raw=true "api net.security")
 
+**CAPEC View**
+
+[http://127.0.0.1:8000/capec/view/1000](http://127.0.0.1:8000/capec/view/1000)
+
+![Alt text](img/api.screenshot.capec.view.jpg?raw=true "api net.security")
+
+**CAPEC Category**
+
+[http://127.0.0.1:8000/capec/category/100](http://127.0.0.1:8000/capec/category/100)
+
+![Alt text](img/api.screenshot.capec.category.jpg?raw=true "api net.security")
+
+**CAPEC Attack**
+
+[http://127.0.0.1:8000/capec/attack/256](http://127.0.0.1:8000/capec/attack/256)
+
+![Alt text](img/api.screenshot.capec.attack.jpg?raw=true "api net.security")

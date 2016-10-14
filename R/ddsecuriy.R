@@ -45,9 +45,24 @@ GetCWEInfo <- function(cwe.id = "CWE-250", output = "json") {
   return(cwe.info)
 }
 
-# TODO
-GetCAPECInfo <- function(capec.id) {
-  return(capec.id)
+#' GetCAPECInfo
+#'
+#' @param capec.id
+#'
+#' @return
+#'
+#* @get /capec/<vca>/<capec.id>
+GetCAPECInfo <- function(vca = "attack", capec.id, output = "json") {
+  if (vca == "attack") df <- capec[["attacks"]]
+  if (vca == "categ") df <- capec[["categories"]]
+  if (vca == "view") df <- capec[["views"]]
+
+  df.row <- df[df$id == capec.id,]
+  if (output == "json") {
+    capec.info <- df.row
+  }
+  # TODO: Implement other output types
+  return(capec.info)
 }
 
 # TODO
