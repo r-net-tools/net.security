@@ -6,7 +6,7 @@
 #' @examples
 #' capec <- GetCAPECData()
 GetCAPECData <- function(savepath = tempdir()) {
-  DownloadCAPECData(dest = savepath)
+  DownloadCAPECData(savepath)
   capec <- data.frame()
   capec.source.file <- paste(savepath, "capec", "capec_v2.8.xml",
                              sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
@@ -23,15 +23,13 @@ GetCAPECData <- function(savepath = tempdir()) {
 
 #### Private Functions -----------------------------------------------------------------------------
 
-DownloadCAPECData <- function(dest) {
-  curdir <- setwd(dest)
-  if (!dir.exists("capec")) {
-    dir.create("capec")
+DownloadCAPECData <- function(savepath) {
+  if (!dir.exists(paste(savepath, "capec", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
+    dir.create(paste(savepath, "capec", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
   }
   capec.url  <- "https://capec.mitre.org/data/xml/capec_v2.8.xml"
-  destfile <- "capec/capec_v2.8.xml"
+  destfile <- paste(savepath, "capec", "capec_v2.8.xml",sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
   utils::download.file(url = capec.url, destfile = destfile)
-  setwd(curdir)
 }
 
 ParseCAPECData.views <- function(doc) {
