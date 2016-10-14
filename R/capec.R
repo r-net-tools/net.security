@@ -37,7 +37,26 @@ DownloadCAPECData <- function(dest) {
 ParseCAPECData.views <- function(doc) {
   # TODO
   raw.capec.views <- XML::xpathApply(doc, "//capec:View")
+  # View IDs
+  view.id <- sapply(XML::getNodeSet(doc, "//capec:View/@ID"), function(x) x[1])
+  # View Names
+  view.name <- sapply(XML::getNodeSet(doc, "//capec:View/@Name"), function(x) x[1])
+  # Category Status
+  view.status <- sapply(XML::getNodeSet(doc, "//capec:View/@Status"), function(x) x[1])
+  # View objective
+  view.objective <- sapply(XML::getNodeSet(doc, "//capec:View/capec:View_Objective", fun = XML::xmlValue), function(x) x[1])
+  # Category Parent Views
+  targets <- XMLChildren2JSON(doc, "capec:View", view.id,
+                              "/capec:Relationships/capec:Relationship/capec:Relationship_Target_ID")
+
   views <- data.frame(stringsAsFactors = FALSE)
+  views <- data.frame(id = view.id,
+                      name = view.name,
+                      status = view.status,
+                      objective = view.objective,
+                      targets = targets,
+                      stringsAsFactors = FALSE
+  )
   return(views)
 }
 
