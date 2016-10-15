@@ -37,7 +37,7 @@ API: `/cweinfo/<cwe-code>`
 
 #### CAPEC
 Reference: https://capec.mitre.org/data/index.html  
-Reference: https://capec.mitre.org/data/xsd/ap_schema_v2.7.1.xsd
+Reference: https://capec.mitre.org/data/xsd/ap_schema_v2.7.1.xsd  
 Raw Data: https://capec.mitre.org/data/xml/capec_v2.8.xml  
 Data Frame: `View(capec$views)` or `View(capec$categories)` or `View(capec$attacks)`  
 API: `/capec/view/<number>`  
@@ -46,7 +46,7 @@ API: `/capec/attack/<number>`
 
 #### CPE
 Reference: https://nvd.nist.gov/cpe.cfm  
-Reference: http://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7695.pdf
+Reference: http://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7695.pdf  
 Raw Data: http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.gz  
 Data Frame: `View(cpes)`  
 API: `/cpe?name="<character>"`  
