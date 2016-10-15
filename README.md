@@ -49,6 +49,7 @@ Reference: https://nvd.nist.gov/cpe.cfm
 Reference: http://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7695.pdf
 Raw Data: http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.gz  
 Data Frame: `View(cpes)`  
+API: `/cpe?name="<character>"`  
  
 #### OVAL
 Reference: https://oval.cisecurity.org/  
