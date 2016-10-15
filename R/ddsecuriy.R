@@ -67,6 +67,7 @@ GetCAPECInfo <- function(vca = "attack", capec.id, output = "json") {
 
 # TODO
 GetCPEbyName <- function(platform) {
+
   return(platform)
 }
 

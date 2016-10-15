@@ -82,6 +82,7 @@ ParseCPEData <- function(cpe.file) {
   cpes.raw <- XML::xmlRoot(doc)
   cpes.raw <- cpes.raw[2:length(cpes.raw)]
 
+  # TODO: Improve performance
   lcpes <- lapply(cpes.raw, GetCPEItem)
   cpes <- plyr::ldply(lcpes, data.frame)
 
@@ -90,6 +91,21 @@ ParseCPEData <- function(cpe.file) {
   cpes$Title <- as.character(cpes$cpe.22)
   cpes$cpe.23 <- as.character(cpes$cpe.23)
   cpes$cpe.ref <- as.character(cpes$cpe.ref)
+
+  # Augment CPE2.3
+  cpes.23 <- stringr::str_replace_all(string = cpes$cpe.23, pattern = "\\\\:", replacement = "_")
+  cpes.23 <- stringr::str_split(string = cpes.23, pattern = ":", simplify = T)
+  cpes$part <- as.factor(cpes.23[,3])
+  cpes$vendor <- as.factor(cpes.23[,4])
+  cpes$product <- as.factor(cpes.23[,5])
+  cpes$version <- as.factor(cpes.23[,6])
+  cpes$update <- as.factor(cpes.23[,7])
+  cpes$edition <- as.factor(cpes.23[,8])
+  cpes$language <- as.factor(cpes.23[,9])
+  cpes$sw_edition <- as.factor(cpes.23[,10])
+  cpes$target_sw <- as.factor(cpes.23[,11])
+  cpes$target_hw <- as.factor(cpes.23[,12])
+  cpes$other <- as.factor(cpes.23[,13])
 
   return(cpes)
 
