@@ -36,7 +36,8 @@ Data Frame: `View(cwes)`
 API: `/cweinfo/<cwe-code>`
 
 #### CAPEC
-Reference: https://capec.mitre.org/data/xsd/ap_schema_v2.7.1.xsd  
+Reference: https://capec.mitre.org/data/index.html  
+Reference: https://capec.mitre.org/data/xsd/ap_schema_v2.7.1.xsd
 Raw Data: https://capec.mitre.org/data/xml/capec_v2.8.xml  
 Data Frame: `View(capec$views)` or `View(capec$categories)` or `View(capec$attacks)`  
 API: `/capec/view/<number>`  
