@@ -5,9 +5,9 @@
 #'
 #' @format A data frame with +100,000 rows and 3 variables:
 #' \describe{
-#'   \item{cpe.22}{Title of the platform}
 #'   \item{cpe.23}{Identifier for given platform}
 #'   \item{cpe.ref}{URLs encoded as json with additional information regarding the cpe entry}
+#'   \item{title}{cpe.22, could match with title of the platform}
 #'   \item{part}{a for applications, o for operating systems, h for hardware devices}
 #'   \item{vendor}{The person or organization that manufactured or created the product}
 #'   \item{product}{The most common and recognizable title or name of the product}
