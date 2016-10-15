@@ -65,10 +65,25 @@ GetCAPECInfo <- function(vca = "attack", capec.id, output = "json") {
   return(capec.info)
 }
 
-# TODO
-GetCPEbyName <- function(platform) {
-
-  return(platform)
+#' GetCPEbyName
+#'
+#' @param name
+#'
+#' @return
+#'
+#* @get /cpe
+GetCPEbyName <- function(name) {
+  # TODO: Investigate plumber funcitionalities, add issue or fork it :(
+  #name <- "winamp"
+  name <- stringr::str_replace_all(string = name, pattern = "%20", replacement = ".")
+  # name <- stringr::str_replace_all(string = name, pattern = ".", replacement = "[.*]")
+  # TODO: Improve matching
+  matched <- grepl(pattern = name, x = cpes$cpe.23, ignore.case = T)
+  if (!any(matched)) matched <- agrepl(pattern = name, x = cpes$cpe.23, ignore.case = T)
+  if (!any(matched)) matched <- agrepl(pattern = name, x = cpes$title, ignore.case = T)
+  if (!any(matched)) matched <- agrepl(pattern = name, x = cpes$product, ignore.case = T)
+  # TODO: Implement other output types
+  return(cpes[matched, c("product", "cpe.23", "title")])
 }
 
 # TODO

@@ -76,6 +76,12 @@ Starting server to listen on port 8000
 
 ![Alt text](img/api.screenshot.cwe.jpg?raw=true "api net.security")
 
+**CPE**
+
+[http://localhost:8000/cpe?name=%22winamp%205.6%22](http://localhost:8000/cpe?name=%22winamp%205.6%22)
+
+![Alt text](img/api.screenshot.cpe.jpg?raw=true "api net.security")
+
 **CAPEC View**
 
 [http://127.0.0.1:8000/capec/view/1000](http://127.0.0.1:8000/capec/view/1000)
