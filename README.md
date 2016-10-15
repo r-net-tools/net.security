@@ -80,7 +80,7 @@ Starting server to listen on port 8000
 
 **CPE**
 
-[http://localhost:8000/cpe?name=%22winamp%205.6%22](http://localhost:8000/cpe?name=%22winamp%205.6%22)
+[http://localhost:8000/cpe?name="winamp 5.6"](http://localhost:8000/cpe?name=%22winamp%205.6%22)
 
 ![Alt text](img/api.screenshot.cpe.jpg?raw=true "api net.security")
 
