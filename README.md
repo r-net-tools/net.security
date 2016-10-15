@@ -26,12 +26,14 @@ Raw Data:
  - MITRE: http://cve.mitre.org/data/downloads/index.html#download
  - NIST: https://nvd.nist.gov/download.cfm  
 
+Update dataset: `UpdateDataSets(path = "data", stnd = "v")`  
 Data Frame: `View(cves)`  
 API: `/cveinfo/<cve-code>`   
 
 #### CWE
 Reference: http://cwe.mitre.org/data/index.html#documentation  
 Raw Data: https://cwe.mitre.org/data  
+Update dataset: `UpdateDataSets(path = "data", stnd = "w")`  
 Data Frame: `View(cwes)`  
 API: `/cweinfo/<cwe-code>`
 
@@ -39,6 +41,7 @@ API: `/cweinfo/<cwe-code>`
 Reference: https://capec.mitre.org/data/index.html  
 Reference: https://capec.mitre.org/data/xsd/ap_schema_v2.7.1.xsd  
 Raw Data: https://capec.mitre.org/data/xml/capec_v2.8.xml  
+Update dataset: `UpdateDataSets(path = "data", stnd = "a")`  
 Data Frame: `View(capec$views)` or `View(capec$categories)` or `View(capec$attacks)`  
 API: `/capec/view/<number>`  
 API: `/capec/category/<number>`  
@@ -48,12 +51,14 @@ API: `/capec/attack/<number>`
 Reference: https://nvd.nist.gov/cpe.cfm  
 Reference: http://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7695.pdf  
 Raw Data: http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.gz  
+Update dataset: `UpdateDataSets(path = "data", stnd = "p")`  
 Data Frame: `View(cpes)`  
 API: `/cpe?name="<character>"`  
  
 #### OVAL
 Reference: https://oval.cisecurity.org/  
 Raw Data: https://oval.cisecurity.org/repository/download/5.11.1/all/oval.xml  
+Update dataset: `UpdateDataSets(path = "data", stnd = "o")`  
 Data Frame: `View(oval)`  
 
 ### API
