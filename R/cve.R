@@ -7,8 +7,8 @@
 #'
 #' @return Data frame
 GetCVEData <- function(origin = "all", savepath = tempdir()) {
-  #DownloadCVEData(dest = savepath)
-  #ExtractCVEFiles(path = savepath)
+  DownloadCVEData(dest = savepath)
+  ExtractCVEFiles(path = savepath)
 
   # TODO: Tidy data
   if (origin %in% c("mitre","all")) {
@@ -318,6 +318,9 @@ references2df <- function(node) {
 
 fix.action2df <- function(node) {
   # TODO: Improve parser
+  if (!is.null(node)) {
+    kk <- node
+  }
   return(NodeToJson(node))
 }
 
