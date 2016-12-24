@@ -87,8 +87,7 @@ ParseCVENISTData <- function(path, years = as.integer(format(Sys.Date(), "%Y")))
 #'
 #' @param year value between 2002 and current year, default value is set as current year
 #' @return data frame
-#' @example year = 2012
-GetNISTvulnsByYear <- function(path, year = as.integer(format(Sys.Date(), "%Y"))) {
+GetNISTvulnsByYear <- function(path = tempdir(), year = as.integer(format(Sys.Date(), "%Y"))) {
   # Reference: https://scap.nist.gov/schema/nvd/vulnerability_0.4.xsd
   # TODO: Improve efficience 1 lapply instead of 2
   nistfile <- paste("nvdcve-2.0-", year, ".xml", sep = "")

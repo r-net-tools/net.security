@@ -16,7 +16,8 @@ Imports:
     jsonlite,
     data.table,
     plumber,
-    xtable
+    xtable,
+    utils
 Suggests:
     testthat,
     covr

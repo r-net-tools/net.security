@@ -78,13 +78,11 @@ NewCPEItem <- function(){
 #'
 #' @return data.frame
 ParseCPEData <- function(cpe.file) {
+  # TODO: Improve performance
   doc <- XML::xmlTreeParse(cpe.file)
   cpes.raw <- XML::xmlRoot(doc)
   cpes.raw <- cpes.raw[2:length(cpes.raw)]
-
-  # TODO: Improve performance
-  lcpes <- lapply(cpes.raw, GetCPEItem)
-  cpes <- plyr::ldply(lcpes, data.frame)
+  cpes <- plyr::ldply(cpes.raw, GetCPEItem)
 
   # TidyData
   cpes$title <- as.character(cpes$cpe.22)

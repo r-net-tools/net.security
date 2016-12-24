@@ -28,7 +28,7 @@ GetCVEInfo <- function(cve.id = "CVE-2010-2010", output = "json") {
 }
 
 
-#' GetCWEInfo
+#' GetCWEInfo search cwe.id and returns its info
 #'
 #' @param cwe.id
 #' @param output
