@@ -40,7 +40,7 @@ DownloadCPEData <- function(savepath) {
 
 #' Title
 #'
-#' @param cpe.raw
+#' @param cpe.raw String
 #'
 #' @return data.frame
 GetCPEItem <- function(cpe.raw) {
@@ -74,7 +74,7 @@ NewCPEItem <- function(){
 
 #' Title
 #'
-#' @param cpe.file
+#' @param cpe.file String
 #'
 #' @return data.frame
 ParseCPEData <- function(cpe.file) {
