@@ -2,10 +2,9 @@
 
 #' GetCPEData
 #'
-#' @return
+#' @param savepath String
+#' @return data frame
 #'
-#' @examples
-#' cpes <- GetCPEData()
 GetCPEData <- function(savepath = tempdir()) {
   # Schema: https://scap.nist.gov/schema/cpe/2.3/cpe-dictionary_2.3.xsd
   # RawData: http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip
@@ -28,6 +27,8 @@ ExtractCPEFiles <- function(savepath) {
 }
 
 #' Download CPE information from NIST
+#'
+#' @param savepath String
 #'
 DownloadCPEData <- function(savepath) {
   if (!dir.exists(paste(savepath, "cpe", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {

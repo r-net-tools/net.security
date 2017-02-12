@@ -48,8 +48,10 @@ GetCWEInfo <- function(cwe.id = "CWE-250", output = "json") {
 #' GetCAPECInfo
 #'
 #' @param capec.id character
+#' @param vca character
+#' @param output character
 #'
-#' @return
+#' @return data frame
 #'
 #* @get /capec/<vca>/<capec.id>
 GetCAPECInfo <- function(vca = "attack", capec.id, output = "json") {

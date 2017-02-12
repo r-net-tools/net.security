@@ -3,6 +3,7 @@
 
 #' Get data frame with CVE information
 #'
+#' @param savepath String
 #' @param origin "all", "mitre", "nist"
 #'
 #' @return Data frame
@@ -43,7 +44,7 @@ GetCVEData <- function(origin = "all", savepath = tempdir()) {
 
 #' Arrange CVE information into data frame
 #'
-#' @param cve.file String
+#' @param path String
 #'
 #' @return Data frame
 ParseCVEMITREData <- function(path) {
@@ -65,6 +66,7 @@ ParseCVEMITREData <- function(path) {
 #' ParseCVENISTData
 #'
 #' @param years numeric vector with values between 2002 and current year
+#' @param path String
 #'
 #' @return data frame
 ParseCVENISTData <- function(path, years = as.integer(format(Sys.Date(), "%Y"))) {
@@ -86,6 +88,7 @@ ParseCVENISTData <- function(path, years = as.integer(format(Sys.Date(), "%Y")))
 #' Create CVE data.frame from NIST entries for specified year
 #'
 #' @param year value between 2002 and current year, default value is set as current year
+#' @param path String
 #' @return data frame
 GetNISTvulnsByYear <- function(path = tempdir(), year = as.integer(format(Sys.Date(), "%Y"))) {
   # Reference: https://scap.nist.gov/schema/nvd/vulnerability_0.4.xsd
@@ -437,7 +440,7 @@ DownloadCVEData <- function(dest) {
 
 #' ExtractCVEFiles, Extract compressed files
 #'
-#' @param dest character, the directory containing the files to be extracted
+#' @param path character, the directory containing the files to be extracted
 ExtractCVEFiles <- function(path) {
   # Uncompress gzip XML files
   gzs <- list.files(path = paste(path, "cve", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")),
