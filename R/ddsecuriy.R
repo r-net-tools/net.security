@@ -30,8 +30,8 @@ GetCVEInfo <- function(cve.id = "CVE-2010-2010", output = "json") {
 
 #' GetCWEInfo search cwe.id and returns its info
 #'
-#' @param cwe.id
-#' @param output
+#' @param cwe.id character
+#' @param output character "json", "markdown", "html"
 #'
 #' @return
 #'
@@ -47,9 +47,11 @@ GetCWEInfo <- function(cwe.id = "CWE-250", output = "json") {
 
 #' GetCAPECInfo
 #'
-#' @param capec.id
+#' @param capec.id character
+#' @param vca character
+#' @param output character
 #'
-#' @return
+#' @return data frame
 #'
 #* @get /capec/<vca>/<capec.id>
 GetCAPECInfo <- function(vca = "attack", capec.id, output = "json") {
@@ -67,7 +69,7 @@ GetCAPECInfo <- function(vca = "attack", capec.id, output = "json") {
 
 #' GetCPEbyName
 #'
-#' @param name
+#' @param name character
 #'
 #' @return
 #'

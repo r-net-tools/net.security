@@ -4,9 +4,6 @@
 #' @param stnd "all":all standards; "v":CVE; "e":exploitdb; "w":CWE; "a":CAPEC; "p":CPE; "o":OVAL
 #'
 #' @export
-#' @examples
-#' UpdateDataSets() # Default: Create all datasets in tempdir()
-#' UpdateDataSets(path = "./data/security", stnd = "v") # Create /data/security/cves.rda
 UpdateDataSets <- function(path = tempdir(), stnd = "all") {
   # Start the clock!
   # ptm <- proc.time()
