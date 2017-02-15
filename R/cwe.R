@@ -2,6 +2,7 @@
 
 #' Get data frame with CWE information
 #'
+#' @param savepath String
 #' @return data frame
 GetCWEData <- function(savepath = tempdir()) {
   DownloadCWEData(savepath)
@@ -15,7 +16,7 @@ GetCWEData <- function(savepath = tempdir()) {
 
 #' Download CWE information
 #'
-#' @param dest String
+#' @param savepath String
 DownloadCWEData <- function(savepath) {
   if (!dir.exists(paste(savepath, "cwe", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
     dir.create(paste(savepath, "cwe", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
@@ -27,7 +28,7 @@ DownloadCWEData <- function(savepath) {
 
 #' Extract compressed files
 #'
-#' @param path String, the directory containing the files to be extracted
+#' @param savepath String, the directory containing the files to be extracted
 ExtractCWEFiles <- function(savepath) {
   # Uncompress gzip XML files
   cwes.zip <- paste(savepath, "cwe", "2000.xml.zip", sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
@@ -40,7 +41,7 @@ ExtractCWEFiles <- function(savepath) {
 
 #' Arrange CWE information into data frame
 #'
-#' @param cwe.file String
+#' @param cwes.file String
 #'
 #' @return Data frame
 ParseCWEData <- function(cwes.file) {
