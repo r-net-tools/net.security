@@ -1,28 +1,16 @@
-Package: net.security
+Package: net.security 
 Title: Security Standards DataSets
-Version: 0.0.0.9500
-Authors@R: c(
-  person("Humbert", "Costas", email = "humbert.costas@gmail.com", role = c("aut", "cre")),
-  person("Arnau", "Sangra", email = "arnsangra@gmail.com", role = "aut"))
-Description: Functions and tools related to network security standards for R.
-Depends:
-    R (>= 3.3.0)
-Imports:
-    R.utils,
-    XML,
-    plyr,
-    dplyr,
-    stringr,
-    jsonlite,
-    data.table,
-    plumber,
-    xtable,
-    utils
-Suggests:
-    testthat,
-    covr
-License: GPL-3
+Version: 0.0.0.9500 
+Authors@R: c( 
+  person("Humbert", "Costas", email = "humbert.costas@gmail.com", role = c("aut", "cre")), 
+  person("Arnau", "Sangra", email = "arnsangra@gmail.com", role = "aut")) 
+Description: Functions and tools related to network security standards for R. 
+Depends: R (>= 3.3.0)
+License: GPL-3 
+Encoding: UTF-8
 LazyData: true
-URL: https://github.com/r-net-tools/net-security
-BugReports: https://github.com/r-net-tools/net-security/issues
 RoxygenNote: 6.0.1
+Imports: 
+Suggests: 
+    testthat, 
+    covr 
