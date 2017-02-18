@@ -65,9 +65,14 @@ DataSetList <- function(){
 GetDataFrame <- function(dataset = "cves") {
   df <- data.frame()
   if (dataset == "cves") {
+    # Check if dataset exists on environment | inst/tmpdata/dataset.rda | tempdir()/dataset.rda
+    # Normalize how to store internal datasets
     # if (DataSetAvailable(dataset = "cves")) {
     #   df <- GetCVEData()
+    # } else {
+    #   warning("CVES data set is not available. Use net.security::DataSetUpdate(dataset = \"cves\") ")
     # }
+    #
   }
   return(df)
 }
