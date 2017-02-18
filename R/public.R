@@ -43,7 +43,15 @@ DataSetUpdate <- function(dataset = "all") {
 DataSetList <- function(){
   # Load local datasets and check which are available
   # return available as character array
-  datasets <- ""
+  datasets <- character(0)
+  if (DataSetAvailable(dataset = "cves")) {
+    datasets <- ifelse(datasets == character(0),
+                       yes = "cves",
+                       no = c(datasets, "cves"))
+  }
+  datasets <- ifelse(datasets == character(0),
+                     yes = "Data sets not available. Use net.security::DataSetUpdate() ",
+                     no = datasets)
   return(datasets)
 }
 
