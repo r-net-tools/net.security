@@ -44,7 +44,7 @@ Raw Data:
  - NIST: https://nvd.nist.gov/download.cfm  
 
 Update dataset: `net.security::DataSetUpdate(dataset = "cve")`  
-Data Frame: `cves <- net.security::GetDataFrame(name = "cve")`  
+Data Frame: `cves <- net.security::GetDataFrame(dataset = "cve")`  
 
 
 ------------------------------------------------------------------

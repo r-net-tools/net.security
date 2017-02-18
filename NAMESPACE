@@ -3,3 +3,4 @@
 export(DataSetList)
 export(DataSetStatus)
 export(DataSetUpdate)
+export(GetDataFrame)

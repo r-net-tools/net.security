@@ -9,6 +9,13 @@ DataSetUpdate(dataset = "all")
 \arguments{
 \item{dataset}{Selects the data set for this operation. Default set to "all". Check available option with DataSetList()}
 }
+\value{
+Official source files download date time.
+}
 \description{
 DataSetUpdate
+}
+\examples{
+net.security::DataSetUpdate(dataset = "all")
+net.security::DataSetUpdate(dataset = "cves")
 }
