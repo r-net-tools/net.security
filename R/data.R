@@ -59,9 +59,44 @@
 #'   \item{descr.sp}{character, spanish description translated by INCIBE colaborators}
 #' }
 #' @source \url{https://nvd.nist.gov/download.cfm}
-# "cves"
+"cves"
 
-#' Common Weakness Enumeration
+#' Common Attack Pattern Enumeration and Classification
+#'
+#' A dataset
+#'
+#' @format A data frame with x rows and y variables:
+#' \describe{
+#'  \item{ID}{CAPEC Identifier}
+#'  \item{Name}{}
+#'  \item{Status}{}
+#'  \item{code_standard}{}
+#'  \item{descr.summary}{}
+#'  \item{descr.details}{}
+#'  \item{relationships}{}
+#'  \item{cwe.parents}{}
+#'  \item{ordinalities}{}
+#'  \item{platforms}{}
+#'  \item{time.intro}{}
+#'  \item{consequences}{}
+#'  \item{mitigation}{}
+#'  \item{causal}{}
+#'  \item{demos}{}
+#'  \item{mapping}{}
+#'  \item{history}{}
+#'  \item{relationship.notes}{}
+#'  \item{maintenance.notes}{}
+#'  \item{background}{}
+#'  \item{introduction.mode}{}
+#'  \item{other.notes}{}
+#'  \item{aff.resources}{}
+#'  \item{exploits}{}
+#'  \item{functional.areas}{}
+#' }
+#' @source \url{https://cwe.mitre.org}
+"cwes"
+
+#' Common Attack Pattern Enumeration and Classification
 #'
 #' A dataset containing the entries for the details for the 719 CWE entries.
 #'
@@ -94,6 +129,39 @@
 #'  \item{exploits}{}
 #'  \item{functional.areas}{}
 #' }
-#' @source \url{https://cwe.mitre.org}
-"cwes"
+#' @source \url{https://capec.mitre.org}
+"capec"
 
+#' Exploitdb
+#'
+#' @format A data frame with more than 79,000 rows and 25 variables
+#' \describe{
+#'   \item{cve}{}
+#'   \item{status}{}
+#'   \item{description}{}
+#'   \item{ref.mitre}{}
+#'   \item{phase}{}
+#'   \item{votes}{}
+#'   \item{comments}{}
+#'   \item{osvdb}{}
+#'   \item{cpe.config}{}
+#'   \item{cpe.software.list}{}
+#'   \item{discovered.datetime}{}
+#'   \item{disclosure.datetime}{}
+#'   \item{exploit.publish.datetime}{}
+#'   \item{published.datetime}{}
+#'   \item{last.modified.datetime}{}
+#'   \item{cvss}{}
+#'   \item{security.protection}{}
+#'   \item{assessment.check}{}
+#'   \item{cwe}{}
+#'   \item{ref.nist}{}
+#'   \item{fix.action}{}
+#'   \item{scanner}{}
+#'   \item{summary}{}
+#'   \item{technical.description}{}
+#'   \item{attack.scenario}{}
+#'   \item{descr.sp}{character, spanish description translated by INCIBE colaborators}
+#' }
+#' @source \url{https://nvd.nist.gov/download.cfm}
+"exploitdb"
