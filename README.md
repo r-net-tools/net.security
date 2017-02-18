@@ -1,4 +1,4 @@
-![Alt text](img/net.security.tiny.jpg?raw=true "net.security")
+![Alt text](inst/img/net.security.tiny.jpg?raw=true "net.security")
 
 [![Project Status: WIP - Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](http://www.repostatus.org/badges/latest/wip.svg)](http://www.repostatus.org/#wip) 
 [![Build Status](https://travis-ci.org/r-net-tools/net.security.svg?branch=master)](https://travis-ci.org/r-net-tools/net.security) 
@@ -6,6 +6,50 @@
 
 
 #### Package for Data Driven Security purposes.
+
+This package provides data sets for security standards and tools. It also have functions for update data sets.
+
+## Install
+
+From R console just type:  
+`devtools::install_github(repo = "r-net-tools/net.security")`  
+
+If you want to test future features, just add branch as parameter:  
+`devtools::install_github(repo = "r-net-tools/net.security", ref = "devel")`  
+
+## Usage
+
+Show last update date and number of observations.    
+```r
+net.security::DataSetStatus(dataset = "all")
+net.security::DataSetStatus(dataset = "cve")
+```
+
+Update data sets from official sources.  
+```r
+net.security::DataSetUpdate(dataset = "all")
+net.security::DataSetUpdate(dataset = "cve")
+```
+
+List available data frames.  
+```r
+net.security::DataSetList()
+```
+
+### Security Standards
+#### CVE
+Reference: http://cve.mitre.org/about/faqs.html  
+Raw Data:
+ - MITRE: http://cve.mitre.org/data/downloads/index.html#download
+ - NIST: https://nvd.nist.gov/download.cfm  
+
+Update dataset: `net.security::DataSetUpdate(dataset = "cve")`  
+Data Frame: `cves <- net.security::GetDataFrame(name = "cve")`  
+
+
+------------------------------------------------------------------
+
+# Legacy stuff
 
 ## Install
 
@@ -75,34 +119,34 @@ Starting server to listen on port 8000
 
 [http://127.0.0.1:8000/cveinfo/CVE-2010-2012](http://127.0.0.1:8000/cveinfo/CVE-2010-2012)
 
-![Alt text](img/api.screenshot.cve.jpg?raw=true "api net.security")
+![Alt text](inst/img/api.screenshot.cve.jpg?raw=true "api net.security")
 
 **CWE**
 
 [http://127.0.0.1:8000/cweinfo/CWE-200](http://127.0.0.1:8000/cweinfo/CWE-200)
 
-![Alt text](img/api.screenshot.cwe.jpg?raw=true "api net.security")
+![Alt text](inst/img/api.screenshot.cwe.jpg?raw=true "api net.security")
 
 **CPE**
 
 [http://localhost:8000/cpe?name="winamp 5.6"](http://localhost:8000/cpe?name=%22winamp%205.6%22)
 
-![Alt text](img/api.screenshot.cpe.jpg?raw=true "api net.security")
+![Alt text](inst/img/api.screenshot.cpe.jpg?raw=true "api net.security")
 
 **CAPEC View**
 
 [http://127.0.0.1:8000/capec/view/1000](http://127.0.0.1:8000/capec/view/1000)
 
-![Alt text](img/api.screenshot.capec.view.jpg?raw=true "api net.security")
+![Alt text](inst/img/api.screenshot.capec.view.jpg?raw=true "api net.security")
 
 **CAPEC Category**
 
 [http://127.0.0.1:8000/capec/category/100](http://127.0.0.1:8000/capec/category/100)
 
-![Alt text](img/api.screenshot.capec.category.jpg?raw=true "api net.security")
+![Alt text](inst/img/api.screenshot.capec.category.jpg?raw=true "api net.security")
 
 **CAPEC Attack**
 
 [http://127.0.0.1:8000/capec/attack/256](http://127.0.0.1:8000/capec/attack/256)
 
-![Alt text](img/api.screenshot.capec.attack.jpg?raw=true "api net.security")
+![Alt text](inst/img/api.screenshot.capec.attack.jpg?raw=true "api net.security")
