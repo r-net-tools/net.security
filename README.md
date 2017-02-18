@@ -22,13 +22,13 @@ If you want to test future features, just add branch as parameter:
 Show last update date and number of observations.    
 ```r
 net.security::DataSetStatus(dataset = "all")
-net.security::DataSetStatus(dataset = "cve")
+net.security::DataSetStatus(dataset = "cves")
 ```
 
 Update data sets from official sources.  
 ```r
 net.security::DataSetUpdate(dataset = "all")
-net.security::DataSetUpdate(dataset = "cve")
+net.security::DataSetUpdate(dataset = "cves")
 ```
 
 List available data frames.  
@@ -37,12 +37,12 @@ net.security::DataSetList()
 ```
 
 ### Security Standards
-#### CVE
+#### CVE: Common Vulnerability Enumeration
 Reference: http://cve.mitre.org/about/faqs.html  
 Raw Data:
  - MITRE: http://cve.mitre.org/data/downloads/index.html#download
  - NIST: https://nvd.nist.gov/download.cfm  
 
-Update dataset: `net.security::DataSetUpdate(dataset = "cve")`  
-Data Frame: `cves <- net.security::GetDataFrame(dataset = "cve")`  
+Update dataset: `net.security::DataSetUpdate(dataset = "cves")`  
+Data Frame: `cvess <- net.security::GetDataFrame(dataset = "cves")`  
 
