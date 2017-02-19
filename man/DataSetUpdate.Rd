@@ -15,7 +15,3 @@ Official source files download date time.
 \description{
 DataSetUpdate
 }
-\examples{
-net.security::DataSetUpdate(dataset = "all")
-net.security::DataSetUpdate(dataset = "cves")
-}

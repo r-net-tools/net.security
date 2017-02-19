@@ -15,7 +15,3 @@ Pairs of datasate
 \description{
 DataSetStatus
 }
-\examples{
-net.security::DataSetStatus(dataset = "all")
-net.security::DataSetStatus(dataset = "cves")
-}

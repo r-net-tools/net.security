@@ -5,10 +5,10 @@
 #' @param dataset Selects the data set for this operation. Default set to "all". Check available option with DataSetList()
 #' @return Pairs of datasate
 #' @export
-#' @examples
-#' net.security::DataSetStatus(dataset = "all")
-#' net.security::DataSetStatus(dataset = "cves")
 DataSetStatus <- function(dataset = "all") {
+  #' # @examples
+  #' net.security::DataSetStatus(dataset = "all")
+  #' net.security::DataSetStatus(dataset = "cves")
   status <- "Unknown"
   if (tolower(dataset) %in% c("cves", "all")) {
     # Get Status from local cves data.frame
@@ -21,10 +21,10 @@ DataSetStatus <- function(dataset = "all") {
 #' @param dataset Selects the data set for this operation. Default set to "all". Check available option with DataSetList()
 #' @return Official source files download date time.
 #' @export
-#' @examples
-#' net.security::DataSetUpdate(dataset = "all")
-#' net.security::DataSetUpdate(dataset = "cves")
 DataSetUpdate <- function(dataset = "all") {
+  #' # @examples
+  #' net.security::DataSetUpdate(dataset = "all")
+  #' net.security::DataSetUpdate(dataset = "cves")
   today <- Sys.Date()
   datasets <- list()
   if (tolower(dataset) %in% c("cves", "all")) {
@@ -33,7 +33,7 @@ DataSetUpdate <- function(dataset = "all") {
     #  build cves internal object (data.frame, date)
     datasets["cves"] <- list(df.cves)
     # Save temporal data frame
-    save(object = cves, file = "inst/tmpdata/cves.rda", compress = "gzip")
+    save(object = df.cves, file = "inst/tmpdata/cves.rda", compress = "gzip")
   }
   netsec.data <- list(today, datasets)
   save(object = netsec.data, file = "inst/extdata/netsec.data.rda", compress = "gzip")
@@ -44,9 +44,9 @@ DataSetUpdate <- function(dataset = "all") {
 #'
 #' @return List of available dataset values.
 #' @export
-#' @examples
-#' net.security::DataSetList()
 DataSetList <- function(){
+  #' # @examples
+  #' net.security::DataSetList()
   # Load local datasets and check which are available
   # return available as character array
   datasets <- character(0)
@@ -66,9 +66,9 @@ DataSetList <- function(){
 #' @param dataset Selects the data set for this operation. Default set to "all". Check available option with DataSetList()
 #' @return Selected dataset as tidy data.frame
 #' @export
-#' @examples
-#' cves <- net.security::GetDataFrame(dataset = "cves")
 GetDataFrame <- function(dataset = "cves") {
+  #' examples
+  #' cves <- net.security::GetDataFrame(dataset = "cves")
   df <- data.frame()
   if (DataSetAvailable(dataset = "cves")) {
     df <- netsec.data[[2]][["cves"]]
@@ -86,8 +86,8 @@ GetDataFrame <- function(dataset = "cves") {
 DataSetAvailable <- function(dataset = "cves") {
   checkval <- FALSE
   # Check if dataset exists on environment | inst/tmpdata/dataset.rda | tempdir()/dataset.rda
-  if ("netsec.data.rda" %in% ls(parent.env(globalenv()))) {
-    checkval <- dataset %in% names(netsec.data[[2]])
+  if (any("netsec.data.rda" %in% ls(parent.env(globalenv())))) {
+    checkval <- any(dataset %in% names(netsec.data[[2]]))
   }
   # Normalize how to store internal datasets
   return(checkval)

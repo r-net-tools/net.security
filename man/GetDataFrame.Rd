@@ -15,6 +15,3 @@ Selected dataset as tidy data.frame
 \description{
 GetDataFrame
 }
-\examples{
-cves <- net.security::GetDataFrame(dataset = "cves")
-}

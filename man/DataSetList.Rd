@@ -12,6 +12,3 @@ List of available dataset values.
 \description{
 DataSetList
 }
-\examples{
-net.security::DataSetList()
-}
