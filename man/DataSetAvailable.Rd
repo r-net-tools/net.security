@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{DataSetAvailable}
 \alias{DataSetAvailable}
-\title{Title}
+\title{DataSetAvailable}
 \usage{
 DataSetAvailable(dataset = "cves")
 }
@@ -13,5 +13,5 @@ DataSetAvailable(dataset = "cves")
 TRUE if dataset is available, FALSE if it needs an update.
 }
 \description{
-Title
+DataSetAvailable
 }

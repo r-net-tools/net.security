@@ -10,7 +10,7 @@
 #' net.security::DataSetStatus(dataset = "cves")
 DataSetStatus <- function(dataset = "all") {
   status <- "Unknown"
-  if (dataset == "cves") {
+  if (tolower(dataset) %in% c("cves", "all")) {
     # Get Status from local cves data.frame
   }
   return(status)
@@ -26,12 +26,18 @@ DataSetStatus <- function(dataset = "all") {
 #' net.security::DataSetUpdate(dataset = "cves")
 DataSetUpdate <- function(dataset = "all") {
   today <- Sys.Date()
-  if (dataset == "cves") {
+  datasets <- list()
+  if (tolower(dataset) %in% c("cves", "all")) {
     #  Update local cves data.frame from official sources
-    #  df <- GetCVEData()
+    df.cves <- GetCVEData()
     #  build cves internal object (data.frame, date)
+    datasets["cves"] <- list(df.cves)
+    # Save temporal data frame
+    save(object = cves, file = "inst/tmpdata/cves.rda", compress = "gzip")
   }
-  return(today)
+  netsec.data <- list(today, datasets)
+  save(object = netsec.data, file = "inst/extdata/netsec.data.rda", compress = "gzip")
+  return(as.character(today))
 }
 
 #' DataSetList
@@ -64,21 +70,15 @@ DataSetList <- function(){
 #' cves <- net.security::GetDataFrame(dataset = "cves")
 GetDataFrame <- function(dataset = "cves") {
   df <- data.frame()
-  if (dataset == "cves") {
-    # Check if dataset exists on environment | inst/tmpdata/dataset.rda | tempdir()/dataset.rda
-    # Normalize how to store internal datasets
-    # if (DataSetAvailable(dataset = "cves")) {
-    #   df <- GetCVEData()
-    # } else {
-    #   warning("CVES data set is not available. Use net.security::DataSetUpdate(dataset = \"cves\") ")
-    # }
-    #
+  if (DataSetAvailable(dataset = "cves")) {
+    df <- netsec.data[[2]][["cves"]]
   }
   return(df)
 }
 
 
 #---- Private functions --------------------------------------------------------
+
 #' DataSetAvailable
 #'
 #' @param dataset Selects the data set for this operation. Default set to "all". Check available option with DataSetList()
@@ -86,6 +86,9 @@ GetDataFrame <- function(dataset = "cves") {
 DataSetAvailable <- function(dataset = "cves") {
   checkval <- FALSE
   # Check if dataset exists on environment | inst/tmpdata/dataset.rda | tempdir()/dataset.rda
+  if ("netsec.data.rda" %in% ls(parent.env(globalenv()))) {
+    checkval <- dataset %in% names(netsec.data[[2]])
+  }
   # Normalize how to store internal datasets
   return(checkval)
 }
