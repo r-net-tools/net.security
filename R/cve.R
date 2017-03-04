@@ -69,8 +69,8 @@ ParseCVEMITREData <- function(path) {
 #'
 #' @return data frame
 ParseCVENISTData <- function(path, years = as.integer(format(Sys.Date(), "%Y"))) {
-  if (years == "all") years <- 2002:as.integer(format(Sys.Date(), "%Y"))
-  years.ok <- 2002:as.integer(format(Sys.Date(), "%Y"))
+  if (years == "all") years <- 2017:as.integer(format(Sys.Date(), "%Y"))
+  years.ok <- 2017:as.integer(format(Sys.Date(), "%Y"))
   if (any(!(years %in% years.ok))) {
     # wrong years defined
     cves <- data.frame(stringsAsFactors = F)
@@ -90,6 +90,7 @@ ParseCVENISTData <- function(path, years = as.integer(format(Sys.Date(), "%Y")))
 #' @param path String
 #' @return data frame
 GetNISTvulnsByYear <- function(path = tempdir(), year = as.integer(format(Sys.Date(), "%Y"))) {
+  print("GetNISTvulnsByYear")
   # Reference: https://scap.nist.gov/schema/nvd/vulnerability_0.4.xsd
   # TODO: Improve efficience 1 lapply instead of 2
   nistfile <- paste("nvdcve-2.0-", year, ".xml", sep = "")
@@ -377,7 +378,7 @@ NewNISTEntry <- function() {
 #### INCIBE Private Functions -----------------------------------------------------------------------------
 
 ParseCVETranslations <- function(path, years = as.integer(format(Sys.Date(), "%Y"))) {
-  if (years == "all") years <- 2002:as.integer(format(Sys.Date(), "%Y"))
+  if (years == "all") years <- 2017:as.integer(format(Sys.Date(), "%Y"))
   cves.sp <- data.frame(cve = character(), descr.sp = character(), stringsAsFactors = F)
   for (year in years){
     nist.file <- paste("nvdcve-", year, "trans.xml", sep = "")
@@ -425,7 +426,7 @@ DownloadCVEData <- function(dest) {
                                  sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
 
   # Download NIST data ()
-  for (year in 2002:as.integer(format(Sys.Date(), "%Y"))) {
+  for (year in 2017:as.integer(format(Sys.Date(), "%Y"))) {
     nist.file <- paste("nvdcve-2.0-", year, ".xml.gz", sep = "")
     nist.url <- paste("https://static.nvd.nist.gov/feeds/xml/cve/", nist.file, sep = "")
     utils::download.file(url = nist.url,
