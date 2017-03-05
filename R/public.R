@@ -29,11 +29,11 @@ DataSetUpdate <- function(dataset = "all") {
   datasets <- list()
   if (tolower(dataset) %in% c("cves", "all")) {
     #  Update local cves data.frame from official sources
-    df.cves <- GetCVEData()
+    cves <- GetCVEData()
     #  build cves internal object (data.frame, date)
-    datasets["cves"] <- list(df.cves)
+    datasets["cves"] <- list(cves)
     # Save temporal data frame
-    save(object = cves, file = "inst/tmpdata/cves.rda", compress = "gzip")
+    save(object = cves, file = "inst/extdata/cves.rda", compress = "gzip")
   }
   netsec.data <- list(today, datasets)
   save(object = netsec.data, file = "inst/extdata/netsec.data.rda", compress = "gzip")
