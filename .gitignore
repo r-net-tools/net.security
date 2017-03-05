@@ -14,3 +14,4 @@ vignettes/*.pdf
 
 # macOS files
 .DS_Store
+inst/extdata/cves.rda
