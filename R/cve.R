@@ -16,13 +16,16 @@ GetCVEData <- function(origin = "all", savepath = tempdir()) {
       # TODO: Unify the data.frames columns (references, ...)
       cves.mitre <- ParseCVEMITREData(path = savepath)
       cves.nist <- ParseCVENISTData(path = savepath, years = "all")
+      print("ParseCVENISTData, ParseCVEMITREData")
       cves <- dplyr::left_join(cves.mitre, cves.nist, by = c("cve" = "cve.id"))
+      print("Joint")
       names(cves) <- c("cve", "status", "description", "ref.mitre", "phase", "votes",
                        "comments", "osvdb", "cpe.config", "cpe.software", "discovered.datetime",
                        "disclosure.datetime", "exploit.publish.datetime", "published.datetime",
                        "last.modified.datetime", "cvss", "security.protection",
                        "assessment.check", "cwe", "ref.nist", "fix.action",
                        "scanner", "summary", "technical.description", "attack.scenario")
+      print("Names table")
     } else {
       cves <- ParseCVEMITREData(path = savepath)
     }
@@ -32,7 +35,9 @@ GetCVEData <- function(origin = "all", savepath = tempdir()) {
   }
 
   # Add spanish translations
+  print("end Tidy Data")
   cves.sp <- ParseCVETranslations(path = savepath, years = "all")
+  print("ParseCVETranslations")
   cves <- dplyr::left_join(cves, cves.sp)
 
   return(cves)
@@ -77,8 +82,10 @@ ParseCVENISTData <- function(path, years = as.integer(format(Sys.Date(), "%Y")))
   } else {
     cves <- NewNISTEntry()
     for (year in years) {
+      print("for year in years")
       kk <- years + 0
       cves <- rbind(cves, GetNISTvulnsByYear(path, year))
+      print("ParseYears")
     }
   }
   return(cves)
@@ -96,16 +103,22 @@ GetNISTvulnsByYear <- function(path = tempdir(), year = as.integer(format(Sys.Da
   nistfile <- paste("nvdcve-2.0-", year, ".xml", sep = "")
   nistpath <- paste(path, "cve","nist", nistfile,
                     sep = ifelse(.Platform$OS.type == "windows","\\","/"))
+  print("nistfile, nistpath")
   doc <- XML::xmlTreeParse(file = nistpath, useInternalNodes = T)
+  print("xmlTreeParse")
   entries <- XML::xmlChildren(XML::xmlRoot(doc))
+  print("xmlChildren")
   lentries <- lapply(entries, GetNISTEntry)
+  print("GetNISTEntry")
   df <- plyr::ldply(lentries, data.frame)
+  print("ldply")
 
   # Tidy Data
   df$.id    <- NULL
   df$cve.id <- as.character(df$cve.id)
   df$cwe    <- as.character(sapply(as.character(df$cwe), function(x) jsonlite::fromJSON(x)))
   df$cwe    <- sub(pattern = "list()",replacement = NA, x = df$cwe)
+  print("end GetNISTvulnsByYear")
 
   return(df)
 }
