@@ -168,11 +168,19 @@ GetNISTEntry <- function(node) {
 }
 
 
+#' osvdb.ext2df
+#'
+#' @param node
+#' @return
 osvdb.ext2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
+#' vulnerable.configuration2df
+#'
+#' @param node
+#' @return
 vulnerable.configuration2df <- function(node) {
   # TODO: Improve parser
 
@@ -256,6 +264,10 @@ vulnerable.configuration2df <- function(node) {
   return(rdf)
 }
 
+#' vulnerable.software.list2df
+#'
+#' @param node
+#' @return
 vulnerable.software.list2df <- function(node) {
   # TODO: Improve parser
   if (is.null(node)) return(jsonlite::toJSON(node))
@@ -263,61 +275,109 @@ vulnerable.software.list2df <- function(node) {
   return(rdf)
 }
 
+#' cve.id2df
+#'
+#' @param node
+#' @return
 cve.id2df <- function(node) {
   # TODO: Improve parser
   return(NodeToChar(node))
 }
 
+#' discovered.datetime2df
+#'
+#' @param node
+#' @return
 discovered.datetime2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
+#' disclosure.datetime2df
+#'
+#' @param node
+#' @return
 disclosure.datetime2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
+#' exploit.publish.datetime2df
+#'
+#' @param node
+#' @return
 exploit.publish.datetime2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
+#' published.datetime2df
+#'
+#' @param node
+#' @return
 published.datetime2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
+#' last.modified.datetime2df
+#'
+#' @param node
+#' @return
 last.modified.datetime2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
+#' cvss2df
+#'
+#' @param node
+#' @return
 cvss2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
+#' security.protection2df
+#'
+#' @param node
+#' @return
 security.protection2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
+#' assessment.check2df
+#'
+#' @param node
+#' @return
 assessment.check2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
+#' cwe2df
+#'
+#' @param node
+#' @return
 cwe2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
+#' references2df
+#'
+#' @param node
+#' @return
 references2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
+#' fix.action2df
+#'
+#' @param node
+#' @return
 fix.action2df <- function(node) {
   # TODO: Improve parser
   if (!is.null(node)) {
@@ -326,21 +386,37 @@ fix.action2df <- function(node) {
   return(NodeToJson(node))
 }
 
+#' scanner2df
+#'
+#' @param node
+#' @return
 scanner2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
+#' summary2df
+#'
+#' @param node
+#' @return
 summary2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
+#' technical.description2df
+#'
+#' @param node
+#' @return
 technical.description2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
+#' attack.scenario2df
+#'
+#' @param node
+#' @return
 attack.scenario2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
@@ -376,6 +452,9 @@ NewNISTEntry <- function() {
 
 #### INCIBE Private Functions -----------------------------------------------------------------------------
 
+#' ParseCVETranslations Create empty data frame for CVE NIST information
+#'
+#' @return data frame
 ParseCVETranslations <- function(path, years = as.integer(format(Sys.Date(), "%Y"))) {
   if (years == "all") years <- 2002:as.integer(format(Sys.Date(), "%Y"))
   cves.sp <- data.frame(cve = character(), descr.sp = character(), stringsAsFactors = F)
