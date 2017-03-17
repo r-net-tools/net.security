@@ -16,16 +16,15 @@ GetCVEData <- function(origin = "all", savepath = tempdir()) {
       # TODO: Unify the data.frames columns (references, ...)
       cves.mitre <- ParseCVEMITREData(path = savepath)
       cves.nist <- ParseCVENISTData(path = savepath, years = "all")
-      print("ParseCVENISTData, ParseCVEMITREData")
+      print(paste("Transforming data..."))
       cves <- dplyr::left_join(cves.mitre, cves.nist, by = c("cve" = "cve.id"))
-      print("Joint")
+      print(paste("Tidy data..."))
       names(cves) <- c("cve", "status", "description", "ref.mitre", "phase", "votes",
                        "comments", "osvdb", "cpe.config", "cpe.software", "discovered.datetime",
                        "disclosure.datetime", "exploit.publish.datetime", "published.datetime",
                        "last.modified.datetime", "cvss", "security.protection",
                        "assessment.check", "cwe", "ref.nist", "fix.action",
                        "scanner", "summary", "technical.description", "attack.scenario")
-      print("Names table")
     } else {
       cves <- ParseCVEMITREData(path = savepath)
     }
@@ -35,10 +34,9 @@ GetCVEData <- function(origin = "all", savepath = tempdir()) {
   }
 
   # Add spanish translations
-  print("end Tidy Data")
   cves.sp <- ParseCVETranslations(path = savepath, years = "all")
-  print("ParseCVETranslations")
   cves <- dplyr::left_join(cves, cves.sp)
+  print(paste("Process finished."))
 
   return(cves)
 }
@@ -61,6 +59,7 @@ ParseCVEMITREData <- function(path) {
                           skip = 9,
                           col.names = column.names,
                           colClasses = column.classes)
+  print(paste("Processing MITRE raw data..."))
   return(cves)
 }
 
@@ -74,18 +73,16 @@ ParseCVEMITREData <- function(path) {
 #'
 #' @return data frame
 ParseCVENISTData <- function(path, years = as.integer(format(Sys.Date(), "%Y"))) {
-  if (years == "all") years <- 2017:as.integer(format(Sys.Date(), "%Y"))
-  years.ok <- 2017:as.integer(format(Sys.Date(), "%Y"))
+  if (years == "all") years <- 2002:as.integer(format(Sys.Date(), "%Y"))
+  years.ok <- 2002:as.integer(format(Sys.Date(), "%Y"))
   if (any(!(years %in% years.ok))) {
     # wrong years defined
     cves <- data.frame(stringsAsFactors = F)
   } else {
     cves <- NewNISTEntry()
     for (year in years) {
-      print("for year in years")
-      kk <- years + 0
+      print(paste("Processing NIST", year, "raw data..."))
       cves <- rbind(cves, GetNISTvulnsByYear(path, year))
-      print("ParseYears")
     }
   }
   return(cves)
@@ -97,28 +94,21 @@ ParseCVENISTData <- function(path, years = as.integer(format(Sys.Date(), "%Y")))
 #' @param path String
 #' @return data frame
 GetNISTvulnsByYear <- function(path = tempdir(), year = as.integer(format(Sys.Date(), "%Y"))) {
-  print("GetNISTvulnsByYear")
   # Reference: https://scap.nist.gov/schema/nvd/vulnerability_0.4.xsd
   # TODO: Improve efficience 1 lapply instead of 2
   nistfile <- paste("nvdcve-2.0-", year, ".xml", sep = "")
   nistpath <- paste(path, "cve","nist", nistfile,
                     sep = ifelse(.Platform$OS.type == "windows","\\","/"))
-  print("nistfile, nistpath")
   doc <- XML::xmlTreeParse(file = nistpath, useInternalNodes = T)
-  print("xmlTreeParse")
   entries <- XML::xmlChildren(XML::xmlRoot(doc))
-  print("xmlChildren")
   lentries <- lapply(entries, GetNISTEntry)
-  print("GetNISTEntry")
   df <- plyr::ldply(lentries, data.frame)
-  print("ldply")
 
   # Tidy Data
   df$.id    <- NULL
   df$cve.id <- as.character(df$cve.id)
   df$cwe    <- as.character(sapply(as.character(df$cwe), function(x) jsonlite::fromJSON(x)))
   df$cwe    <- sub(pattern = "list()",replacement = NA, x = df$cwe)
-  print("end GetNISTvulnsByYear")
 
   return(df)
 }
@@ -391,7 +381,7 @@ NewNISTEntry <- function() {
 #### INCIBE Private Functions -----------------------------------------------------------------------------
 
 ParseCVETranslations <- function(path, years = as.integer(format(Sys.Date(), "%Y"))) {
-  if (years == "all") years <- 2017:as.integer(format(Sys.Date(), "%Y"))
+  if (years == "all") years <- 2002:as.integer(format(Sys.Date(), "%Y"))
   cves.sp <- data.frame(cve = character(), descr.sp = character(), stringsAsFactors = F)
   for (year in years){
     nist.file <- paste("nvdcve-", year, "trans.xml", sep = "")
@@ -403,6 +393,8 @@ ParseCVETranslations <- function(path, years = as.integer(format(Sys.Date(), "%Y
                                stringsAsFactors = F)
 
     cves.sp <- dplyr::bind_rows(cves.sp, cves.sp.year)
+    print(paste("Processing INCIBE", year, "spanish translations..."))
+
     # cve.type <- XML::xpathSApply(doc, "//nvdtrans/entry/@type")
     # cve.desc.date <- XML::xpathSApply(doc, "//nvdtrans/entry/desc/@modified")
   }
@@ -411,6 +403,19 @@ ParseCVETranslations <- function(path, years = as.integer(format(Sys.Date(), "%Y
 
 
 #### Private Functions -----------------------------------------------------------------------------
+
+#' LastDownloadDate
+#'
+#' @return
+#' @export
+#'
+#' @examples
+LastDownloadCVEDate <- function(){
+  doc.html <- XML::htmlParse("http://cve.mitre.org/data/downloads/index.html#download")
+  txt <- XML::xmlValue(XML::xpathSApply(doc.html, '//div[@class="smaller"]')[[1]])
+  last <- stringr::str_extract_all(pattern = "(.*-.*)", string = txt, simplify = T)[1,1]
+  return(last)
+}
 
 #' DownloadCVEData, Download CVE information
 #'
@@ -439,7 +444,7 @@ DownloadCVEData <- function(dest) {
                                  sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
 
   # Download NIST data ()
-  for (year in 2017:as.integer(format(Sys.Date(), "%Y"))) {
+  for (year in 2002:as.integer(format(Sys.Date(), "%Y"))) {
     nist.file <- paste("nvdcve-2.0-", year, ".xml.gz", sep = "")
     nist.url <- paste("https://static.nvd.nist.gov/feeds/xml/cve/", nist.file, sep = "")
     utils::download.file(url = nist.url,
@@ -459,6 +464,8 @@ DownloadCVEData <- function(dest) {
 #' @param path character, the directory containing the files to be extracted
 ExtractCVEFiles <- function(path) {
   # Uncompress gzip XML files
+  print(paste("Unzip, extract, etc..."))
+
   gzs <- list.files(path = paste(path, "cve", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")),
                     pattern = ".gz", full.names = TRUE, recursive = TRUE)
   apply(X = data.frame(gzs = gzs, stringsAsFactors = F),
