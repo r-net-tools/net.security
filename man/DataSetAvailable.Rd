@@ -4,10 +4,10 @@
 \alias{DataSetAvailable}
 \title{DataSetAvailable}
 \usage{
-DataSetAvailable(dataset = "cves")
+DataSetAvailable(ds)
 }
 \arguments{
-\item{dataset}{Selects the data set for this operation. Default set to "all". Check available option with DataSetList()}
+\item{ds}{Selects the data set for this operation. Default set to "all". Check available option with DataSetList()}
 }
 \value{
 TRUE if dataset is available, FALSE if it needs an update.

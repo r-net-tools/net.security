@@ -4,14 +4,17 @@
 \alias{GetDataFrame}
 \title{GetDataFrame}
 \usage{
-GetDataFrame(dataset = "cves")
+GetDataFrame(ds)
 }
 \arguments{
-\item{dataset}{Selects the data set for this operation. Default set to "all". Check available option with DataSetList()}
+\item{ds}{Selects the data set for this operation. Default set to "all". Check available option with DataSetList()}
 }
 \value{
 Selected dataset as tidy data.frame
 }
 \description{
 GetDataFrame
+}
+\examples{
+cves <- net.security::GetDataFrame(ds = "cves")
 }

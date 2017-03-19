@@ -4,14 +4,22 @@
 \alias{DataSetUpdate}
 \title{DataSetUpdate}
 \usage{
-DataSetUpdate(dataset = "all")
+DataSetUpdate(ds = "all")
 }
 \arguments{
-\item{dataset}{Selects the data set for this operation. Default set to "all". Check available option with DataSetList()}
+\item{ds}{Selects the data set for this operation. Default set to "all". Check available option with DataSetList()}
 }
 \value{
 Official source files download date time.
 }
 \description{
 DataSetUpdate
+}
+\examples{
+\dontrun{
+net.security::DataSetUpdate(ds = "all")
+}
+\dontrun{
+net.security::DataSetUpdate(ds = "cves")
+}
 }

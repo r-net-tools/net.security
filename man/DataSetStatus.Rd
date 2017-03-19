@@ -2,16 +2,27 @@
 % Please edit documentation in R/public.R
 \name{DataSetStatus}
 \alias{DataSetStatus}
-\title{DataSetStatus}
+\title{Shows data set basic information}
 \usage{
-DataSetStatus(dataset = "all")
+DataSetStatus(ds = "all")
 }
 \arguments{
-\item{dataset}{Selects the data set for this operation. Default set to "all". Check available option with DataSetList()}
+\item{ds}{Selects the data set for this operation. Default set to "all". Check available option with DataSetList()}
 }
 \value{
 Pairs of datasate
 }
 \description{
-DataSetStatus
+\code{DataSetStatus} prints to console size of data set, download date and date of new public raw data.
+}
+\details{
+This is a generic function. Just specify which standard and it will print its
+information. Type "all" or leave it without parameters and it will print info
+for all available datasets.
+}
+\examples{
+DataSetStatus("cves")
+\dontrun{
+DataSetStatus()
+}
 }

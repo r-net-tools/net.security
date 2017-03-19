@@ -7,8 +7,11 @@
 DataSetList()
 }
 \value{
-List of available dataset values.
+List of available datasets.
 }
 \description{
 DataSetList
+}
+\examples{
+net.security::DataSetList()
 }

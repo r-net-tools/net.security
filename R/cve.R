@@ -1,3 +1,18 @@
+#### Public Functions ----------------------------------------------------------------------------
+
+#' LastDownloadDate
+#'
+#' @return character with last official update date YYYY-MM-DD
+#' @export
+#'
+#' @examples last <- LastDownloadCVEDate()
+LastDownloadCVEDate <- function(){
+  doc.html <- XML::htmlParse("http://cve.mitre.org/data/downloads/index.html#download")
+  txt <- XML::xmlValue(XML::xpathSApply(doc.html, '//div[@class="smaller"]')[[1]])
+  last <- stringr::str_extract_all(pattern = "(.*-.*)", string = txt, simplify = T)[1,1]
+  return(last)
+}
+
 #### Private Functions ----------------------------------------------------------------------------
 
 #' Get data frame with CVE information
@@ -16,7 +31,9 @@ GetCVEData <- function(origin = "all", savepath = tempdir()) {
       # TODO: Unify the data.frames columns (references, ...)
       cves.mitre <- ParseCVEMITREData(path = savepath)
       cves.nist <- ParseCVENISTData(path = savepath, years = "all")
+      print(paste("Transforming data..."))
       cves <- dplyr::left_join(cves.mitre, cves.nist, by = c("cve" = "cve.id"))
+      print(paste("Tidy data..."))
       names(cves) <- c("cve", "status", "description", "ref.mitre", "phase", "votes",
                        "comments", "osvdb", "cpe.config", "cpe.software", "discovered.datetime",
                        "disclosure.datetime", "exploit.publish.datetime", "published.datetime",
@@ -32,8 +49,16 @@ GetCVEData <- function(origin = "all", savepath = tempdir()) {
   }
 
   # Add spanish translations
-  cves.sp <- ParseCVETranslations(path = savepath, years = "all")
-  cves <- dplyr::left_join(cves, cves.sp)
+  # TODO: Solve encoding issue. See devtools:check() log.
+  # cves.sp <- ParseCVETranslations(path = savepath, years = "all")
+  # cves <- dplyr::left_join(cves, cves.sp)
+
+  # Remove WIP columns parsing
+  wip.cols <- c("descr.sp")
+  cve.lite.cols <- names(cves)[!(names(cves) %in% wip.cols)]
+  cves <- cves[, cve.lite.cols]
+
+  print(paste("Process finished."))
 
   return(cves)
 }
@@ -56,6 +81,7 @@ ParseCVEMITREData <- function(path) {
                           skip = 9,
                           col.names = column.names,
                           colClasses = column.classes)
+  print(paste("Processing MITRE raw data..."))
   return(cves)
 }
 
@@ -77,7 +103,7 @@ ParseCVENISTData <- function(path, years = as.integer(format(Sys.Date(), "%Y")))
   } else {
     cves <- NewNISTEntry()
     for (year in years) {
-      kk <- years + 0
+      print(paste("Processing NIST", year, "raw data..."))
       cves <- rbind(cves, GetNISTvulnsByYear(path, year))
     }
   }
@@ -168,19 +194,11 @@ GetNISTEntry <- function(node) {
 }
 
 
-#' osvdb.ext2df
-#'
-#' @param node
-#' @return
 osvdb.ext2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
-#' vulnerable.configuration2df
-#'
-#' @param node
-#' @return
 vulnerable.configuration2df <- function(node) {
   # TODO: Improve parser
 
@@ -264,10 +282,6 @@ vulnerable.configuration2df <- function(node) {
   return(rdf)
 }
 
-#' vulnerable.software.list2df
-#'
-#' @param node
-#' @return
 vulnerable.software.list2df <- function(node) {
   # TODO: Improve parser
   if (is.null(node)) return(jsonlite::toJSON(node))
@@ -275,109 +289,61 @@ vulnerable.software.list2df <- function(node) {
   return(rdf)
 }
 
-#' cve.id2df
-#'
-#' @param node
-#' @return
 cve.id2df <- function(node) {
   # TODO: Improve parser
   return(NodeToChar(node))
 }
 
-#' discovered.datetime2df
-#'
-#' @param node
-#' @return
 discovered.datetime2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
-#' disclosure.datetime2df
-#'
-#' @param node
-#' @return
 disclosure.datetime2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
-#' exploit.publish.datetime2df
-#'
-#' @param node
-#' @return
 exploit.publish.datetime2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
-#' published.datetime2df
-#'
-#' @param node
-#' @return
 published.datetime2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
-#' last.modified.datetime2df
-#'
-#' @param node
-#' @return
 last.modified.datetime2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
-#' cvss2df
-#'
-#' @param node
-#' @return
 cvss2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
-#' security.protection2df
-#'
-#' @param node
-#' @return
 security.protection2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
-#' assessment.check2df
-#'
-#' @param node
-#' @return
 assessment.check2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
-#' cwe2df
-#'
-#' @param node
-#' @return
 cwe2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
-#' references2df
-#'
-#' @param node
-#' @return
 references2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
-#' fix.action2df
-#'
-#' @param node
-#' @return
 fix.action2df <- function(node) {
   # TODO: Improve parser
   if (!is.null(node)) {
@@ -386,37 +352,21 @@ fix.action2df <- function(node) {
   return(NodeToJson(node))
 }
 
-#' scanner2df
-#'
-#' @param node
-#' @return
 scanner2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
-#' summary2df
-#'
-#' @param node
-#' @return
 summary2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
-#' technical.description2df
-#'
-#' @param node
-#' @return
 technical.description2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
 }
 
-#' attack.scenario2df
-#'
-#' @param node
-#' @return
 attack.scenario2df <- function(node) {
   # TODO: Improve parser
   return(NodeToJson(node))
@@ -452,9 +402,6 @@ NewNISTEntry <- function() {
 
 #### INCIBE Private Functions -----------------------------------------------------------------------------
 
-#' ParseCVETranslations Create empty data frame for CVE NIST information
-#'
-#' @return data frame
 ParseCVETranslations <- function(path, years = as.integer(format(Sys.Date(), "%Y"))) {
   if (years == "all") years <- 2002:as.integer(format(Sys.Date(), "%Y"))
   cves.sp <- data.frame(cve = character(), descr.sp = character(), stringsAsFactors = F)
@@ -468,6 +415,8 @@ ParseCVETranslations <- function(path, years = as.integer(format(Sys.Date(), "%Y
                                stringsAsFactors = F)
 
     cves.sp <- dplyr::bind_rows(cves.sp, cves.sp.year)
+    print(paste("Processing INCIBE", year, "spanish translations..."))
+
     # cve.type <- XML::xpathSApply(doc, "//nvdtrans/entry/@type")
     # cve.desc.date <- XML::xpathSApply(doc, "//nvdtrans/entry/desc/@modified")
   }
@@ -524,6 +473,8 @@ DownloadCVEData <- function(dest) {
 #' @param path character, the directory containing the files to be extracted
 ExtractCVEFiles <- function(path) {
   # Uncompress gzip XML files
+  print(paste("Unzip, extract, etc..."))
+
   gzs <- list.files(path = paste(path, "cve", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")),
                     pattern = ".gz", full.names = TRUE, recursive = TRUE)
   apply(X = data.frame(gzs = gzs, stringsAsFactors = F),
