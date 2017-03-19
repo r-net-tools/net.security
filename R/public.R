@@ -19,16 +19,17 @@ DataSetStatus <- function(ds = "all") {
 
   if (tolower(ds) %in% c("cves", "all")) {
     # Get Status from local cves data.frame
-    print("* CVES dataset:")
+    print("-| CVES dataset:")
     if (DataSetAvailable(ds)) {
       cves.timestamp <- netsec.data[[1]][[paste(ds,".ini", sep = "")]]
-      print(paste("  Last update for CVES dataset at", as.character(cves.timestamp)))
-      print(paste("  Data set with", as.character(nrow(netsec.data[[2]][[ds]])), "rows and",
+      print(paste(" |- Last update for CVES dataset at", as.character(cves.timestamp)))
+      print(paste(" |- Data set with", as.character(nrow(netsec.data[[2]][[ds]])), "rows and",
             as.character(ncol(netsec.data[[2]][[ds]])), "variables."))
       cveonline <- strptime(net.security::LastDownloadCVEDate(), format = "%Y-%m-%d")
       cves.timestamp <- strptime(cves.timestamp, format = "%Y-%m-%d")
-      print(paste("  Online RAW data updated at", cveonline))
-      status <- paste("->CVES dataset", as.character(cveonline-cves.timestamp), "days outdated!")
+      print(paste(" |- Online RAW data updated at", cveonline))
+      print(paste(" |- CVES dataset", as.character(cveonline-cves.timestamp), "days outdated."))
+      status <- "."
     }
   }
   return(status)
