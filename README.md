@@ -19,21 +19,33 @@ If you want to test future features, just add branch as parameter:
 
 ## Usage
 
-Show last update date and number of observations.    
+List available datasets. Results are used in other functions.
 ```r
-net.security::DataSetStatus(dataset = "all")
-net.security::DataSetStatus(dataset = "cves")
+> net.security::DataSetList()
+[1] "cves"
+```
+
+Show last update and number of observations.    
+```r
+> net.security::DataSetStatus("cves")
+[1] "* CVES dataset:"
+[1] "  Last update for CVES dataset at 2017-03-17"
+[1] "  Data set with 103648 rows and 25 variables."
+[1] "  Online RAW data updated at 2017-03-18"
+[1] "->CVES dataset 1 days outdated!"
 ```
 
 Update data sets from official sources.  
 ```r
-net.security::DataSetUpdate(dataset = "all")
-net.security::DataSetUpdate(dataset = "cves")
+net.security::DataSetUpdate("cves")
 ```
 
-List available data frames.  
+Get data sets as data frames.  
 ```r
-net.security::DataSetList()
+> cves <- net.security::GetDataFrame("cves")
+> class(cves)
+[1] "data.frame"
+
 ```
 
 ### Security Standards
@@ -42,7 +54,3 @@ Reference: http://cve.mitre.org/about/faqs.html
 Raw Data:
  - MITRE: http://cve.mitre.org/data/downloads/index.html#download
  - NIST: https://nvd.nist.gov/download.cfm  
-
-Update dataset: `net.security::DataSetUpdate(dataset = "cves")`  
-Data Frame: `cvess <- net.security::GetDataFrame(dataset = "cves")`  
-

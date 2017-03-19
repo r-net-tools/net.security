@@ -75,7 +75,7 @@ DataSetUpdate <- function(ds = "all") {
 
 #' DataSetList
 #'
-#' @return List of available dataset values.
+#' @return List of available datasets.
 #' @export
 #' @examples
 #' net.security::DataSetList()
