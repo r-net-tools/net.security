@@ -1,24 +1,30 @@
-#---- Public functions --------------------------------------------------------
-
-#' DataSetStatus
+#' Shows data set basic information
 #'
-#' @param dataset Selects the data set for this operation. Default set to "all". Check available option with DataSetList()
+#' \code{DataSetStatus} prints to console size of data set, download date and date of new public raw data.
+#'
+#' This is a generic function. Just specify which standard and it will print its
+#' information. Type "all" or leave it without parameters and it will print info
+#' for all available datasets.
+#'
+#' @param ds Selects the data set for this operation. Default set to "all". Check available option with DataSetList()
 #' @return Pairs of datasate
 #' @export
 #' @examples
-#' net.security::DataSetStatus(dataset = "all")
-#' net.security::DataSetStatus(dataset = "cves")
-DataSetStatus <- function(dataset = "all") {
+#' DataSetStatus("cves")
+#' \dontrun{
+#' DataSetStatus()
+#' }
+DataSetStatus <- function(ds = "all") {
   status <- "Unknown"
 
-  if (tolower(dataset) %in% c("cves", "all")) {
+  if (tolower(ds) %in% c("cves", "all")) {
     # Get Status from local cves data.frame
     print("* CVES dataset:")
-    if (DataSetAvailable(dataset)) {
-      cves.timestamp <- netsec.data[[1]][[paste(dataset,".ini", sep = "")]]
+    if (DataSetAvailable(ds)) {
+      cves.timestamp <- netsec.data[[1]][[paste(ds,".ini", sep = "")]]
       print(paste("  Last update for CVES dataset at", as.character(cves.timestamp)))
-      print(paste("  Data set with", as.character(nrow(netsec.data[[2]][[dataset]])), "rows and",
-            as.character(ncol(netsec.data[[2]][[dataset]])), "variables."))
+      print(paste("  Data set with", as.character(nrow(netsec.data[[2]][[ds]])), "rows and",
+            as.character(ncol(netsec.data[[2]][[ds]])), "variables."))
       cveonline <- strptime(net.security::LastDownloadCVEDate(), format = "%Y-%m-%d")
       cves.timestamp <- strptime(cves.timestamp, format = "%Y-%m-%d")
       print(paste("  Online RAW data updated at", cveonline))
@@ -30,32 +36,39 @@ DataSetStatus <- function(dataset = "all") {
 
 #' DataSetUpdate
 #'
-#' @param dataset Selects the data set for this operation. Default set to "all". Check available option with DataSetList()
+#' @param ds Selects the data set for this operation. Default set to "all". Check available option with DataSetList()
 #' @return Official source files download date time.
 #' @export
 #' @examples
-#' net.security::DataSetUpdate(dataset = "all")
-#' net.security::DataSetUpdate(dataset = "cves")
-DataSetUpdate <- function(dataset = "all") {
+#' \dontrun{
+#' net.security::DataSetUpdate(ds = "all")
+#' }
+#' \dontrun{
+#' net.security::DataSetUpdate(ds = "cves")
+#' }
+DataSetUpdate <- function(ds = "all") {
   today <- Sys.Date()
   timestamp <- list()
   datasets <- list()
 
   # Update CVES dataset
-  if (tolower(dataset) %in% c("cves", "all")) {
+  if (tolower(ds) %in% c("cves", "all")) {
     #  Update local cves data.frame from official sources
     cves <- GetCVEData()
     #  build cves internal object (data.frame, date)
     datasets["cves"] <- list(cves)
-    # Save temporal data frame
-    save(object = cves, file = "inst/extdata/cves.rda", compress = "gzip")
+    # Save sample cves data frame
+    cves.sample <- cves[sample(nrow(cves), 500), ]
+    save(object = cves.sample, file = "data/cves.sample.rda", compress = "xz")
     timestamp["cves.ini"] <- list(today)
     timestamp["cves.fin"] <- list(Sys.Date())
   }
 
   # Update and save datasets object
   netsec.data <- list(timestamp, datasets)
-  save(object = netsec.data, file = "data/netsec.data.rda", compress = "gzip")
+  names(netsec.data) <- c("dwinfo","datasets")
+  print("Compressing and saving data sets to local file...")
+  save(object = netsec.data, file = "R/sysdata.rda", compress = "xz")
 
   return(as.character(today))
 }
@@ -72,7 +85,7 @@ DataSetList <- function(){
   datasets <- ""
 
   # Search CVES dataset
-  if (DataSetAvailable(dataset = "cves")) {
+  if (DataSetAvailable(ds = "cves")) {
     datasets <- ifelse(datasets == "",
                        yes = "cves",
                        no = c(datasets, "cves"))
@@ -82,7 +95,7 @@ DataSetList <- function(){
                      no = datasets)
 
   # Search CPES dataset
-  if (DataSetAvailable(dataset = "cpes")) {
+  if (DataSetAvailable(ds = "cpes")) {
     datasets <- ifelse(datasets == "",
                  yes = "cpes",
                  no = c(datasets, "cpes"))
@@ -97,15 +110,15 @@ DataSetList <- function(){
 
 #' GetDataFrame
 #'
-#' @param dataset Selects the data set for this operation. Default set to "all". Check available option with DataSetList()
+#' @param ds Selects the data set for this operation. Default set to "all". Check available option with DataSetList()
 #' @return Selected dataset as tidy data.frame
 #' @export
 #' @examples
-#' cves <- net.security::GetDataFrame(dataset = "cves")
-GetDataFrame <- function(dataset) {
+#' cves <- net.security::GetDataFrame(ds = "cves")
+GetDataFrame <- function(ds) {
   df <- data.frame()
-  if (DataSetAvailable(dataset)) {
-    df <- netsec.data[[2]][[dataset]]
+  if (DataSetAvailable(ds)) {
+    df <- netsec.data[[2]][[ds]]
   }
   return(df)
 }
@@ -115,13 +128,13 @@ GetDataFrame <- function(dataset) {
 
 #' DataSetAvailable
 #'
-#' @param dataset Selects the data set for this operation. Default set to "all". Check available option with DataSetList()
+#' @param ds Selects the data set for this operation. Default set to "all". Check available option with DataSetList()
 #' @return TRUE if dataset is available, FALSE if it needs an update.
-DataSetAvailable <- function(dataset) {
+DataSetAvailable <- function(ds) {
   checkval <- FALSE
   # Check if dataset exists on environment | inst/tmpdata/dataset.rda | tempdir()/dataset.rda
   if (exists("netsec.data")) {
-    checkval <- any(dataset %in% names(netsec.data[[2]]))
+    checkval <- any(ds %in% names(netsec.data[[2]]))
   }
   # Normalize how to store internal datasets
   return(checkval)

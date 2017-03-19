@@ -16,7 +16,8 @@ Imports:
     data.table,
     dplyr,
     jsonlite,
-    plyr
+    plyr,
+    stringr
 Suggests: 
     testthat, 
     covr 

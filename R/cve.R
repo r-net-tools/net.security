@@ -1,3 +1,18 @@
+#### Public Functions ----------------------------------------------------------------------------
+
+#' LastDownloadDate
+#'
+#' @return character with last official update date YYYY-MM-DD
+#' @export
+#'
+#' @examples last <- LastDownloadCVEDate()
+LastDownloadCVEDate <- function(){
+  doc.html <- XML::htmlParse("http://cve.mitre.org/data/downloads/index.html#download")
+  txt <- XML::xmlValue(XML::xpathSApply(doc.html, '//div[@class="smaller"]')[[1]])
+  last <- stringr::str_extract_all(pattern = "(.*-.*)", string = txt, simplify = T)[1,1]
+  return(last)
+}
+
 #### Private Functions ----------------------------------------------------------------------------
 
 #' Get data frame with CVE information
@@ -34,8 +49,15 @@ GetCVEData <- function(origin = "all", savepath = tempdir()) {
   }
 
   # Add spanish translations
-  cves.sp <- ParseCVETranslations(path = savepath, years = "all")
-  cves <- dplyr::left_join(cves, cves.sp)
+  # TODO: Solve encoding issue. See devtools:check() log.
+  # cves.sp <- ParseCVETranslations(path = savepath, years = "all")
+  # cves <- dplyr::left_join(cves, cves.sp)
+
+  # Remove WIP columns parsing
+  wip.cols <- c("descr.sp")
+  cve.lite.cols <- names(cves)[!(names(cves) %in% wip.cols)]
+  cves <- cves[, cve.lite.cols]
+
   print(paste("Process finished."))
 
   return(cves)
@@ -403,19 +425,6 @@ ParseCVETranslations <- function(path, years = as.integer(format(Sys.Date(), "%Y
 
 
 #### Private Functions -----------------------------------------------------------------------------
-
-#' LastDownloadDate
-#'
-#' @return
-#' @export
-#'
-#' @examples
-LastDownloadCVEDate <- function(){
-  doc.html <- XML::htmlParse("http://cve.mitre.org/data/downloads/index.html#download")
-  txt <- XML::xmlValue(XML::xpathSApply(doc.html, '//div[@class="smaller"]')[[1]])
-  last <- stringr::str_extract_all(pattern = "(.*-.*)", string = txt, simplify = T)[1,1]
-  return(last)
-}
 
 #' DownloadCVEData, Download CVE information
 #'
