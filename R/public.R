@@ -19,7 +19,7 @@ DataSetStatus <- function(ds = "all") {
 
   if (tolower(ds) %in% c("cves", "all")) {
     # Get Status from local cves data.frame
-    print("-| CVES dataset:")
+    print("-: CVES dataset:")
     if (DataSetAvailable(ds)) {
       cves.timestamp <- netsec.data[[1]][[paste(ds,".ini", sep = "")]]
       print(paste(" |- Last update for CVES dataset at", as.character(cves.timestamp)))

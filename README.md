@@ -1,8 +1,8 @@
 ![Alt text](inst/img/net.security.tiny.jpg?raw=true "net.security")
 
 [![Project Status: WIP - Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](http://www.repostatus.org/badges/latest/wip.svg)](http://www.repostatus.org/#wip) 
-[![Build Status](https://travis-ci.org/r-net-tools/net.security.svg?branch=devel)](https://travis-ci.org/r-net-tools/net.security) 
-[![Coverage Status](https://coveralls.io/repos/github/r-net-tools/net.security/badge.svg?branch=devel)](https://coveralls.io/github/r-net-tools/net.security?branch=devel)
+[![Build Status](https://travis-ci.org/r-net-tools/net.security.svg?branch=master)](https://travis-ci.org/r-net-tools/net.security) 
+[![Coverage Status](https://coveralls.io/repos/github/r-net-tools/net.security/badge.svg?branch=master)](https://coveralls.io/github/r-net-tools/net.security?branch=master)
 
 
 #### Package for Data Driven Security purposes.
@@ -29,10 +29,10 @@ Show last update and number of observations.
 ```r
 > net.security::DataSetStatus("cves")
 [1] "-: CVES dataset:"
-[1] " \- Last update for CVES dataset at 2017-03-17"
-[1] " \- Data set with 103648 rows and 25 variables."
-[1] " \- Online RAW data updated at 2017-03-18"
-[1] " \- Outdated days: 1"
+[1] " |- Last update for CVES dataset at 2017-03-17"
+[1] " |- Data set with 103648 rows and 25 variables."
+[1] " |- Online RAW data updated at 2017-03-18"
+[1] " |- Outdated days: 1"
 ```
 
 Update data sets from official sources.  
