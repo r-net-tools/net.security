@@ -3,7 +3,6 @@
 #' LastDownloadDate
 #'
 #' @return character with last official update date YYYY-MM-DD
-#' @export
 #'
 #' @examples last <- LastDownloadCVEDate()
 LastDownloadCVEDate <- function(){

@@ -8,14 +8,30 @@
 GetCPEData <- function(savepath = tempdir()) {
   # Schema: https://scap.nist.gov/schema/cpe/2.3/cpe-dictionary_2.3.xsd
   # RawData: http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip
+  print(paste("Downloading raw data..."))
   DownloadCPEData(savepath)
+  print(paste("Extracting data..."))
   cpe.source.file <- ExtractCPEFiles(savepath)
+  print(paste("Transforming data..."))
   cpes <- ParseCPEData(cpe.source.file)
   return(cpes)
 }
 
 
 #### Private Functions -----------------------------------------------------------------------------
+
+LastDownloadCPEDate <- function(){
+  doc.html <- XML::htmlParse(paste(readLines("https://nvd.nist.gov/cpe.cfm")))
+  ltxt <- XML::xpathSApply(doc.html, '//li')
+  i <- sapply(ltxt, function(x) grepl("official-cpe-dictionary_v2.3.xml", XML::xmlValue(x)))
+  txt <- XML::xmlValue(ltxt[[which(i)]])
+  last <- stringr::str_sub(txt,
+                           stringr::str_locate(txt, "Updated")[1,1],
+                           stringr::str_locate(txt, "- gz")[1,1]-2)
+  last <- strptime(last, "Updated: %m/%d/%Y %I:%M:%S %p", tz="EST")
+  last <- as.character.POSIXt(last)
+  return(last)
+}
 
 ExtractCPEFiles <- function(savepath) {
   # Uncompress gzip XML files
