@@ -87,6 +87,8 @@ DataSetUpdate <- function(ds = "all") {
     datasets[["cves"]] <- cves
     netsec.data$datasets <- datasets
 
+    # print("Checking on MITRE last update for CVEs...")
+    # print("Checking on NIST last update for CPEs...")
     # cveonline <- strptime(LastDownloadCVEDate(), format = "%Y-%m-%d")
     # cves.timestamp <- strptime(netsec.data[[1]][["cves.ini"]], format = "%Y-%m-%d")
     # if ((cveonline - cves.timestamp) <= 0) {

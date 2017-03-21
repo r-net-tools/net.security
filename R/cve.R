@@ -6,7 +6,6 @@
 #'
 #' @examples last <- LastDownloadCVEDate()
 LastDownloadCVEDate <- function(){
-  print("Checking on MITRE last update for CVEs...")
   doc.html <- XML::htmlParse("http://cve.mitre.org/data/downloads/index.html#download")
   txt <- XML::xmlValue(XML::xpathSApply(doc.html, '//div[@class="smaller"]')[[1]])
   last <- stringr::str_extract_all(pattern = "(.*-.*)", string = txt, simplify = T)[1,1]
