@@ -55,13 +55,15 @@ Quick Reference: http://cve.mitre.org/about/faqs.html
 Raw Data:
  - MITRE: http://cve.mitre.org/data/downloads/index.html#download
  - NIST: https://nvd.nist.gov/download.cfm  
+ 
 Standard:
  - [NIST Special Publication 800-51. Use of the Common. Vulnerabilities and Exposures. (CVE) Vulnerability Naming.](http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-51.pdf)  
  - [NIST SP 800-51 Revision 1, Guide to Using Vulnerability Naming Schemes](http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-51r1.pdf)  
 
 #### CPE: Common Platform Enumeration
-Quick Reference: https://nvd.nist.gov/cpe.cfm
+Quick Reference: https://nvd.nist.gov/cpe.cfm  
 Raw Data: 
- - NIST: http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.gz
+ - NIST: http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.gz  
+ 
 Standard:
- - [NISTIR 7695, Common Platform Enumeration: Naming Specification Version 2.3](http://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7695.pdf)
+ - [NISTIR 7695, Common Platform Enumeration: Naming Specification Version 2.3](http://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7695.pdf)  
