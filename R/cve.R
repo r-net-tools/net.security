@@ -4,7 +4,9 @@
 #'
 #' @return character with last official update date YYYY-MM-DD
 #'
+#' \dontrun{
 #' @examples last <- LastDownloadCVEDate()
+#' }
 LastDownloadCVEDate <- function(){
   doc.html <- XML::htmlParse("http://cve.mitre.org/data/downloads/index.html#download")
   txt <- XML::xmlValue(XML::xpathSApply(doc.html, '//div[@class="smaller"]')[[1]])

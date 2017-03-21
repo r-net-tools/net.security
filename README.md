@@ -36,7 +36,7 @@ Show last update and number of observations.
 [1] " |- Outdated days: 1"
 ```
 
-Update data sets from official sources.  
+Update data sets from official sources. Estimated duration: 1h for cves, 1/2h for cpes. 
 ```r
 net.security::DataSetUpdate("cves")
 ```
