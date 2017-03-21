@@ -79,50 +79,44 @@ DataSetUpdate <- function(ds = "all") {
 
   # Update CVES dataset
   if (tolower(ds) %in% c("cves", "all")) {
+    #  Update local cves data.frame from official sources
+    cves <- GetCVEData()
+    # Update dataset object
+    netsec.data$dwinfo[["cves.ini"]] <- today
+    netsec.data$dwinfo[["cves.fin"]] <- Sys.Date()
+    datasets[["cves"]] <- cves
+    netsec.data$datasets <- datasets
+
+    # cveonline <- strptime(LastDownloadCVEDate(), format = "%Y-%m-%d")
+    # cves.timestamp <- strptime(netsec.data[[1]][["cves.ini"]], format = "%Y-%m-%d")
+    # if ((cveonline - cves.timestamp) <= 0) {
+    #   print(paste(" |- No updates needed for CPES dataset."))
+    # } else {
+    #   print(paste(" |- CPES dataset", as.character(cpeonline-cpes.timestamp), "days outdated."))
+    # }
+
     # upd <- LastDownloadCVEDate()
     # if (any(grepl("cves", names(netsec.data$dwinfo))) &
     #     (netsec.data$dwinfo$cves.ini >= upd)) {
     #   print("You have the newest CVES dataset.")
     # } else {
-      #  Update local cves data.frame from official sources
-      cves <- GetCVEData()
-      # Update dataset object
-      netsec.data$dwinfo[["cves.ini"]] <- today
-      netsec.data$dwinfo[["cves.fin"]] <- Sys.Date()
-      datasets[["cves"]] <- cves
-      netsec.data$datasets <- datasets
-
-      # Save sample cves data frame
-      # print("Compressing and saving random sample of CVEs to local file...")
-      # cves.sample <- cves[sample(nrow(cves), 500), ]
-      # save(object = cves.sample, file = "data/cves.sample.rda", compress = "xz")
+    #
+    #   # Save sample cves data frame
+    #   # print("Compressing and saving random sample of CVEs to local file...")
+    #   # cves.sample <- cves[sample(nrow(cves), 500), ]
+    #   # save(object = cves.sample, file = "data/cves.sample.rda", compress = "xz")
     # }
   }
 
   # Update CPES dataset
   if (tolower(ds) %in% c("cpes", "all")) {
-    # upd <- LastDownloadCPEDate()
-    # if (!is.null(netsec.data$dwinfo$cpes.ini)){
-    #   if (netsec.data$dwinfo$cpes.ini >= upd) {
-    #
-    #   }
-    # } else {
-    # }
-    #   print("You have the newest CPES dataset.")
-    # } else {
-      #  Update local cpes data.frame from official sources
-      cpes <- GetCPEData()
-      # Update dataset object
-      netsec.data$dwinfo[["cpes.ini"]] <- today
-      netsec.data$dwinfo[["cpes.fin"]] <- Sys.Date()
-      datasets[["cpes"]] <- cpes
-      netsec.data$datasets <- datasets
-
-      # Save sample cpes data frame
-      # print("Compressing and saving random sample of CPEs to local file...")
-      # cpes.sample <- cpes[sample(nrow(cpes), 500), ]
-      # save(object = cpes.sample, file = "data/cpes.sample.rda", compress = "xz")
-    # }
+    #  Update local cpes data.frame from official sources
+    cpes <- GetCPEData()
+    # Update dataset object
+    netsec.data$dwinfo[["cpes.ini"]] <- today
+    netsec.data$dwinfo[["cpes.fin"]] <- Sys.Date()
+    datasets[["cpes"]] <- cpes
+    netsec.data$datasets <- datasets
   }
 
   # Update and save datasets object
@@ -130,7 +124,10 @@ DataSetUpdate <- function(ds = "all") {
   # names(netsec.data) <- c("dwinfo","datasets")
   print("Compressing and saving data sets to local file...")
   save(object = netsec.data, file = "R/sysdata.rda", compress = "xz")
+
+  # TODO: Update netsec.data in parent.env(environment())
   warning("Package needs rebuild to use updated data sets.")
+  # assign(x = netsec.data, value = net.sec.data, envir = parent.env(environment()))
 
   return(as.character(today))
 }
@@ -148,19 +145,16 @@ DataSetList <- function(){
 
   # Search CVES dataset
   if (DataSetAvailable(ds = "cves")) {
-    datasets <- ifelse(datasets == "",
-                       yes = "cves",
-                       no = c(datasets, "cves"))
+    ifelse(datasets == "",
+           yes = datasets <- "cves",
+           no = datasets[length(datasets) + 1] <- "cves")
   }
-  datasets <- ifelse(datasets == "",
-                     yes = "Data sets not available. Use net.security::DataSetUpdate() ",
-                     no = datasets)
 
   # Search CPES dataset
   if (DataSetAvailable(ds = "cpes")) {
-    datasets <- ifelse(datasets == "",
-                 yes = "cpes",
-                 no = c(datasets, "cpes"))
+    ifelse(datasets == "",
+           yes = datasets <- "cpes",
+           no = datasets[length(datasets) + 1] <- "cpes")
   }
 
   # Check if no datasets available
@@ -197,7 +191,7 @@ GetDataFrame <- function(ds) {
 DataSetAvailable <- function(ds) {
   checkval <- FALSE
   if (exists("netsec.data")) {
-    checkval <- any(ds %in% names(netsec.data[["datasets"]]))
+    checkval <- any(tolower(ds) %in% names(netsec.data[["datasets"]]))
   }
   # Normalize how to store internal datasets
   return(checkval)

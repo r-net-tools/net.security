@@ -21,6 +21,7 @@ GetCPEData <- function(savepath = tempdir()) {
 #### Private Functions -----------------------------------------------------------------------------
 
 LastDownloadCPEDate <- function(){
+  print("Checking on NIST last update for CPEs...")
   doc.html <- XML::htmlParse(paste(readLines("https://nvd.nist.gov/cpe.cfm")))
   ltxt <- XML::xpathSApply(doc.html, '//li')
   i <- sapply(ltxt, function(x) grepl("official-cpe-dictionary_v2.3.xml", XML::xmlValue(x)))
