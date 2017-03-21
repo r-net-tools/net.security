@@ -12,7 +12,7 @@ GetCPEData <- function(savepath = tempdir()) {
   DownloadCPEData(savepath)
   print(paste("Extracting data..."))
   cpe.source.file <- ExtractCPEFiles(savepath)
-  print(paste("Transforming data..."))
+  print(paste("Indexing data..."))
   cpes <- ParseCPEData(cpe.source.file)
   return(cpes)
 }

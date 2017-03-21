@@ -30,7 +30,7 @@ GetCVEData <- function(origin = "all", savepath = tempdir()) {
       # TODO: Unify the data.frames columns (references, ...)
       cves.mitre <- ParseCVEMITREData(path = savepath)
       cves.nist <- ParseCVENISTData(path = savepath, years = "all")
-      print(paste("Transforming data..."))
+      print(paste("Indexing data..."))
       cves <- dplyr::left_join(cves.mitre, cves.nist, by = c("cve" = "cve.id"))
       print(paste("Tidy data..."))
       names(cves) <- c("cve", "status", "description", "ref.mitre", "phase", "votes",

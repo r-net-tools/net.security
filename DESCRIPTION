@@ -3,7 +3,7 @@ Title: Security Standards DataSets
 Version: 0.0.0.9500 
 Author: person("Humbert", "Costas", email = "humbert.costas@gmail.com", role = c("aut", "cre")
 Description: Functions and tools related to network security standards for R. 
-Depends: R (>= 3.3.0)
+Depends: R (>= 3.3.2)
 License: GPL-3 
 Encoding: UTF-8
 LazyData: true
