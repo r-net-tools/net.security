@@ -51,7 +51,7 @@ GetCVEData <- function(origin = "all", savepath = tempdir()) {
   # cves <- dplyr::left_join(cves, cves.sp)
 
   # Remove WIP columns parsing
-  wip.cols <- c("descr.sp")
+  wip.cols <- c("descr.sp", "osvdb")
   cve.lite.cols <- names(cves)[!(names(cves) %in% wip.cols)]
   cves <- cves[, cve.lite.cols]
 
