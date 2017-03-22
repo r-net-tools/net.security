@@ -41,3 +41,14 @@ test_that("cves_content", {
   cve_pattern <- "CVE-[[:digit:]]"
   expect_true(all(grepl(pattern = cve_pattern, x = my_cves$cve)))
 })
+
+#### Internal functions
+x <- LastDownloadCVEDate()
+
+test_that("check LastDownloadCVEDate output",{
+  expect_true(exists("x"))
+  expect_false(is.null(x))
+  expect_is(x, "character")
+})
+rm(x)
+
