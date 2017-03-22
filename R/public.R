@@ -57,7 +57,17 @@ DataSetStatus <- function(ds = "all") {
   return(status)
 }
 
-#' DataSetUpdate
+#' Update local data sets and update R/sysdata.rda file
+#'
+#' \code{DataSetUpdate} Starts the process for updating local data sets available with \code{GetDataFrame} function.
+#'
+#' The process include the following phases:
+#'  - Download files from MITRE, NIST and INCIBE sources.
+#'  - Process MITRE raw data.
+#'  - Process NIST raw data. One file per year.
+#'  - Indexing data. Includes CSV and XML parsing. Build data frame.
+#'  - Tidy data frame.
+#'  - Compress and save data.frame to internal data.
 #'
 #' @param ds Selects the data set for this operation. Default set to "all".
 #'           Check available options with DataSetList()
@@ -71,6 +81,13 @@ DataSetStatus <- function(ds = "all") {
 #' net.security::DataSetUpdate(ds = "cves")
 #' }
 DataSetUpdate <- function(ds = "all") {
+  # TODO: Create netsec.data if not exists
+  # Create netsec.data structure
+  # timestamp <- list()
+  # datasets <- list()
+  # netsec.data <- list(timestamp, datasets)
+  # names(netsec.data) <- c("dwinfo","datasets")
+
   today <- Sys.Date()
   timestamp <- list()
   datasets <- netsec.data$datasets
@@ -97,9 +114,6 @@ DataSetUpdate <- function(ds = "all") {
     netsec.data$datasets <- datasets
   }
 
-  # Update and save datasets object
-  # netsec.data <- list(timestamp, datasets)
-  # names(netsec.data) <- c("dwinfo","datasets")
   print("Compressing and saving data sets to local file...")
   save(object = netsec.data, file = "R/sysdata.rda", compress = "xz")
 
@@ -111,7 +125,11 @@ DataSetUpdate <- function(ds = "all") {
   return(as.character(today))
 }
 
-#' DataSetList
+#' Show data set status. Prints information about update status and number of observations of local data sets.
+#'
+#' \code{DataSetList}
+#'
+#' Check the internal data structure and returns a character vector with names of available data.frames.
 #'
 #' @return List of available datasets.
 #' @export
@@ -143,7 +161,11 @@ DataSetList <- function(){
   return(datasets)
 }
 
-#' GetDataFrame
+#' Get data sets as data frames. Check data sets documentation for details of data frames.
+#'
+#' \code{GetDataFrame}
+#'
+#' Returns the data.frame selected. "Unknown" if it's not available.
 #'
 #' @param ds Selects the data set for this operation. Default set to "all". Check available option with DataSetList()
 #' @return Selected dataset as tidy data.frame
