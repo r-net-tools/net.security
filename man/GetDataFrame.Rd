@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{GetDataFrame}
 \alias{GetDataFrame}
-\title{GetDataFrame}
+\title{Get data sets as data frames. Check data sets documentation for details of data frames.}
 \usage{
 GetDataFrame(ds)
 }
@@ -13,7 +13,10 @@ GetDataFrame(ds)
 Selected dataset as tidy data.frame
 }
 \description{
-GetDataFrame
+\code{GetDataFrame}
+}
+\details{
+Returns the data.frame selected. "Unknown" if it's not available.
 }
 \examples{
 cves <- net.security::GetDataFrame(ds = "cves")

@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{DataSetList}
 \alias{DataSetList}
-\title{DataSetList}
+\title{Show data set status. Prints information about update status and number of observations of local data sets.}
 \usage{
 DataSetList()
 }
@@ -10,7 +10,10 @@ DataSetList()
 List of available datasets.
 }
 \description{
-DataSetList
+\code{DataSetList}
+}
+\details{
+Check the internal data structure and returns a character vector with names of available data.frames.
 }
 \examples{
 net.security::DataSetList()

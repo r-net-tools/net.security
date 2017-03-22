@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{DataSetUpdate}
 \alias{DataSetUpdate}
-\title{DataSetUpdate}
+\title{Update local data sets and update R/sysdata.rda file}
 \usage{
 DataSetUpdate(ds = "all")
 }
@@ -14,7 +14,18 @@ Check available options with DataSetList()}
 Date Official source files download date time.
 }
 \description{
-DataSetUpdate
+\code{DataSetUpdate} Starts the process for updating local data sets available with \code{\link{GetDataFrame}} function.
+}
+\details{
+The process include the following phases:
+\enumerate{
+   \item Download files from MITRE, NIST and INCIBE sources.
+   \item Process MITRE raw data.
+   \item Process NIST raw data. One file per year.
+   \item Indexing data. Includes CSV and XML parsing. Build data frame.
+   \item Tidy data frame.
+   \item Compress and save data.frame to internal data.
+}
 }
 \examples{
 \dontrun{
