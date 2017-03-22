@@ -59,15 +59,17 @@ DataSetStatus <- function(ds = "all") {
 
 #' Update local data sets and update R/sysdata.rda file
 #'
-#' \code{DataSetUpdate} Starts the process for updating local data sets available with \code{GetDataFrame} function.
+#' \code{DataSetUpdate} Starts the process for updating local data sets available with \code{\link{GetDataFrame}} function.
 #'
 #' The process include the following phases:
-#'  - Download files from MITRE, NIST and INCIBE sources.
-#'  - Process MITRE raw data.
-#'  - Process NIST raw data. One file per year.
-#'  - Indexing data. Includes CSV and XML parsing. Build data frame.
-#'  - Tidy data frame.
-#'  - Compress and save data.frame to internal data.
+#' \enumerate{
+#'    \item Download files from MITRE, NIST and INCIBE sources.
+#'    \item Process MITRE raw data.
+#'    \item Process NIST raw data. One file per year.
+#'    \item Indexing data. Includes CSV and XML parsing. Build data frame.
+#'    \item Tidy data frame.
+#'    \item Compress and save data.frame to internal data.
+#' }
 #'
 #' @param ds Selects the data set for this operation. Default set to "all".
 #'           Check available options with DataSetList()
