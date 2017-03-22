@@ -12,6 +12,3 @@ character with last official update date YYYY-MM-DD
 \description{
 LastDownloadDate
 }
-\examples{
-last <- LastDownloadCVEDate()
-}

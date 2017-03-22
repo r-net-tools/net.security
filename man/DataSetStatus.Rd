@@ -7,7 +7,8 @@
 DataSetStatus(ds = "all")
 }
 \arguments{
-\item{ds}{Selects the data set for this operation. Default set to "all". Check available option with DataSetList()}
+\item{ds}{Selects the data set for this operation. Default set to "all".
+Check available option with DataSetList()}
 }
 \value{
 Pairs of datasate

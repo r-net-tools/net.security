@@ -7,10 +7,11 @@
 DataSetUpdate(ds = "all")
 }
 \arguments{
-\item{ds}{Selects the data set for this operation. Default set to "all". Check available option with DataSetList()}
+\item{ds}{Selects the data set for this operation. Default set to "all".
+Check available options with DataSetList()}
 }
 \value{
-Official source files download date time.
+Date Official source files download date time.
 }
 \description{
 DataSetUpdate
