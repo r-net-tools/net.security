@@ -12,10 +12,22 @@ This package provides data sets for security standards and tools. It also have f
 ## Install
 
 From R console just type:  
-`devtools::install_github(repo = "r-net-tools/net.security")`  
+```r
+devtools::install_github(repo = "r-net-tools/net.security")
+```  
 
 If you want to test future features, just add branch as parameter:  
-`devtools::install_github(repo = "r-net-tools/net.security", ref = "devel")`  
+```r
+devtools::install_github(repo = "r-net-tools/net.security", ref = "devel")
+```  
+
+### Linux - Debian
+If you need to upgrade R to latest version, follow [this](https://cran.r-project.org/bin/linux/debian/) instructions step by step.
+
+Latest versions of R made the installation of package dependencies automatically. Check the DESCRIPTION file for needed installed packages. Packages openssl, curl and XML will need system libraries that are not installed by default. Maybe you will need to install this:  
+```sh
+sudo apt-get install libssl-dev libcurl4-openssl-dev libxml2-dev
+```
 
 ## Usage
 
