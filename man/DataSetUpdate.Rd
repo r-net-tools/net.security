@@ -4,11 +4,15 @@
 \alias{DataSetUpdate}
 \title{Update local data sets and update R/sysdata.rda file}
 \usage{
-DataSetUpdate(ds = "all")
+DataSetUpdate(ds = "all", samples = FALSE, use.remote = TRUE)
 }
 \arguments{
 \item{ds}{Selects the data set for this operation. Default set to "all".
 Check available options with DataSetList()}
+
+\item{samples}{if TRUE it will create sample data.frames and store them in /data}
+
+\item{use.remote}{if TRUE it will download sysdata.rda from net.security github}
 }
 \value{
 Date Official source files download date time.
