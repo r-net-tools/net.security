@@ -3,7 +3,7 @@ context("cve functions")
 #### Expected Values -------------------------------------------------------------------------------
 
 expected_cves_names    <- c("cve", "status", "description", "ref.mitre", "phase",
-                            "votes", "comments", "osvdb", "cpe.config", "cpe.software",
+                            "votes", "comments", "cpe.config", "cpe.software",
                             "discovered.datetime", "disclosure.datetime", "exploit.publish.datetime",
                             "published.datetime", "last.modified.datetime", "cvss",
                             "security.protection", "assessment.check", "cwe", "ref.nist", "fix.action",
