@@ -101,7 +101,7 @@ ParseCVENISTData <- function(path, years = as.integer(format(Sys.Date(), "%Y")))
     cves <- NewNISTEntry()
     for (year in years) {
       print(paste("Processing NIST", year, "raw data..."))
-      cves <- rbind(cves, GetNISTvulnsByYear(path, year))
+      cves <- dplyr::bind_rows(cves, GetNISTvulnsByYear(path, year))
     }
   }
   return(cves)
