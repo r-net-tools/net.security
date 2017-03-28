@@ -23,7 +23,7 @@ GetCPEData <- function(savepath = tempdir()) {
 LastDownloadCPEDate <- function(){
   doc.html <- XML::htmlParse(paste(readLines("https://nvd.nist.gov/cpe.cfm")))
   ltxt <- XML::xpathSApply(doc.html, '//li')
-  i <- sapply(ltxt, function(x) grepl("official-cpe-dictionary_v2.3.xml", XML::xmlValue(x)))
+  i <- sapply(ltxt, function(x) grepl("official-cpe-dictionary_v2.3.xml", XML::saveXML(x)))
   txt <- XML::xmlValue(ltxt[[which(i)]])
   last <- stringr::str_sub(txt,
                            stringr::str_locate(txt, "Updated")[1,1],
