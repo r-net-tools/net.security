@@ -80,8 +80,9 @@ Update data sets from official sources. Estimated duration: 1h for cves, 1/4h fo
 [1] "Indexing data..."
 [1] "Tidy data..."
 [1] "Process finished."
-[1] "Updated CVEs data.frame has 103075  new observations."
+[1] "Updated CVEs data.frame has 103081  new observations."
 [1] "Compressing and saving data sets to local file..."
+[1] "2017-03-29"
 >
 ```
 
