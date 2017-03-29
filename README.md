@@ -57,7 +57,7 @@ Show data set status. Prints information about update status and number of obser
 
 Update data sets from official sources. Estimated duration: 1h for cves, 1/2h for cpes. 
 ```r
-> net.security::DataSetUpdate("cves")
+> net.security::DataSetUpdate("cves", use.remote = FALSE)
 [1] "Downloading raw data..."
 [1] "Unzip, extract, etc..."
 [1] "Processing MITRE raw data..."
@@ -80,7 +80,9 @@ Update data sets from official sources. Estimated duration: 1h for cves, 1/2h fo
 [1] "Indexing data..."
 [1] "Tidy data..."
 [1] "Process finished."
+[1] "Updated CVEs data.frame has 103081  new observations."
 [1] "Compressing and saving data sets to local file..."
+[1] "2017-03-29"
 >
 ```
 
