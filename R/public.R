@@ -54,6 +54,24 @@ DataSetStatus <- function(ds = "all") {
       status <- "-:"
     }
   }
+  if (tolower(ds) %in% c("cwes", "all")) {
+    # Get Status from local cwes data.frame
+    if (DataSetAvailable("cwes")) {
+      print("-: CWES dataset:")
+      cwes.timestamp <- strptime(netsec.data[[1]][["cwes.ini"]], format = "%Y-%m-%d")
+      print(paste(" |- Last update for CWES dataset at", as.character(cwes.timestamp)))
+      print(paste(" |- Data set with", as.character(nrow(netsec.data[[2]][["cwes"]])), "rows and",
+                  as.character(ncol(netsec.data[[2]][["cwes"]])), "variables."))
+      # cweonline <- strptime(LastDownloadCWEDate(), format = "%Y-%m-%d")
+      # print(paste(" |- Online RAW data updated at", cweonline))
+      # if ((cweonline-cwes.timestamp)<=0) {
+      #   print(paste(" |- No updates needed for CWES dataset."))
+      # } else {
+      #   print(paste(" |- CWES dataset", as.character(cweonline-cwes.timestamp), "days outdated."))
+      # }
+      status <- "-:"
+    }
+  }
   return(status)
 }
 
@@ -87,7 +105,7 @@ DataSetStatus <- function(ds = "all") {
 DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
 
   ds <- tolower(ds)
-  if (ds %in% c("all", "cves", "cpes")) {
+  if (ds %in% c("all", "cves", "cpes", "cwes")) {
     # TODO: Create netsec.data if not exists
     # Create netsec.data structure
     # timestamp <- list()
@@ -97,10 +115,12 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
 
     cves.ini <- Sys.Date()
     cpes.ini <- Sys.Date()
+    cwes.ini <- Sys.Date()
     timestamp <- list()
     datasets <- netsec.data$datasets
     cves.nrow <- nrow(netsec.data$datasets$cves)
     cpes.nrow <- nrow(netsec.data$datasets$cpes)
+    cwes.nrow <- nrow(netsec.data$datasets$cwes)
 
     # print(paste(ls(parent.env(environment()))))
     # netsec.data$dwinfo[["test"]] <- "OK"
@@ -124,6 +144,11 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
         cpes <- netsec.data$datasets$cpes
         cpes.ini <- netsec.data$dwinfo[["cpes.ini"]]
       }
+      if (tolower(ds) %in% c("cwes", "all")) {
+        #  Update local cwes data.frame from official sources
+        cwes <- netsec.data$datasets$cwes
+        cwes.ini <- netsec.data$dwinfo[["cwes.ini"]]
+      }
       rm(netsec.data)
     } else {
       if (tolower(ds) %in% c("cves", "all")) {
@@ -133,6 +158,10 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
       if (tolower(ds) %in% c("cpes", "all")) {
         #  Update local cpes data.frame from official sources
         cpes <- GetCPEData()
+      }
+      if (tolower(ds) %in% c("cwes", "all")) {
+        #  Update local cwes data.frame from official sources
+        cwes <- GetCWEData()
       }
     }
 
@@ -153,6 +182,14 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
       new.cpes <- as.character(nrow(cpes) - cpes.nrow)
       print(paste("Updated CPEs data.frame has", new.cpes, " new observations."))
     }
+    if (tolower(ds) %in% c("cwes", "all")) {
+      #  Update package datasets with updated cwes data.frame
+      netsec.data$dwinfo[["cwes.ini"]] <- cwes.ini
+      netsec.data$dwinfo[["cwes.fin"]] <- cwes.ini
+      datasets[["cwes"]] <- cwes
+      new.cwes <- as.character(nrow(cwes) - cwes.nrow)
+      print(paste("Updated CWEs data.frame has", new.cwes, " new observations."))
+    }
     netsec.data$datasets <- datasets
 
     # Save samples if needed
@@ -172,6 +209,15 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
         # cols <- names(cves)[sapply(cves, class) == "factor"]
         # cpes.sample[cols] <- lapply(cpes.sample[cols], factor)
         save(object = cpes.sample, file = "data/cpes.sample.rda", compress = "xz")
+      }
+      if (tolower(ds) %in% c("cwes", "all")) {
+        #  Update local cwes data.frame from official sources
+        # Save sample cves data frame
+        cwes.sample <- cwes[sample(nrow(cwes), 100), ]
+        cwes.sample[] <- lapply(cwes.sample, as.character)
+        # cols <- names(cves)[sapply(cves, class) == "factor"]
+        # cpes.sample[cols] <- lapply(cpes.sample[cols], factor)
+        save(object = cwes.sample, file = "data/cwes.sample.rda", compress = "xz")
       }
     }
     print("Compressing and saving data sets to local file...")
@@ -215,6 +261,13 @@ DataSetList <- function(){
     ifelse(datasets == "",
            yes = datasets <- "cpes",
            no = datasets[length(datasets) + 1] <- "cpes")
+  }
+
+  # Search CWES dataset
+  if (DataSetAvailable(ds = "cwes")) {
+    ifelse(datasets == "",
+           yes = datasets <- "cwes",
+           no = datasets[length(datasets) + 1] <- "cwes")
   }
 
   # Check if no datasets available
