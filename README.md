@@ -7,7 +7,7 @@
 
 #### Package for Data Driven Security purposes.
 
-This package provides data sets for security standards and tools. It also have functions for update data sets.
+This package provides functions for security standards data management. It comes with data frames of 1000 observations for each security standard. It's possible to update the data frames from official sources and build updated data sets. This process is slow, so the default option is set to download from this repository an updated set of data frames pre-built. We publish new data updates every month.  
 
 ## Install
 
@@ -55,9 +55,9 @@ Show data set status. Prints information about update status and number of obser
 > 
 ```
 
-Update data sets from official sources. Estimated duration: 1h for cves, 1/2h for cpes. 
+Update data sets from official sources. Estimated duration: 1h for cves, 1/4h for cpes. Set `use.remote = FALSE` to download from offical sources. Default option get the updated data sets from this project.  
 ```r
-> net.security::DataSetUpdate("cves")
+> net.security::DataSetUpdate("cves", use.remote = FALSE)
 [1] "Downloading raw data..."
 [1] "Unzip, extract, etc..."
 [1] "Processing MITRE raw data..."
@@ -80,6 +80,7 @@ Update data sets from official sources. Estimated duration: 1h for cves, 1/2h fo
 [1] "Indexing data..."
 [1] "Tidy data..."
 [1] "Process finished."
+[1] "Updated CVEs data.frame has 103075  new observations."
 [1] "Compressing and saving data sets to local file..."
 >
 ```
