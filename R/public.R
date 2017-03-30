@@ -54,6 +54,24 @@ DataSetStatus <- function(ds = "all") {
       status <- "-:"
     }
   }
+  if (tolower(ds) %in% c("oval", "all")) {
+    # Get Status from local oval data.frame
+    if (DataSetAvailable("oval")) {
+      print("-: OVAL dataset:")
+      oval.timestamp <- strptime(netsec.data[[1]][["oval.ini"]], format = "%Y-%m-%d")
+      print(paste(" |- Last update for OVAL dataset at", as.character(oval.timestamp)))
+      print(paste(" |- Data set with", as.character(nrow(netsec.data[[2]][["oval"]])), "rows and",
+                  as.character(ncol(netsec.data[[2]][["oval"]])), "variables."))
+      cpeonline <- strptime(LastDownloadCPEDate(), format = "%Y-%m-%d")
+      print(paste(" |- Online RAW data updated at", cpeonline))
+      if ((cpeonline-oval.timestamp)<=0) {
+        print(paste(" |- No updates needed for OVAL dataset."))
+      } else {
+        print(paste(" |- OVAL dataset", as.character(cpeonline-oval.timestamp), "days outdated."))
+      }
+      status <- "-:"
+    }
+  }
   return(status)
 }
 
@@ -87,7 +105,7 @@ DataSetStatus <- function(ds = "all") {
 DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
 
   ds <- tolower(ds)
-  if (ds %in% c("all", "cves", "cpes")) {
+  if (ds %in% c("all", "cves", "cpes", "oval")) {
     # TODO: Create netsec.data if not exists
     # Create netsec.data structure
     # timestamp <- list()
@@ -97,10 +115,12 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
 
     cves.ini <- Sys.Date()
     cpes.ini <- Sys.Date()
+    oval.ini <- Sys.Date()
     timestamp <- list()
     datasets <- netsec.data$datasets
     cves.nrow <- nrow(netsec.data$datasets$cves)
     cpes.nrow <- nrow(netsec.data$datasets$cpes)
+    oval.nrow <- nrow(netsec.data$datasets$oval)
 
     # print(paste(ls(parent.env(environment()))))
     # netsec.data$dwinfo[["test"]] <- "OK"
@@ -124,6 +144,11 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
         cpes <- netsec.data$datasets$cpes
         cpes.ini <- netsec.data$dwinfo[["cpes.ini"]]
       }
+      if (tolower(ds) %in% c("oval", "all")) {
+        #  Update local OVAL data.frame from official sources
+        oval <- netsec.data$datasets$oval
+        oval.ini <- netsec.data$dwinfo[["oval.ini"]]
+      }
       rm(netsec.data)
     } else {
       if (tolower(ds) %in% c("cves", "all")) {
@@ -133,6 +158,10 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
       if (tolower(ds) %in% c("cpes", "all")) {
         #  Update local cpes data.frame from official sources
         cpes <- GetCPEData()
+      }
+      if (tolower(ds) %in% c("oval", "all")) {
+        #  Update local oval data.frame from official sources
+        oval <- GetOVALData()
       }
     }
 
@@ -153,6 +182,14 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
       new.cpes <- as.character(nrow(cpes) - cpes.nrow)
       print(paste("Updated CPEs data.frame has", new.cpes, " new observations."))
     }
+    if (tolower(ds) %in% c("oval", "all")) {
+      #  Update package datasets with updated oval data.frame
+      netsec.data$dwinfo[["oval.ini"]] <- oval.ini
+      netsec.data$dwinfo[["oval.fin"]] <- oval.ini
+      datasets[["oval"]] <- oval
+      new.oval <- as.character(nrow(oval) - oval.nrow)
+      print(paste("Updated OVAL data.frame has", new.oval, " new observations."))
+    }
     netsec.data$datasets <- datasets
 
     # Save samples if needed
@@ -172,6 +209,15 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
         # cols <- names(cves)[sapply(cves, class) == "factor"]
         # cpes.sample[cols] <- lapply(cpes.sample[cols], factor)
         save(object = cpes.sample, file = "data/cpes.sample.rda", compress = "xz")
+      }
+      if (tolower(ds) %in% c("oval", "all")) {
+        #  Update local oval data.frame from official sources
+        # Save sample cves data frame
+        oval.sample <- oval[sample(nrow(oval), 1000), ]
+        oval.sample[] <- lapply(oval.sample, as.character)
+        # cols <- names(cves)[sapply(cves, class) == "factor"]
+        # oval.sample[cols] <- lapply(oval.sample[cols], factor)
+        save(object = oval.sample, file = "data/oval.sample.rda", compress = "xz")
       }
     }
     print("Compressing and saving data sets to local file...")
@@ -215,6 +261,12 @@ DataSetList <- function(){
     ifelse(datasets == "",
            yes = datasets <- "cpes",
            no = datasets[length(datasets) + 1] <- "cpes")
+  }
+  # Search oval dataset
+  if (DataSetAvailable(ds = "oval")) {
+    ifelse(datasets == "",
+           yes = datasets <- "oval",
+           no = datasets[length(datasets) + 1] <- "oval")
   }
 
   # Check if no datasets available

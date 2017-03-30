@@ -1,8 +1,8 @@
 ![Alt text](inst/img/net.security.tiny.jpg?raw=true "net.security")
 
 [![Project Status: WIP - Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](http://www.repostatus.org/badges/latest/wip.svg)](http://www.repostatus.org/#wip) 
-[![Build Status](https://travis-ci.org/r-net-tools/net.security.svg?branch=master)](https://travis-ci.org/r-net-tools/net.security) 
-[![Coverage Status](https://coveralls.io/repos/github/r-net-tools/net.security/badge.svg?branch=devel)](https://coveralls.io/github/r-net-tools/net.security?branch=devel)
+[![Build Status](https://travis-ci.org/r-net-tools/net.security.svg?branch=oval)](https://travis-ci.org/r-net-tools/net.security) 
+[![Coverage Status](https://coveralls.io/repos/github/r-net-tools/net.security/badge.svg?branch=oval)](https://coveralls.io/github/r-net-tools/net.security?branch=oval)
 
 
 #### Package for Data Driven Security purposes.
@@ -36,6 +36,7 @@ List available datasets. Results are used in other functions.
 > net.security::DataSetList()
 [1] "cves"
 [2] "cpes"
+[3] "oval"
 ```
 
 Show data set status. Prints information about update status and number of observations of local data sets.    
@@ -114,3 +115,12 @@ Raw Data:
  
 Standard:
  - [NISTIR 7695, Common Platform Enumeration: Naming Specification Version 2.3](http://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7695.pdf)  
+
+#### OVAL: Open Vulnerability and Assessment Language  
+Quick Reference: https://oval.mitre.org/about/faqs.html  
+Raw Data: 
+ - [CIS](https://www.cisecurity.org/): https://oval.cisecurity.org/repository/download/5.11.1/all/oval.xml  
+ 
+Standard:
+ - [MITRE Documentation](https://oval.mitre.org/language/about/)  
+
