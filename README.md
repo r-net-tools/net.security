@@ -114,3 +114,14 @@ Raw Data:
  
 Standard:
  - [NISTIR 7695, Common Platform Enumeration: Naming Specification Version 2.3](http://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7695.pdf)  
+
+#### CWE: Common Weakness Enumeration
+Quick Reference: https://cwe.mitre.org/about/faq.html  
+Raw Data: 
+ - MITRE: https://cwe.mitre.org/data/xml/cwec_v2.10.xml.zip  
+ 
+Standard:
+ - [CWE XML Schema documentation](https://cwe.mitre.org/documents/schema/schema_v5.4.2.html)  
+ - [CWE XSD File](https://cwe.mitre.org/data/xsd/cwe_schema_v5.4.2.xsd)  
+ - [All CWE Standard content. PDF File](https://cwe.mitre.org/data/published/cwe_v2.10.pdf)  
+ 
