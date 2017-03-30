@@ -62,7 +62,7 @@ DataSetStatus <- function(ds = "all") {
       print(paste(" |- Last update for OVAL dataset at", as.character(oval.timestamp)))
       print(paste(" |- Data set with", as.character(nrow(netsec.data[[2]][["oval"]])), "rows and",
                   as.character(ncol(netsec.data[[2]][["oval"]])), "variables."))
-      cpeonline <- strptime(LastDownloadCPEDate(), format = "%Y-%m-%d")
+      cpeonline <- strptime(LastDownloadOVALDate(), format = "%Y-%m-%d")
       print(paste(" |- Online RAW data updated at", cpeonline))
       if ((cpeonline-oval.timestamp)<=0) {
         print(paste(" |- No updates needed for OVAL dataset."))

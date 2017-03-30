@@ -1,3 +1,6 @@
+LastDownloadOVALDate <- function(){
+  return(as.character(Sys.Date()))
+}
 
 #' GetOVALData
 #'
