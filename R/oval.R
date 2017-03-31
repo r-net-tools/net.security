@@ -14,6 +14,12 @@ GetOVALData <- function(savepath = tempdir()) {
                             sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
   print("Processing CIS raw data...")
   ovals <- ParseOVALData(oval.source.file)
+
+  # Remove WIP columns parsing
+  wip.cols <- c("type")
+  oval.lite.cols <- names(ovals)[!(names(ovals) %in% wip.cols)]
+  ovals <- ovals[, oval.lite.cols]
+
   print("Process finished.")
   return(ovals)
 }

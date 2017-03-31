@@ -2,10 +2,10 @@ context("oval functions")
 
 #### Expected Values -------------------------------------------------------------------------------
 
-expected_oval_names    <- c("type","class","id","version","title",
+expected_oval_names    <- c("class","id","version","title",
                             "affected.family","affected.platforms","affected.cpes",
                             "references","status","deprecated")
-expected_oval_classes  <- c("factor","factor","character","factor","character",
+expected_oval_classes  <- c("factor","character","factor","character",
                             "factor","character","character","character","factor",
                             "factor")
 
@@ -15,6 +15,7 @@ expected_item_names <- c("class","id","version","title","affected.family",
 expected_item_classes <- c("character","character","character","character",
                            "character","character","character","character",
                            "character","character","character")
+regex.oval.id <- "oval:[A-Za-z0-9_\\-\\.]+:def:[1-9][0-9]*"
 
 #### OVAL data fram generation ----------------------------------------------------------------------
 
