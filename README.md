@@ -7,7 +7,7 @@
 
 #### Package for Data Driven Security purposes.
 
-This package provides data sets for security standards and tools. It also have functions for update data sets.
+This package provides functions for security standards data management. It comes with data frames of 1000 observations for each security standard and updates are possible from official sources to build updated data sets. This process is slow, so the default option is set to download from [this](https://github.com/r-net-tools/security.datasets) repository an updated set of pre-built data frames. New data updates are published every month.  
 
 ## Install
 
@@ -24,7 +24,8 @@ devtools::install_github(repo = "r-net-tools/net.security", ref = "devel")
 ### Linux - Debian
 If you need to upgrade R to latest version, follow [this](https://cran.r-project.org/bin/linux/debian/) instructions step by step.
 
-Latest versions of R made the installation of package dependencies automatically. Check the DESCRIPTION file for needed installed packages. Packages openssl, curl and XML will need system libraries that are not installed by default. Maybe you will need to install this:  
+Latest versions of R automate the installation of package dependencies. Check the DESCRIPTION file for required packages. Openssl, curl and XML packages will need system libraries that are not installed by default. Perhaps you will need to install:  
+
 ```sh
 sudo apt-get install libssl-dev libcurl4-openssl-dev libxml2-dev
 ```
@@ -55,7 +56,8 @@ Show data set status. Prints information about update status and number of obser
 > 
 ```
 
-Update data sets from official sources. Estimated duration: 1h for cves, 1/2h for cpes. 
+Update data sets from official sources. Estimated duration: 1h for cves, 15min for cpes. Set use.remote = FALSE to download from offical sources. Default option gets the updated data sets from [this](https://github.com/r-net-tools/security.datasets) repository.  
+
 ```r
 > net.security::DataSetUpdate("cves")
 [1] "Downloading raw data..."
