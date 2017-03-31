@@ -65,7 +65,7 @@ Show data set status. Prints information about update status and number of obser
 > 
 ```
 
-Update data sets from official sources. Estimated duration: 1h for cves, 1/4h for cpes. Set `use.remote = FALSE` to download from offical sources. Default option get the updated data sets from this project.  
+Update data sets from official sources. Estimated duration: 1h for cves, 1/4h for cpes. Set `use.remote = FALSE` to download from offical sources. Default option get the updated data sets from [this](https://github.com/r-net-tools/security.datasets) repository.  
 ```r
 > net.security::DataSetUpdate(use.remote = FALSE)
 [1] "Downloading CVES raw data..."
