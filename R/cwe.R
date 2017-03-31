@@ -176,6 +176,13 @@ ListNodesToXML <- function(doc){
 #' @param CWE number
 #' @param compact boolean
 GetParents <- function(cwes, CWE = "", compact = FALSE) {
+  # Workaround for non standard evaluation
+  # http://stackoverflow.com/questions/9439256/how-can-i-handle-r-cmd-check-no-visible-binding-for-global-variable-notes-when
+  ID <- NULL
+  Relationship_Target_Form <- NULL
+  Relationship_Nature <- NULL
+  Relationship_Target_ID <- NULL
+
   parents <- ""
   relations <- jsonlite::fromJSON(dplyr::filter(cwes, ID == CWE)[["relationships"]])
   if (length(relations) > 0) {
