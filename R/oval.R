@@ -8,10 +8,13 @@ LastDownloadOVALDate <- function(){
 #' @return data frame
 #'
 GetOVALData <- function(savepath = tempdir()) {
+  print("Downloading raw data...")
   DownloadOVALData(savepath)
   oval.source.file <- paste(savepath, "oval", "oval.xml",
                             sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
+  print("Processing CIS raw data...")
   ovals <- ParseOVALData(oval.source.file)
+  print("Process finished.")
   return(ovals)
 }
 
