@@ -111,7 +111,7 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
     # Get updated data.frames
     if (use.remote) {
       # Get sysdata.rda and update local data
-      utils::download.file(url = "https://github.com/r-net-tools/net.security/raw/devel/R/sysdata.rda",
+      utils::download.file(url = "https://github.com/r-net-tools/security.datasets/raw/master/net.security/sysdata.rda",
                     destfile = paste(tempdir(),"sysdata.rda",sep = "\\"))
       load(file = paste(tempdir(),"sysdata.rda",sep = "\\"))
       if (tolower(ds) %in% c("cves", "all")) {
