@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{GetDataFrame}
 \alias{GetDataFrame}
-\title{Get data sets as data frames. Check data sets documentation for details of data frames.}
+\title{Get data sets as data frames.}
 \usage{
 GetDataFrame(ds)
 }
@@ -13,7 +13,7 @@ GetDataFrame(ds)
 Selected dataset as tidy data.frame
 }
 \description{
-\code{GetDataFrame}
+\code{GetDataFrame} Get data sets as data frames. Check data sets documentation for details of data frames.
 }
 \details{
 Returns the data.frame selected. "Unknown" if it's not available.
