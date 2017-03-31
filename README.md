@@ -67,8 +67,8 @@ Show data set status. Prints information about update status and number of obser
 
 Update data sets from official sources. Estimated duration: 1h for cves, 1/4h for cpes. Set `use.remote = FALSE` to download from offical sources. Default option get the updated data sets from this project.  
 ```r
-> net.security::DataSetUpdate("cves", use.remote = FALSE)
-[1] "Downloading raw data..."
+> net.security::DataSetUpdate(use.remote = FALSE)
+[1] "Downloading CVES raw data..."
 [1] "Unzip, extract, etc..."
 [1] "Processing MITRE raw data..."
 [1] "Processing NIST 2002 raw data..."
@@ -89,10 +89,24 @@ Update data sets from official sources. Estimated duration: 1h for cves, 1/4h fo
 [1] "Processing NIST 2017 raw data..."
 [1] "Indexing data..."
 [1] "Tidy data..."
-[1] "Process finished."
-[1] "Updated CVEs data.frame has 103081  new observations."
+[1] "CVES Process finished."
+[1] "Downloading CPES raw data..."
+[1] "Extracting data..."
+[1] "Indexing data..."
+[1] "CPES Process finished."
+[1] "Downloading CWES raw data..."
+[1] "Unzip, extract, etc..."
+[1] "Processing MITRE raw data..."
+[1] "CWES Process finished."
+[1] "Downloading OVAL raw data..."
+[1] "Processing CIS raw data..."
+[1] "OVAL Process finished."
+[1] "Updated CVEs data.frame has 70  new observations."
+[1] "Updated CPEs data.frame has 38  new observations."
+[1] "Updated CWEs data.frame has 0  new observations."
+[1] "Updated OVAL data.frame has 0  new observations."
 [1] "Compressing and saving data sets to local file..."
-[1] "2017-03-29"
+[1] "2017-03-31"
 >
 ```
 
