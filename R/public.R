@@ -281,7 +281,7 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
 
 #' Show data set status. Prints information about update status and number of observations of local data sets.
 #'
-#' \code{DataSetList}
+#' \code{DataSetList} Show data set status. Prints information about update status and number of observations of local data sets.
 #'
 #' Check the internal data structure and returns a character vector with names of available data.frames.
 #'
@@ -330,7 +330,7 @@ DataSetList <- function(){
 
 #' Get data sets as data frames. Check data sets documentation for details of data frames.
 #'
-#' \code{GetDataFrame}
+#' \code{GetDataFrame} Get data sets as data frames. Check data sets documentation for details of data frames.
 #'
 #' Returns the data.frame selected. "Unknown" if it's not available.
 #'

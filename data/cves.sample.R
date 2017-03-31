@@ -1,4 +1,4 @@
-#' Sample of 500 random CVEs (Common Vulnerability Enummeration)
+#' Sample of 1000 random CVEs (Common Vulnerability Enummeration)
 #'
 #' A data set containing public information about CVE information from MITRE and NIST.
 #'
@@ -10,7 +10,6 @@
 #'   \item{phase}{Values can be Proposed, Interim, Modified or Assigned. Some time are followed with date with format %Y%m%d (MITRE)}
 #'   \item{votes}{Values can be accept, modify, noop, recast, reject, reviewing or revote. They are usually followed by voter name. (MITRE)}
 #'   \item{comments}{Comments about the vulnerability. (MITRE)}
-#'   \item{osvbd}{OSVDB reference identifier. (NIST)}
 #'   \item{cpe.config}{The id for the vulnerable configuration. The products that collectively characterize a particular IT platform type. (NIST)}
 #'   \item{cpe.software}{The CPE name of the vulnerable software. (NIST)}
 #'   \item{discovered.datetime}{The date that the vulnerability was first discovered.(NIST)}
@@ -36,7 +35,7 @@
 #'
 #' @usage data(cves.sample)
 #'
-#' @format A data frame with 500 rows and 26 columns.
+#' @format A data frame with 1000 rows and 24 columns.
 #'
 #' @keywords cve
 #'

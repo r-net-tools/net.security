@@ -13,7 +13,7 @@ GetDataFrame(ds)
 Selected dataset as tidy data.frame
 }
 \description{
-\code{GetDataFrame}
+\code{GetDataFrame} Get data sets as data frames. Check data sets documentation for details of data frames.
 }
 \details{
 Returns the data.frame selected. "Unknown" if it's not available.
