@@ -31,7 +31,7 @@ sudo apt-get install libssl-dev libcurl4-openssl-dev libxml2-dev
 
 ## Usage
 
-List available datasets. Results are used in other functions.
+**List available datasets**. Results are used in other functions.
 ```r
 > net.security::DataSetList()
 [1] "cves"
@@ -40,7 +40,7 @@ List available datasets. Results are used in other functions.
 [4] "oval"
 ```
 
-Show data set status. Prints information about update status and number of observations of local data sets.    
+**Show data set status**. Prints information about update status and number of observations of local data sets.    
 ```r
 > net.security::DataSetStatus()
 [1] "-: CVES dataset:"
@@ -65,7 +65,7 @@ Show data set status. Prints information about update status and number of obser
 > 
 ```
 
-Update data sets from official sources. Estimated duration: 1h for cves, 1/4h for cpes. Set `use.remote = FALSE` to download from offical sources. Default option get the updated data sets from this project.  
+**Update data sets** from official sources. Estimated duration: 1h for cves, 1/4h for cpes. Set `use.remote = FALSE` to download from offical sources. Default option get the updated data sets from [this](https://github.com/r-net-tools/security.datasets) repository.  
 ```r
 > net.security::DataSetUpdate(use.remote = FALSE)
 [1] "Downloading CVES raw data..."
@@ -110,7 +110,7 @@ Update data sets from official sources. Estimated duration: 1h for cves, 1/4h fo
 >
 ```
 
-Get data sets as data frames. Check data sets documentation for details of data frames. 
+**Get data sets as data frames**. Check data sets documentation for details of data frames. 
 ```r
 > cves <- net.security::GetDataFrame("cves")
 > class(cves)
