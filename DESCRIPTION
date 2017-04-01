@@ -4,7 +4,7 @@ Version: 0.1.0
 Authors@R: c(
     person("Humbert", "Costas", email = "humbert.costas@gmail.com", role = c("aut", "cre")),
     person("Arnau", "Sangra", email = "arnsangra@gmail.com", role = "ctb"))
-Description: This package provides functions for security standards data management. It comes with data frames of 1000 observations for each security standard and updates are possible from official sources to build updated data sets.
+Description: Provides functions for security standards data management. It comes with data frames of 1000 observations for each security standard and updates are possible from official sources to build updated data sets.
 URL: https://github.com/r-net-tools/net.security
 Depends: R (>= 3.3.1)
 License: GPL-3 
