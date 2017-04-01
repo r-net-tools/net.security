@@ -279,7 +279,7 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
   return(as.character(Sys.Date()))
 }
 
-#' Show data set status. Prints information about update status and number of observations of local data sets.
+#' Show data set status.
 #'
 #' \code{DataSetList} Show data set status. Prints information about update status and number of observations of local data sets.
 #'
@@ -328,7 +328,7 @@ DataSetList <- function(){
   return(datasets)
 }
 
-#' Get data sets as data frames. Check data sets documentation for details of data frames.
+#' Get data sets as data frames.
 #'
 #' \code{GetDataFrame} Get data sets as data frames. Check data sets documentation for details of data frames.
 #'
@@ -352,10 +352,6 @@ GetDataFrame <- function(ds) {
 
 #---- Private functions --------------------------------------------------------
 
-#' DataSetAvailable
-#'
-#' @param ds Selects the data set for this operation. Default set to "all". Check available option with DataSetList()
-#' @return TRUE if dataset is available, FALSE if it needs an update.
 DataSetAvailable <- function(ds) {
   checkval <- FALSE
   if (exists("netsec.data")) {

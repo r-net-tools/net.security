@@ -1,4 +1,4 @@
-#' Sample of 500 random CPEs (Common Platform Enummeration)
+#' Sample of 1000 random CPEs (Common Platform Enummeration)
 #'
 #' A data set containing public information about CPE information from NIST.
 #'
@@ -28,7 +28,7 @@
 #'
 #' @usage data(cpes.sample)
 #'
-#' @format A data frame with 500 rows and 14 columns.
+#' @format A data frame with 1000 rows and 14 columns.
 #'
 #' @keywords cpe
 #'

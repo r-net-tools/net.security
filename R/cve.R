@@ -1,8 +1,3 @@
-#### Public Functions ----------------------------------------------------------------------------
-
-#' LastDownloadDate
-#'
-#' @return character with last official update date YYYY-MM-DD
 LastDownloadCVEDate <- function(){
   doc.html <- XML::htmlParse("http://cve.mitre.org/data/downloads/index.html#download")
   txt <- XML::xmlValue(XML::xpathSApply(doc.html, '//div[@class="smaller"]')[[1]])
@@ -10,14 +5,6 @@ LastDownloadCVEDate <- function(){
   return(last)
 }
 
-#### Private Functions ----------------------------------------------------------------------------
-
-#' Get data frame with CVE information
-#'
-#' @param savepath String
-#' @param origin "all", "mitre", "nist"
-#'
-#' @return Data frame
 GetCVEData <- function(origin = "all", savepath = tempdir()) {
   DownloadCVEData(dest = savepath)
   ExtractCVEFiles(path = savepath)
@@ -63,11 +50,6 @@ GetCVEData <- function(origin = "all", savepath = tempdir()) {
 
 #### MITRE Private Functions -----------------------------------------------------------------------------
 
-#' Arrange CVE information into data frame
-#'
-#' @param path String
-#'
-#' @return Data frame
 ParseCVEMITREData <- function(path) {
   # TODO: Parse XML files
   cve.file <-   paste(path, "cve", "mitre", "allitems.csv",
@@ -85,12 +67,6 @@ ParseCVEMITREData <- function(path) {
 
 #### NIST Private Functions -----------------------------------------------------------------------------
 
-#' ParseCVENISTData
-#'
-#' @param years numeric vector with values between 2002 and current year
-#' @param path String
-#'
-#' @return data frame
 ParseCVENISTData <- function(path, years = as.integer(format(Sys.Date(), "%Y"))) {
   if (years == "all") years <- 2002:as.integer(format(Sys.Date(), "%Y"))
   years.ok <- 2002:as.integer(format(Sys.Date(), "%Y"))
@@ -107,11 +83,6 @@ ParseCVENISTData <- function(path, years = as.integer(format(Sys.Date(), "%Y")))
   return(cves)
 }
 
-#' Create CVE data.frame from NIST entries for specified year
-#'
-#' @param year value between 2002 and current year, default value is set as current year
-#' @param path String
-#' @return data frame
 GetNISTvulnsByYear <- function(path = tempdir(), year = as.integer(format(Sys.Date(), "%Y"))) {
   # Reference: https://scap.nist.gov/schema/nvd/vulnerability_0.4.xsd
   # TODO: Improve efficience 1 lapply instead of 2
@@ -132,11 +103,6 @@ GetNISTvulnsByYear <- function(path = tempdir(), year = as.integer(format(Sys.Da
   return(df)
 }
 
-#' Parse from NIST XML CVE entry to data.frame
-#'
-#' @param node XML Node
-#'
-#' @return data frame
 GetNISTEntry <- function(node) {
   # TODO: Tidy data frame
 
@@ -369,10 +335,6 @@ attack.scenario2df <- function(node) {
   return(NodeToJson(node))
 }
 
-
-#' Create empty data frame for CVE NIST information
-#'
-#' @return data frame
 NewNISTEntry <- function() {
   return(data.frame(osvdb.ext = character(),
                     vulnerable.configuration = character(),
@@ -421,11 +383,6 @@ ParseCVETranslations <- function(path, years = as.integer(format(Sys.Date(), "%Y
 }
 
 
-#### Private Functions -----------------------------------------------------------------------------
-
-#' DownloadCVEData, Download CVE information
-#'
-#' @param dest  String with directory where to store files to be downloaded.
 DownloadCVEData <- function(dest) {
   # Data folders
   if (!dir.exists(paste(dest, "cve", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
@@ -465,9 +422,6 @@ DownloadCVEData <- function(dest) {
   }
 }
 
-#' ExtractCVEFiles, Extract compressed files
-#'
-#' @param path character, the directory containing the files to be extracted
 ExtractCVEFiles <- function(path) {
   # Uncompress gzip XML files
   print(paste("Unzip, extract, etc..."))
@@ -478,21 +432,11 @@ ExtractCVEFiles <- function(path) {
         1, function(x) R.utils::gunzip(x, overwrite = TRUE, remove = TRUE))
 }
 
-#' Transform XML node as string
-#'
-#' @param x XML Node
-#'
-#' @return Character
 NodeToChar <- function(x) {
   if (is.null(x)) x <- ""
   return(as.character(unlist(XML::xmlToList(x))))
 }
 
-#' Transform XML node as JSON string
-#'
-#' @param x XML Node
-#'
-#' @return json
 NodeToJson <- function(x) {
   if (is.null(x)) x <- "<xml></xml>"
   return(jsonlite::toJSON(XML::xmlToList(x)))

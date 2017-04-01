@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{GetDataFrame}
 \alias{GetDataFrame}
-\title{Get data sets as data frames. Check data sets documentation for details of data frames.}
+\title{Get data sets as data frames.}
 \usage{
 GetDataFrame(ds)
 }

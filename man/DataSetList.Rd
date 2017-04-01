@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{DataSetList}
 \alias{DataSetList}
-\title{Show data set status. Prints information about update status and number of observations of local data sets.}
+\title{Show data set status.}
 \usage{
 DataSetList()
 }

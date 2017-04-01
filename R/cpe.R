@@ -1,10 +1,3 @@
-#### Exported Functions ----------------------------------------------------------------------------
-
-#' GetCPEData
-#'
-#' @param savepath String
-#' @return data frame
-#'
 GetCPEData <- function(savepath = tempdir()) {
   # Schema: https://scap.nist.gov/schema/cpe/2.3/cpe-dictionary_2.3.xsd
   # RawData: http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip
@@ -16,9 +9,6 @@ GetCPEData <- function(savepath = tempdir()) {
   cpes <- ParseCPEData(cpe.source.file)
   return(cpes)
 }
-
-
-#### Private Functions -----------------------------------------------------------------------------
 
 LastDownloadCPEDate <- function(){
   doc.html <- XML::htmlParse(paste(readLines("https://nvd.nist.gov/cpe.cfm")))
@@ -42,10 +32,6 @@ ExtractCPEFiles <- function(savepath) {
   return(cpes.xml)
 }
 
-#' Download CPE information from NIST
-#'
-#' @param savepath String
-#'
 DownloadCPEData <- function(savepath) {
   if (!dir.exists(paste(savepath, "cpe", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
     dir.create(paste(savepath, "cpe", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
@@ -55,11 +41,6 @@ DownloadCPEData <- function(savepath) {
   utils::download.file(url = cpe.url, destfile = cpes.zip)
 }
 
-#' Title
-#'
-#' @param cpe.raw String
-#'
-#' @return data.frame
 GetCPEItem <- function(cpe.raw) {
   cpe <- NewCPEItem()
   cpe.raw <- XML::xmlToList(cpe.raw)
@@ -78,9 +59,6 @@ GetCPEItem <- function(cpe.raw) {
   return(cpe)
 }
 
-#' Title
-#'
-#' @return data.frame
 NewCPEItem <- function(){
   return(data.frame(cpe.22 = character(),
                     cpe.23 = character(),
@@ -89,11 +67,6 @@ NewCPEItem <- function(){
   )
 }
 
-#' Title
-#'
-#' @param cpe.file String
-#'
-#' @return data.frame
 ParseCPEData <- function(cpe.file) {
   # TODO: Improve performance
   doc <- XML::xmlTreeParse(cpe.file)
@@ -125,5 +98,3 @@ ParseCPEData <- function(cpe.file) {
   return(cpes)
 
 }
-
-
