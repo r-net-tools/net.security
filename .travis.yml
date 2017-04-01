@@ -5,3 +5,5 @@ git:
   depth: 3
 after_success:
   - Rscript -e 'covr::coveralls()'
+before_install:
+  export _R_CHECK_CRAN_INCOMING_=true

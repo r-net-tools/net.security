@@ -248,10 +248,6 @@ GetDataFrame <- function(ds) {
 
 #---- Private functions --------------------------------------------------------
 
-#' DataSetAvailable
-#'
-#' @param ds Selects the data set for this operation. Default set to "all". Check available option with DataSetList()
-#' @return TRUE if dataset is available, FALSE if it needs an update.
 DataSetAvailable <- function(ds) {
   checkval <- FALSE
   if (exists("netsec.data")) {
