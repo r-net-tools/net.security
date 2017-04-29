@@ -28,7 +28,7 @@ If you need to upgrade R to latest version, follow [this](https://cran.r-project
 Latest versions of R automate the installation of package dependencies. Check the DESCRIPTION file for required packages. Openssl, curl and XML packages will need system libraries that are not installed by default. Perhaps you will need to install:  
 
 ```sh
-sudo apt-get install libssl-dev libcurl4-openssl-dev libxml2-dev
+sudo apt-get install libssl-dev libcurl4-openssl-dev libxml2-dev lzma
 ```
 
 ## Usage
