@@ -18,7 +18,8 @@ GetCVEData <- function(origin = "all", savepath = tempdir()) {
       print(paste("Indexing data..."))
       cves <- dplyr::left_join(cves.mitre, cves.nist, by = c("cve" = "cve.id"))
       print(paste("Tidy data..."))
-      cves$cvss.vector <- unlist(lapply(cves$cvss, GetCVSSVector))
+      cves$cvss.vector <- unlist(lapply(cves$cvss, GetCVSS2Vector))
+      cves$cvss <- unlist(lapply(cves$cvss, GetCVSS2Score))
       names(cves) <- c("cve", "status", "description", "ref.mitre", "phase", "votes",
                        "comments", "osvdb", "cpe.config", "cpe.software", "discovered.datetime",
                        "disclosure.datetime", "exploit.publish.datetime", "published.datetime",
