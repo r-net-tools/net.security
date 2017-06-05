@@ -1,5 +1,6 @@
 language: r
 warnings_are_errors: false
+latex: false
 sudo: required
 git:
   depth: 3
