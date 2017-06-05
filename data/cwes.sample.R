@@ -5,7 +5,13 @@
 #' \describe{
 #'    \item{ID}{}
 #'    \item{Name}{}
-#'    \item{Weakness_Abstraction}{}
+#'    \item{Weakness_Abstraction}{The Weakness_Abstraction attribute defines the abstraction level for this weakness. Acceptable values are:
+#'                                  - `Class`, which is the most abstract type of Weakness such as CWE-362 Race Conditions.
+#'                                  - `Base`,  which is a more specific type of weakness that is still mostly independent of a specific resource or technology such as CWE-567 Unsynchronized Access to Shared Data.
+#'                                  - `Variant`,  which is a weakness specific to a particular resource, technology or context.
+#'                                  - `Incomplete`, for incomplete definition.
+#'                                  - `Deprecated`, old definition.
+#'                                  - `Draft`, Work in progress.  }
 #'    \item{Status}{}
 #'    \item{code_standard}{}
 #'    \item{descr.summary}{}

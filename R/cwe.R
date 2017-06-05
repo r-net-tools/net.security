@@ -58,6 +58,8 @@ ParseCWEData <- function(cwes.file) {
                         stringsAsFactors = FALSE)
   cwes$code_standard <- paste("CWE-", cwes$ID, sep = "")
   cwes.basic <- XML::xmlToDataFrame(raw.cwes)
+  cwes$Status <- XML::xpathSApply(doc, "//Weakness/@Status")
+  cwes$Weakness_Abstraction <- XML::xpathSApply(doc, "//Weakness/@Weakness_Abstraction")
 
   #Description
   raw.cwes.descr <- XML::xpathSApply(doc, "//Weakness/Description")
