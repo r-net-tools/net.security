@@ -79,7 +79,9 @@ ParseCWEData <- function(cwes.file) {
   cwes$ordinalities <- OrdinalitiesNodesToJson(raw.cwes.ord)
 
   #Applicable_Platforms
-  cwes$platforms <- cwes.basic$Applicable_Platforms
+  cwes$platforms <- stringr::str_wrap(cwes.basic$Applicable_Platforms)
+  cwes$platforms[is.na(cwes$platforms)] <- ""
+  cwes$platforms[nchar(cwes$platforms) == 0] <- NA
 
   #Time_of_Introduction
   raw.cwes.toi <- GetListNodes(raw.cwes, "Time_of_Introduction")
