@@ -5,7 +5,7 @@ context("cve functions")
 expected_cves_names    <- c("cve", "status", "description", "ref.mitre", "phase",
                             "votes", "comments", "cpe.config", "cpe.software",
                             "discovered.datetime", "disclosure.datetime", "exploit.publish.datetime",
-                            "published.datetime", "last.modified.datetime", "cvss",
+                            "published.datetime", "last.modified.datetime", "cvss", "cvss.vector",
                             "security.protection", "assessment.check", "cwe", "ref.nist", "fix.action",
                             "scanner", "summary", "technical.description", "attack.scenario")
 expected_cves_classes  <- c("character", "factor", "character", "character", "character", "character", "character")
