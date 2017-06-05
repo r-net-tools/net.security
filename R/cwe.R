@@ -58,8 +58,8 @@ ParseCWEData <- function(cwes.file) {
                         stringsAsFactors = FALSE)
   cwes$code_standard <- paste("CWE-", cwes$ID, sep = "")
   cwes.basic <- XML::xmlToDataFrame(raw.cwes)
-  cwes$Status <- XML::xpathSApply(doc, "//Weakness/@Status")
-  cwes$Weakness_Abstraction <- XML::xpathSApply(doc, "//Weakness/@Weakness_Abstraction")
+  cwes$Status <- as.factor(XML::xpathSApply(doc, "//Weakness/@Status"))
+  cwes$Weakness_Abstraction <- as.factor(XML::xpathSApply(doc, "//Weakness/@Weakness_Abstraction"))
 
   #Description
   raw.cwes.descr <- XML::xpathSApply(doc, "//Weakness/Description")
@@ -76,7 +76,7 @@ ParseCWEData <- function(cwes.file) {
 
   #Weakness_Ordinalities
   raw.cwes.ord <- GetListNodes(raw.cwes, "Weakness_Ordinalities")
-  cwes$ordinalities <- ListNodesToJson(raw.cwes.ord)
+  cwes$ordinalities <- OrdinalitiesNodesToJson(raw.cwes.ord)
 
   #Applicable_Platforms
   cwes$platforms <- cwes.basic$Applicable_Platforms
@@ -169,6 +169,23 @@ ListNodesToXML <- function(doc){
                                         yes = "[]",
                                         no = XML::saveXML(x)))
          )
+}
+
+OrdinalitiesNodesToJson <- function(doc) {
+  Ord2JSON <- function(x) {
+    ord <- x
+    if ((nrow(x) >= 1) && (ncol(x) == 1)) {
+      ord <- as.character(x$Ordinality)
+    } else {
+      ord <- paste(ord$Ordinality, ": ",
+                   stringr::str_wrap(ord$Ordinality_Description),sep = "")
+    }
+    return(jsonlite::toJSON(ord))
+  }
+  x <- sapply(doc, function(x) ifelse(test = is.null(x),
+                                      yes = "[]",
+                                      no = Ord2JSON(XML::xmlToDataFrame(x))))
+  return(x)
 }
 
 #' Get parents from a given CWE
