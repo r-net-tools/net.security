@@ -13,7 +13,7 @@ GetCWEData <- function(savepath = tempdir()) {
   cwes.file <- ExtractCWEFiles(savepath)
   print("Processing MITRE raw data...")
   cwes <- ParseCWEData(cwes.file)
-  print("Process finished.")
+  print(paste("CWES data frame building process finished."))
   return(cwes)
 }
 

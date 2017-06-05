@@ -176,19 +176,19 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
       rm(netsec.data)
     } else {
       if (tolower(ds) %in% c("cves", "all")) {
-        #  Update local cves data.frame from official sources
+        print("Updating local cves data.frame from official sources.")
         cves <- GetCVEData()
       }
       if (tolower(ds) %in% c("cpes", "all")) {
-        #  Update local cpes data.frame from official sources
+        print("Updating local cpes data.frame from official sources.")
         cpes <- GetCPEData()
       }
       if (tolower(ds) %in% c("cwes", "all")) {
-        #  Update local cwes data.frame from official sources
+        print("Updating local cwes data.frame from official sources.")
         cwes <- GetCWEData()
       }
       if (tolower(ds) %in% c("oval", "all")) {
-        #  Update local oval data.frame from official sources
+        print("Updating local oval data.frame from official sources.")
         oval <- GetOVALData()
       }
     }

@@ -7,6 +7,7 @@ GetCPEData <- function(savepath = tempdir()) {
   cpe.source.file <- ExtractCPEFiles(savepath)
   print(paste("Indexing data..."))
   cpes <- ParseCPEData(cpe.source.file)
+  print(paste("CPES data frame building process finished."))
   return(cpes)
 }
 

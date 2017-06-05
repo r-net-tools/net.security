@@ -50,7 +50,7 @@ GetCVEData <- function(origin = "all", savepath = tempdir()) {
   cve.lite.cols <- names(cves)[!(names(cves) %in% wip.cols)]
   cves <- cves[, cve.lite.cols]
 
-  print(paste("Process finished."))
+  print(paste("CVES data frame building process finished."))
 
   return(cves)
 }

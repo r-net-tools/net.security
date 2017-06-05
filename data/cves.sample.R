@@ -17,7 +17,8 @@
 #'   \item{exploit.publish.datetime}{(NIST)}
 #'   \item{published.datetime}{(NIST)}
 #'   \item{last.modified.datetime}{(NIST)}
-#'   \item{cvss}{CVSS metrics stored as JSON. (NIST)}
+#'   \item{cvss}{CVSS v2 base score (NIST)}
+#'   \item{cvss.vector}{CVSS v2 basic vector AV:[L,A,N]/AC:[H,M,L]/Au:[M,S,N]/C:[N,P,C]/I:[N,P,C]/A:[N,P,C] (NIST)}
 #'   \item{security.protection}{The security protection type. Allowed values: ALLOWS_ADMIN_ACCESS, ALLOWS_USER_ACCESS, ALLOWS_OTHER_ACCESS. (NIST)}
 #'   \item{assessment.check}{An optional list of equivalent assessment methods that specify additional system state that must be present for the vulnerability to exist. (NIST)}
 #'   \item{cwe}{CWE reference extracted from other ref.nist and ref.mitre columns. (NIST)}

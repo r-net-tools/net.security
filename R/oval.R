@@ -20,7 +20,7 @@ GetOVALData <- function(savepath = tempdir()) {
   oval.lite.cols <- names(ovals)[!(names(ovals) %in% wip.cols)]
   ovals <- ovals[, oval.lite.cols]
 
-  print("Process finished.")
+  print(paste("OVAL data frame building process finished."))
   return(ovals)
 }
 
