@@ -124,7 +124,7 @@ ParseCWEData <- function(cwes.file) {
 
   #Modes_of_Introduction
   raw.cwes.mintro <- GetListNodes(raw.cwes, "Modes_of_Introduction")
-  cwes$introduction.mode <- ListNodesToJson(raw.cwes.mintro)
+  cwes$introduction.mode <- ModeIntroductionNodesToJson(raw.cwes.mintro)
 
   #Other_Notes
   raw.cwes.other <- GetListNodes(raw.cwes, "Other_Notes")
@@ -173,11 +173,20 @@ ListNodesToXML <- function(doc){
          )
 }
 
+ModeIntroductionNodesToJson <- function(doc){
+  Time2JSON <- function(x){
+    return(jsonlite::toJSON(stringr::str_wrap(as.character(x$Text))))
+  }
+  x <- sapply(doc, function(x) ifelse(test = is.null(x),
+                                      yes = "[]",
+                                      no = Time2JSON(XML::xmlToDataFrame(x)))
+  )
+  return(x)
+}
+
 TimeIntroNodesToJson <- function(doc){
   Time2JSON <- function(x){
-    ti <- x
-    ti <- as.character(ti$text)
-    return(jsonlite::toJSON(ti))
+    return(jsonlite::toJSON(as.character(x$text)))
   }
   x <- sapply(doc, function(x) ifelse(test = is.null(x),
                                         yes = "[]",
