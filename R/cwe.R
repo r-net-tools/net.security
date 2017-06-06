@@ -8,7 +8,7 @@ LastDownloadCWEDate <- function(){
 #' @return data frame
 GetCWEData <- function(savepath = tempdir()) {
   print("Downloading raw data...")
-  DownloadCWEData(savepath)
+  # DownloadCWEData(savepath)
   print("Unzip, extract, etc...")
   cwes.file <- ExtractCWEFiles(savepath)
   print("Processing MITRE raw data...")
@@ -85,7 +85,7 @@ ParseCWEData <- function(cwes.file) {
 
   #Time_of_Introduction
   raw.cwes.toi <- GetListNodes(raw.cwes, "Time_of_Introduction")
-  cwes$time.intro <- ListNodesToJson(raw.cwes.toi)
+  cwes$time.intro <- TimeIntroNodesToJson(raw.cwes.toi)
 
   #Common_Consequences
   raw.cwes.cc <- GetListNodes(raw.cwes, "Common_Consequences")
@@ -173,14 +173,26 @@ ListNodesToXML <- function(doc){
          )
 }
 
+TimeIntroNodesToJson <- function(doc){
+  Time2JSON <- function(x){
+    ti <- x
+    ti <- as.character(ti$text)
+    return(jsonlite::toJSON(ti))
+  }
+  x <- sapply(doc, function(x) ifelse(test = is.null(x),
+                                        yes = "[]",
+                                        no = Time2JSON(XML::xmlToDataFrame(x)))
+  )
+  return(x)
+}
+
 OrdinalitiesNodesToJson <- function(doc) {
   Ord2JSON <- function(x) {
-    ord <- x
     if ((nrow(x) >= 1) && (ncol(x) == 1)) {
       ord <- as.character(x$Ordinality)
     } else {
-      ord <- paste(ord$Ordinality, ": ",
-                   stringr::str_wrap(ord$Ordinality_Description),sep = "")
+      ord <- paste(x$Ordinality, ": ",
+                   stringr::str_wrap(x$Ordinality_Description),sep = "")
     }
     return(jsonlite::toJSON(ord))
   }
