@@ -13,6 +13,23 @@ GetCWEData <- function(savepath = tempdir()) {
   cwes.file <- ExtractCWEFiles(savepath)
   print("Processing MITRE raw data...")
   cwes <- ParseCWEData(cwes.file)
+  # Sort and filter by WIP
+  cwes <- cwes[c("code_standard", "Name", "Weakness_Abstraction", "Status",
+                 "descr.summary", "descr.details", "ID", "cwe.parents",
+                 "time.intro", "consequences", "exploits", "ordinalities",
+                 "platforms", "aff.resources", "causal", "mitigation",  "demos",
+                 "mapping", "history", "relationship.notes", "maintenance.notes",
+                 "background", "introduction.mode", "other.notes", "functional.areas")]
+  names(cwes) <- c("code_standard", "Name", "Weakness_Abstraction", "Status",
+                   "descr.summary", "descr.details", "cwe.id", "cwe.parents.ids",
+                   "time.intro", "consequences", "exploits", "ordinalities",
+                   "platforms", "aff.resources", "causal", "mitigation",  "demos",
+                   "mapping", "history", "relationship.notes", "maintenance.notes",
+                   "background", "introduction.mode", "other.notes", "functional.areas")
+  cwes <- cwes[,c("code_standard", "Name", "Weakness_Abstraction", "Status",
+                  "descr.summary", "descr.details", "cwe.id", "cwe.parents.ids",
+                  "time.intro", "consequences", "exploits", "ordinalities",
+                  "platforms", "aff.resources", "causal", "mitigation")]
   print(paste("CWES data frame building process finished."))
   return(cwes)
 }
