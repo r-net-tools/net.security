@@ -18,12 +18,20 @@ GetCVEData <- function(origin = "all", savepath = tempdir()) {
       print(paste("Indexing data..."))
       cves <- dplyr::left_join(cves.mitre, cves.nist, by = c("cve" = "cve.id"))
       print(paste("Tidy data..."))
+      cves$cvss.vector <- unlist(lapply(cves$cvss, GetCVSS2Vector))
+      cves$cvss <- unlist(lapply(cves$cvss, GetCVSS2Score))
       names(cves) <- c("cve", "status", "description", "ref.mitre", "phase", "votes",
                        "comments", "osvdb", "cpe.config", "cpe.software", "discovered.datetime",
                        "disclosure.datetime", "exploit.publish.datetime", "published.datetime",
                        "last.modified.datetime", "cvss", "security.protection",
                        "assessment.check", "cwe", "ref.nist", "fix.action",
-                       "scanner", "summary", "technical.description", "attack.scenario")
+                       "scanner", "summary", "technical.description", "attack.scenario","cvss.vector")
+      cves <- cves[c("cve", "status", "description", "ref.mitre", "phase", "votes",
+                     "comments", "osvdb", "cpe.config", "cpe.software", "discovered.datetime",
+                     "disclosure.datetime", "exploit.publish.datetime", "published.datetime",
+                     "last.modified.datetime", "cvss", "cvss.vector", "security.protection",
+                     "assessment.check", "cwe", "ref.nist", "fix.action", "scanner",
+                     "summary", "technical.description", "attack.scenario")]
     } else {
       cves <- ParseCVEMITREData(path = savepath)
     }
@@ -42,7 +50,7 @@ GetCVEData <- function(origin = "all", savepath = tempdir()) {
   cve.lite.cols <- names(cves)[!(names(cves) %in% wip.cols)]
   cves <- cves[, cve.lite.cols]
 
-  print(paste("Process finished."))
+  print(paste("CVES data frame building process finished."))
 
   return(cves)
 }

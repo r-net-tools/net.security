@@ -33,35 +33,39 @@ sudo apt-get install libssl-dev libcurl4-openssl-dev libxml2-dev lzma
 
 ## Usage
 
-List available datasets. Results are used in other functions.
+**List available datasets**. Results are used in other functions.
 ```r
 > net.security::DataSetList()
 [1] "cves"
 [2] "cpes"
+[3] "cwes"
 ```
 
-Show data set status. Prints information about update status and number of observations of local data sets.    
+**Show data set status**. Prints information about update status and number of observations of local data sets.    
 ```r
 > net.security::DataSetStatus()
 [1] "-: CVES dataset:"
-[1] " |- Last update for CVES dataset at 2017-03-17"
-[1] " |- Data set with 103648 rows and 25 variables."
-[1] " |- Online RAW data updated at 2017-03-21"
-[1] " |- CVES dataset 4 days outdated."
+[1] " |- Last update for CVES dataset at 2017-03-28"
+[1] " |- Data set with 104075 rows and 24 variables."
+[1] " |- Online RAW data updated at 2017-03-30"
+[1] " |- CVES dataset 2 days outdated."
 [1] "-: CPES dataset:"
-[1] " |- Last update for CPES dataset at 2017-03-21"
-[1] " |- Data set with 117873 rows and 14 variables."
-[1] " |- Online RAW data updated at 2017-03-21"
-[1] " |- No updates needed for CPES dataset."
+[1] " |- Last update for CPES dataset at 2017-03-28"
+[1] " |- Data set with 117994 rows and 14 variables."
+[1] " |- Online RAW data updated at 2017-03-30"
+[1] " |- CPES dataset 2 days outdated."
+[1] "-: CWES dataset:"
+[1] " |- Last update for CWES dataset at 2017-03-28"
+[1] " |- Data set with 720 rows and 26 variables."
 [1] "-:"
 > 
 ```
 
-Update data sets from official sources. Estimated duration: 1h for cves, 15min for cpes. Set use.remote = FALSE to download from offical sources. Default option gets the updated data sets from [this](https://github.com/r-net-tools/security.datasets) repository.  
+**Update data sets** from official sources. Estimated duration: 1h for cves, 15min for cpes. Set use.remote = FALSE to download from offical sources. Default option gets the updated data sets from [this](https://github.com/r-net-tools/security.datasets) repository.  
 
 ```r
-> net.security::DataSetUpdate("cves")
-[1] "Downloading raw data..."
+> net.security::DataSetUpdate(use.remote = FALSE)
+[1] "Updating local cves data.frame from official sources."
 [1] "Unzip, extract, etc..."
 [1] "Processing MITRE raw data..."
 [1] "Processing NIST 2002 raw data..."
@@ -82,12 +86,26 @@ Update data sets from official sources. Estimated duration: 1h for cves, 15min f
 [1] "Processing NIST 2017 raw data..."
 [1] "Indexing data..."
 [1] "Tidy data..."
-[1] "Process finished."
+[1] "CVES data frame building process finished."
+[1] "Updating local cpes data.frame from official sources."
+[1] "Downloading raw data..."
+[1] "Extracting data..."
+[1] "Indexing data..."
+[1] "CPES data frame building process finished."
+[1] "Updating local cwes data.frame from official sources."
+[1] "Downloading raw data..."
+[1] "Unzip, extract, etc..."
+[1] "Processing MITRE raw data..."
+[1] "CWES data frame building process finished."
+[1] "Updated CVEs data.frame has 105521  new observations."
+[1] "Updated CPEs data.frame has 119072  new observations."
+[1] "Updated CWEs data.frame has 620  new observations."
 [1] "Compressing and saving data sets to local file..."
+[1] "2017-06-07"
 >
 ```
 
-Get data sets as data frames. Check data sets documentation for details of data frames. 
+**Get data sets as data frames**. Check data sets documentation for details of data frames. 
 ```r
 > cves <- net.security::GetDataFrame("cves")
 > class(cves)
@@ -115,3 +133,14 @@ Raw Data:
  
 Standard:
  - [NISTIR 7695, Common Platform Enumeration: Naming Specification Version 2.3](http://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7695.pdf)  
+
+#### CWE: Common Weakness Enumeration
+Quick Reference: https://cwe.mitre.org/about/faq.html  
+Raw Data: 
+ - MITRE: https://cwe.mitre.org/data/xml/cwec_v2.10.xml.zip  
+ 
+Standard:
+ - [CWE XML Schema documentation](https://cwe.mitre.org/documents/schema/schema_v5.4.2.html)  
+ - [CWE XSD File](https://cwe.mitre.org/data/xsd/cwe_schema_v5.4.2.xsd)  
+ - [All CWE Standard content. PDF File](https://cwe.mitre.org/data/published/cwe_v2.10.pdf)  
+ 

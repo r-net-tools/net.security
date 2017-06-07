@@ -1,4 +1,4 @@
-#' Sample of 500 random CVEs (Common Vulnerability Enummeration)
+#' Sample of 1000 random CVEs (Common Vulnerability Enummeration)
 #'
 #' A data set containing public information about CVE information from MITRE and NIST.
 #'
@@ -10,7 +10,6 @@
 #'   \item{phase}{Values can be Proposed, Interim, Modified or Assigned. Some time are followed with date with format %Y%m%d (MITRE)}
 #'   \item{votes}{Values can be accept, modify, noop, recast, reject, reviewing or revote. They are usually followed by voter name. (MITRE)}
 #'   \item{comments}{Comments about the vulnerability. (MITRE)}
-#'   \item{osvbd}{OSVDB reference identifier. (NIST)}
 #'   \item{cpe.config}{The id for the vulnerable configuration. The products that collectively characterize a particular IT platform type. (NIST)}
 #'   \item{cpe.software}{The CPE name of the vulnerable software. (NIST)}
 #'   \item{discovered.datetime}{The date that the vulnerability was first discovered.(NIST)}
@@ -18,7 +17,8 @@
 #'   \item{exploit.publish.datetime}{(NIST)}
 #'   \item{published.datetime}{(NIST)}
 #'   \item{last.modified.datetime}{(NIST)}
-#'   \item{cvss}{CVSS metrics stored as JSON. (NIST)}
+#'   \item{cvss}{CVSS v2 base score (NIST)}
+#'   \item{cvss.vector}{CVSS v2 basic vector AV:[L,A,N]/AC:[H,M,L]/Au:[M,S,N]/C:[N,P,C]/I:[N,P,C]/A:[N,P,C] (NIST)}
 #'   \item{security.protection}{The security protection type. Allowed values: ALLOWS_ADMIN_ACCESS, ALLOWS_USER_ACCESS, ALLOWS_OTHER_ACCESS. (NIST)}
 #'   \item{assessment.check}{An optional list of equivalent assessment methods that specify additional system state that must be present for the vulnerability to exist. (NIST)}
 #'   \item{cwe}{CWE reference extracted from other ref.nist and ref.mitre columns. (NIST)}
@@ -36,7 +36,7 @@
 #'
 #' @usage data(cves.sample)
 #'
-#' @format A data frame with 500 rows and 26 columns.
+#' @format A data frame with 1000 rows and 24 columns.
 #'
 #' @keywords cve
 #'
