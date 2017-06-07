@@ -8,7 +8,7 @@ LastDownloadCWEDate <- function(){
 #' @return data frame
 GetCWEData <- function(savepath = tempdir()) {
   print("Downloading raw data...")
-  DownloadCWEData(savepath)
+  # DownloadCWEData(savepath)
   print("Unzip, extract, etc...")
   cwes.file <- ExtractCWEFiles(savepath)
   print("Processing MITRE raw data...")
@@ -110,7 +110,7 @@ ParseCWEData <- function(cwes.file) {
 
   #Potential_Mitigations
   raw.cwes.mitigation <- GetListNodes(raw.cwes, "Potential_Mitigations")
-  cwes$mitigation <- ListNodesToXML(raw.cwes.mitigation)
+  cwes$mitigation <- MitigationNodesToJSON(raw.cwes.mitigation)
 
   #Causal_Nature
   cwes$causal <- cwes.basic$Causal_Nature
@@ -190,6 +190,58 @@ ListNodesToXML <- function(doc){
          )
 }
 
+MitigationNodesToJSON <- function(doc){
+  GetMitigation <- function(miti) {
+    phase <- XML::getNodeSet(miti, "Mitigation_Phase")
+    if (length(phase) > 0) {
+      phase <- stringr::str_wrap(sapply(phase, XML::xmlValue))
+    } else {
+      phase <- ""
+    }
+    strat <- XML::getNodeSet(miti, "Mitigation_Strategy")
+    if (length(strat) > 0) {
+      strat <- stringr::str_wrap(sapply(strat, XML::xmlValue))
+    } else {
+      strat <- ""
+    }
+    descr <- XML::getNodeSet(miti, "Mitigation_Description")
+    if (length(descr) > 0) {
+      descr <- stringr::str_wrap(sapply(descr, XML::xmlValue))
+      descr <- stringr::str_replace_all(descr, "\n", "")
+    } else {
+      descr <- ""
+    }
+    effec <- XML::getNodeSet(miti, "Mitigation_Effectiveness")
+    if (length(effec) > 0) {
+      effec <- stringr::str_wrap(sapply(effec, XML::xmlValue))
+    } else {
+      effec <- ""
+    }
+    effec.notes <- XML::getNodeSet(miti, "Mitigation_Effectiveness_Notes")
+    if (length(effec.notes) > 0) {
+      effec.notes <- stringr::str_wrap(sapply(effec.notes, XML::xmlValue))
+      effec.notes <- stringr::str_replace_all(effec.notes, "\n", "")
+    } else {
+      effec.notes <- ""
+    }
+    miti <- list(phase = phase, strategy = strat, description = descr,
+                 eff.value = effec, eff.notes = effec.notes)
+    return(miti)
+  }
+
+  Miti2JSON <- function(xml.mitis) {
+    miti <- xml.mitis
+    lmiti <- XML::getNodeSet(xml.mitis, "Mitigation")
+    lmiti <- lapply(lmiti, GetMitigation)
+    miti <- jsonlite::toJSON(lmiti)
+    return(miti)
+  }
+  x <- sapply(doc, function(x) ifelse(test = is.null(x),
+                                      yes = "[]",
+                                      no = Miti2JSON(x)))
+  return(x)
+}
+
 CommonConsequencesNodesToJSON <- function(doc){
   GetConsequence <- function(cons) {
     scope <- XML::getNodeSet(cons, "Consequence_Scope")
@@ -207,6 +259,7 @@ CommonConsequencesNodesToJSON <- function(doc){
     note <- XML::getNodeSet(cons, "Consequence_Note")
     if (length(note) > 0) {
       note <- stringr::str_wrap(sapply(note, XML::xmlValue))
+      note <- stringr::str_replace_all(note, "\n", "")
     } else {
       note <- ""
     }
