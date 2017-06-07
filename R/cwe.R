@@ -8,7 +8,7 @@ LastDownloadCWEDate <- function(){
 #' @return data frame
 GetCWEData <- function(savepath = tempdir()) {
   print("Downloading raw data...")
-  # DownloadCWEData(savepath)
+  DownloadCWEData(savepath)
   print("Unzip, extract, etc...")
   cwes.file <- ExtractCWEFiles(savepath)
   print("Processing MITRE raw data...")
