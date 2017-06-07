@@ -8,7 +8,7 @@ LastDownloadCWEDate <- function(){
 #' @return data frame
 GetCWEData <- function(savepath = tempdir()) {
   print("Downloading raw data...")
-  # DownloadCWEData(savepath)
+  DownloadCWEData(savepath)
   print("Unzip, extract, etc...")
   cwes.file <- ExtractCWEFiles(savepath)
   print("Processing MITRE raw data...")
@@ -89,7 +89,7 @@ ParseCWEData <- function(cwes.file) {
 
   #Common_Consequences
   raw.cwes.cc <- GetListNodes(raw.cwes, "Common_Consequences")
-  cwes$consequences <- ListNodesToXML(raw.cwes.cc)
+  cwes$consequences <- CommonConsequencesNodesToJSON(raw.cwes.cc)
 
   #Potential_Mitigations
   raw.cwes.mitigation <- GetListNodes(raw.cwes, "Potential_Mitigations")
@@ -171,6 +171,42 @@ ListNodesToXML <- function(doc){
                                         yes = "[]",
                                         no = XML::saveXML(x)))
          )
+}
+
+CommonConsequencesNodesToJSON <- function(doc){
+  GetConsequence <- function(cons) {
+    scope <- XML::getNodeSet(cons, "Consequence_Scope")
+    if (length(scope) > 0) {
+      scope <- stringr::str_wrap(sapply(scope, XML::xmlValue))
+    } else {
+      scope <- ""
+    }
+    impact <- XML::getNodeSet(cons, "Consequence_Technical_Impact")
+    if (length(impact) > 0) {
+      impact <- stringr::str_wrap(sapply(impact, XML::xmlValue))
+    } else {
+      impact <- ""
+    }
+    note <- XML::getNodeSet(cons, "Consequence_Note")
+    if (length(note) > 0) {
+      note <- stringr::str_wrap(sapply(note, XML::xmlValue))
+    } else {
+      note <- ""
+    }
+    cons <- list(scope = scope, impact = impact, note = note)
+    return(cons)
+  }
+  Cons2JSON <- function(xml.conss) {
+    cons <- xml.conss
+    lcons <- XML::getNodeSet(xml.conss, "Common_Consequence")
+    lcons <- lapply(lcons, GetConsequence)
+    cons <- jsonlite::toJSON(lcons)
+    return(cons)
+  }
+  x <- sapply(doc, function(x) ifelse(test = is.null(x),
+                                      yes = "[]",
+                                      no = Cons2JSON(x)))
+  return(x)
 }
 
 ModeIntroductionNodesToJson <- function(doc){
