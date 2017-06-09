@@ -8,7 +8,7 @@ LastDownloadCWEDate <- function(){
 #' @return data frame
 GetCWEData <- function(savepath = tempdir()) {
   print("Downloading raw data...")
-  DownloadCWEData(savepath)
+  # DownloadCWEData(savepath)
   print("Unzip, extract, etc...")
   cwes.file <- ExtractCWEFiles(savepath)
   print("Processing MITRE raw data...")
@@ -16,19 +16,19 @@ GetCWEData <- function(savepath = tempdir()) {
   # Sort and filter by WIP
   cwes <- cwes[c("code_standard", "Name", "Weakness_Abstraction", "Status",
                  "descr.summary", "descr.details", "ID", "cwe.parents",
-                 "time.intro", "consequences", "exploits", "ordinalities",
+                 "time.intro", "consequences", "exploits", "related.capec", "ordinalities",
                  "platforms", "aff.resources", "causal", "mitigation",  "demos",
                  "mapping", "history", "relationship.notes", "maintenance.notes",
                  "background", "introduction.mode", "other.notes", "functional.areas")]
   names(cwes) <- c("code_standard", "Name", "Weakness_Abstraction", "Status",
                    "descr.summary", "descr.details", "cwe.id", "cwe.parents.ids",
-                   "time.intro", "consequences", "exploits", "ordinalities",
+                   "time.intro", "consequences", "exploits", "related.capec", "ordinalities",
                    "platforms", "aff.resources", "causal", "mitigation",  "demos",
                    "mapping", "history", "relationship.notes", "maintenance.notes",
                    "background", "introduction.mode", "other.notes", "functional.areas")
   cwes <- cwes[,c("code_standard", "Name", "Weakness_Abstraction", "Status",
                   "descr.summary", "descr.details", "cwe.id", "cwe.parents.ids",
-                  "time.intro", "consequences", "exploits", "ordinalities",
+                  "time.intro", "consequences", "related.capec", "exploits", "ordinalities",
                   "platforms", "aff.resources", "causal", "mitigation")]
   print(paste("CWES data frame building process finished."))
   return(cwes)
@@ -148,7 +148,11 @@ ParseCWEData <- function(cwes.file) {
   cwes$other.notes <- ListNodesToJson(raw.cwes.other)
 
   #References
+
   #Related_Attack_Patterns
+  raw.cwes.capec <- GetListNodes(raw.cwes, "Related_Attack_Patterns")
+  cwes$related.capec <- RelatedAttackPatternsNodesToJson(raw.cwes.capec)
+
   #Observed_Examples
   #Theoretical_Notes
   #Affected_Resources
@@ -188,6 +192,22 @@ ListNodesToXML <- function(doc){
                                         yes = "[]",
                                         no = XML::saveXML(x)))
          )
+}
+
+RelatedAttackPatternsNodesToJson <- function(doc){
+  CAPEC2JSON <- function(xml.capec) {
+    capec <- xml.capec
+    lcapec <- XML::getNodeSet(xml.capec, "Related_Attack_Pattern")
+    lcapec <- sapply(lcapec, XML::xmlValue)
+    lcapec <- paste("CAPEC", lcapec, sep = "-")
+    capec <- jsonlite::toJSON(lcapec)
+    return(capec)
+  }
+  x <- sapply(doc, function(x) ifelse(test = is.null(x),
+                                      yes = "[]",
+                                      no = CAPEC2JSON(x)))
+  return(x)
+
 }
 
 MitigationNodesToJSON <- function(doc){
