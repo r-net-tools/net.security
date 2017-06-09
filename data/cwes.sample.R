@@ -19,6 +19,7 @@
 #'    \item{cwe.parents.ids}{cwe parents ids separated by ; . Useful for graph representations.}
 #'    \item{time.intro}{The Time_of_Introduction element contains the points of time in the software life cycle at which the weakness may be introduced. If there are multiple points of time at which the weakness may be introduced, then separate Introduction elements should be included for each. This element should be populated for all weakness bases and variants.}
 #'    \item{consequences}{This element contains the common consequences associated with this weakness. It is populated by one or more individual Common_Consequence subelements. This should be included and completed as much as possible for all weaknesses.}
+#'    \item{related.capec}{The Related_Attack_Patterns (CAPEC) element contains all references to CAPEC which will identify related attack patterns to this weakness. It has one or more Related_Attack_Pattern elements as children and each child will point to a single CAPEC entry which is associated with this weakness. This should be filled out to the extent possible for most weaknesses.}
 #'    \item{exploits}{This element contains a rough estimate at the likelihood of exploitation of an exposed weakness. Many factors can impact this value which is why it should only be regarded as an approximation.}
 #'    \item{ordinalities}{This element describes when this entry is primary - where the weakness exists independent of other weaknesses, or when this entry might be resultant - where the weakness is typically related to the presence of some other weaknesses. The Ordinality subelement identifies whether or not we are providing context around when this entry is primary, or resultant. The Ordinality_Description contains the description of the context in which this entry is primary or resultant. It is important to note that it is possible for the same entry to be primary in some instances and resultant in others.}
 #'    \item{platforms}{This structure contains the Languages, Operating_Systems, Hardware_Architectures, Architectural_Paradigms, Environments, Technology_Classes or Common Platforms on which this entry may exist. This should be filled out as much as possible for all Compound_Element and Weakness entries.}
@@ -33,7 +34,7 @@
 #'
 #' @usage data(cwes.sample)
 #'
-#' @format A data frame with 100 rows and 16 columns.
+#' @format A data frame with 100 rows and 17 columns.
 #'
 #' @keywords cwe
 #'
