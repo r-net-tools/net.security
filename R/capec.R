@@ -196,7 +196,7 @@ GetConsequence <- function(x) {
 GetConsequences <- function(doc, att.id) {
   cons <- sapply(att.id,
                  function(x)
-                   as.character(jsonlite::toJSON(dplyr::rbind_all(lapply(XML::getNodeSet(doc,
+                   as.character(jsonlite::toJSON(dplyr::bind_rows(lapply(XML::getNodeSet(doc,
                                                                             paste("//capec:Attack_Pattern[@ID='", x,
                                                                                   "']/capec:Attack_Motivation-Consequences/capec:Attack_Motivation-Consequence",
                                                                                   sep = "")),

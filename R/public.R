@@ -121,7 +121,7 @@ DataSetStatus <- function(ds = "all") {
 DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
 
   ds <- tolower(ds)
-  if (ds %in% c("all", "cves", "cpes", "cwes","oval")) {
+  if (ds %in% c("all", "cves", "cpes", "cwes", "capec")) {
     cves.ini <- Sys.Date()
     cpes.ini <- Sys.Date()
     cwes.ini <- Sys.Date()
