@@ -7,7 +7,7 @@
 GetCAPECData <- function(savepath = tempdir()) {
   DownloadCAPECData(savepath)
   capec <- data.frame()
-  capec.source.file <- paste(savepath, "capec", "capec_v2.8.xml",
+  capec.source.file <- paste(savepath, "capec", "capec_v2.10.xml",
                              sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
   doc <- XML::xmlParse(capec.source.file)
   # capec.views <- ParseCAPECData.views(doc)
