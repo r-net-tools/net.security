@@ -71,6 +71,23 @@ DataSetStatus <- function(ds = "all") {
       # }
     }
   }
+  if (tolower(ds) %in% c("capec", "all")) {
+    # Get Status from local capec data.frame
+    if (DataSetAvailable("capec")) {
+      print("-: CAPEC dataset:")
+      capec.timestamp <- strptime(netsec.data[[1]][["capec.ini"]], format = "%Y-%m-%d")
+      print(paste(" |- Last update for CAPEC dataset at", as.character(capec.timestamp)))
+      print(paste(" |- Data set with", as.character(nrow(netsec.data[[2]][["capec"]])), "rows and",
+                  as.character(ncol(netsec.data[[2]][["capec"]])), "variables."))
+      # cweonline <- strptime(LastDownloadCWEDate(), format = "%Y-%m-%d")
+      # print(paste(" |- Online RAW data updated at", cweonline))
+      # if ((cweonline-cwes.timestamp)<=0) {
+      #   print(paste(" |- No updates needed for CWES dataset."))
+      # } else {
+      #   print(paste(" |- CWES dataset", as.character(cweonline-cwes.timestamp), "days outdated."))
+      # }
+    }
+  }
   return(status)
 }
 
@@ -108,11 +125,13 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
     cves.ini <- Sys.Date()
     cpes.ini <- Sys.Date()
     cwes.ini <- Sys.Date()
+    capec.ini <- Sys.Date()
     timestamp <- list()
     datasets <- netsec.data$datasets
     cves.nrow <- nrow(netsec.data$datasets$cves)
     cpes.nrow <- nrow(netsec.data$datasets$cpes)
     cwes.nrow <- nrow(netsec.data$datasets$cwes)
+    capec.nrow <- nrow(netsec.data$datasets$capec)
 
     # Get updated data.frames
     if (use.remote) {
@@ -135,6 +154,11 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
         cwes <- netsec.data$datasets$cwes
         cwes.ini <- netsec.data$dwinfo[["cwes.ini"]]
       }
+      if (tolower(ds) %in% c("capec", "all")) {
+        #  Update local capec data.frame from official sources
+        capec <- netsec.data$datasets$capec
+        capec.ini <- netsec.data$dwinfo[["capec.ini"]]
+      }
       rm(netsec.data)
     } else {
       if (tolower(ds) %in% c("cves", "all")) {
@@ -148,6 +172,10 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
       if (tolower(ds) %in% c("cwes", "all")) {
         print("Updating local cwes data.frame from official sources.")
         cwes <- GetCWEData()
+      }
+      if (tolower(ds) %in% c("capec", "all")) {
+        print("Updating local capec data.frame from official sources.")
+        capec <- GetCAPECData()
       }
     }
 
@@ -175,6 +203,14 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
       datasets[["cwes"]] <- cwes
       new.cwes <- as.character(nrow(cwes) - cwes.nrow)
       print(paste("Updated CWEs data.frame has", new.cwes, " new observations."))
+    }
+    if (tolower(ds) %in% c("capec", "all")) {
+      #  Update package datasets with updated capec data.frame
+      netsec.data$dwinfo[["capec.ini"]] <- capec.ini
+      netsec.data$dwinfo[["capec.fin"]] <- capec.ini
+      datasets[["capec"]] <- capec
+      new.capec <- as.character(nrow(capec) - capec.nrow)
+      print(paste("Updated CAPECs data.frame has", new.capec, " new observations."))
     }
     netsec.data$datasets <- datasets
 
@@ -204,6 +240,15 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
         # cols <- names(cves)[sapply(cves, class) == "factor"]
         # cpes.sample[cols] <- lapply(cpes.sample[cols], factor)
         save(object = cwes.sample, file = "data/cwes.sample.rda", compress = "xz")
+      }
+      if (tolower(ds) %in% c("capec", "all")) {
+        #  Update local capec data.frame from official sources
+        # Save sample capec data frame
+        capec.sample <- capec[sample(nrow(capec), 100), ]
+        capec.sample[] <- lapply(capec.sample, as.character)
+        # cols <- names(capec)[sapply(capec, class) == "factor"]
+        # capec.sample[cols] <- lapply(capec.sample[cols], factor)
+        save(object = capec.sample, file = "data/capec.sample.rda", compress = "xz")
       }
     }
     print("Compressing and saving data sets to local file...")
@@ -254,6 +299,12 @@ DataSetList <- function(){
     ifelse(datasets == "",
            yes = datasets <- "cwes",
            no = datasets[length(datasets) + 1] <- "cwes")
+  }
+  # Search CAPEC dataset
+  if (DataSetAvailable(ds = "capec")) {
+    ifelse(datasets == "",
+           yes = datasets <- "capec",
+           no = datasets[length(datasets) + 1] <- "capec")
   }
 
   # Check if no datasets available

@@ -8,7 +8,7 @@ LastDownloadCWEDate <- function(){
 #' @return data frame
 GetCWEData <- function(savepath = tempdir()) {
   print("Downloading raw data...")
-  # DownloadCWEData(savepath)
+  DownloadCWEData(savepath)
   print("Unzip, extract, etc...")
   cwes.file <- ExtractCWEFiles(savepath)
   print("Processing MITRE raw data...")
@@ -199,7 +199,7 @@ RelatedAttackPatternsNodesToJson <- function(doc){
     capec <- xml.capec
     lcapec <- XML::getNodeSet(xml.capec, "Related_Attack_Pattern")
     lcapec <- sapply(lcapec, XML::xmlValue)
-    lcapec <- paste("CAPEC", lcapec, sep = "-")
+    # lcapec <- paste("CAPEC", lcapec, sep = "-")
     capec <- jsonlite::toJSON(lcapec)
     return(capec)
   }
