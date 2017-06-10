@@ -404,15 +404,15 @@ DownloadCVEData <- function(dest) {
   }
 
   # Download MITRE data (http://cve.mitre.org/data/downloads/index.html#download)
-  utils::download.file(url = "http://cve.mitre.org/data/downloads/allitems.xml.gz",
-                destfile = paste(dest, "cve", "mitre", "allitems.xml.gz",
-                                 sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
+  # utils::download.file(url = "http://cve.mitre.org/data/downloads/allitems.xml.gz",
+  #               destfile = paste(dest, "cve", "mitre", "allitems.xml.gz",
+  #                                sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
   # utils::download.file(url = "http://cve.mitre.org/schema/cve/cve_1.0.xsd",
   #               destfile = paste(dest, "cve", "mitre", "cve_1.0.xsd",
   #                                sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
-  # utils::download.file(url = "http://cve.mitre.org/data/downloads/allitems.csv.gz",
-  #               destfile = paste(dest, "cve", "mitre","allitems.csv.gz",
-  #                                sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
+  utils::download.file(url = "http://cve.mitre.org/data/downloads/allitems.csv.gz",
+                destfile = paste(dest, "cve", "mitre","allitems.csv.gz",
+                                 sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
 
   # Download NIST data ()
   for (year in 2002:as.integer(format(Sys.Date(), "%Y"))) {
