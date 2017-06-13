@@ -3,3 +3,5 @@
 ^\.travis\.yml$
 ^CONDUCT\.md$
 ^NEWS\.md$
+^inst\img\*$
+^inst/img/*$
