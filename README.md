@@ -144,3 +144,9 @@ Standard:
  - [CWE XSD File](https://cwe.mitre.org/data/xsd/cwe_schema_v5.4.2.xsd)  
  - [All CWE Standard content. PDF File](https://cwe.mitre.org/data/published/cwe_v2.10.pdf)  
  
+#### CAPEC: Common Attack Pattern Enumeration and Classification  
+Quick Reference: https://capec.mitre.org/about/index.html  
+Raw Data: 
+ - MITRE: https://capec.mitre.org/data/  
+ 
+Standard: https://capec.mitre.org/documents/schema/index.html  
