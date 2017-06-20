@@ -36,9 +36,7 @@ sudo apt-get install libssl-dev libcurl4-openssl-dev libxml2-dev lzma
 **List available datasets**. Results are used in other functions.
 ```r
 > net.security::DataSetList()
-[1] "cves"
-[2] "cpes"
-[3] "cwes"
+[1] "cves"  "cpes"  "cwes"  "capec"
 ```
 
 **Show data set status**. Prints information about update status and number of observations of local data sets.    
@@ -57,6 +55,9 @@ sudo apt-get install libssl-dev libcurl4-openssl-dev libxml2-dev lzma
 [1] "-: CWES dataset:"
 [1] " |- Last update for CWES dataset at 2017-03-28"
 [1] " |- Data set with 720 rows and 26 variables."
+[1] "-: CAPEC dataset:"
+[1] " |- Last update for CAPEC dataset at 2017-06-10"
+[1] " |- Data set with 100 rows and 34 variables."
 [1] "-:"
 > 
 ```
@@ -97,9 +98,12 @@ sudo apt-get install libssl-dev libcurl4-openssl-dev libxml2-dev lzma
 [1] "Unzip, extract, etc..."
 [1] "Processing MITRE raw data..."
 [1] "CWES data frame building process finished."
+[1] "Updating local capec data.frame from official sources."
+[1] "CAPEC data frame building process finished."
 [1] "Updated CVEs data.frame has 105521  new observations."
 [1] "Updated CPEs data.frame has 119072  new observations."
 [1] "Updated CWEs data.frame has 620  new observations."
+[1] "Updated CAPECs data.frame has 442  new observations."
 [1] "Compressing and saving data sets to local file..."
 [1] "2017-06-07"
 >

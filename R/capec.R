@@ -17,6 +17,7 @@ GetCAPECData <- function(savepath = tempdir()) {
   # capec <- list(views = capec.views,
   #               categories = capec.categories,
   #               attacks = capec.attacks)
+  print(paste("CAPEC data frame building process finished."))
   return(capec.attacks)
 }
 
