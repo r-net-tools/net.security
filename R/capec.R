@@ -1,9 +1,5 @@
 #### References: https://capec.mitre.org/data/index.html
 
-#' Download, parse and return a tidy data frame with CAPEC information
-#'
-#' @param savepath String
-#' @return data frame
 GetCAPECData <- function(savepath = tempdir()) {
   DownloadCAPECData(savepath)
   capec <- data.frame()

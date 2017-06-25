@@ -2,10 +2,6 @@ LastDownloadCWEDate <- function(){
   return(Sys.Date())
 }
 
-#' Get data frame with CWE information
-#'
-#' @param savepath String
-#' @return data frame
 GetCWEData <- function(savepath = tempdir()) {
   print("Downloading raw data...")
   DownloadCWEData(savepath)
@@ -34,12 +30,6 @@ GetCWEData <- function(savepath = tempdir()) {
   return(cwes)
 }
 
-
-#### Private Functions -----------------------------------------------------------------------------
-
-#' Download CWE information
-#'
-#' @param savepath String
 DownloadCWEData <- function(savepath) {
   if (!dir.exists(paste(savepath, "cwe", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
     dir.create(paste(savepath, "cwe", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
@@ -49,9 +39,6 @@ DownloadCWEData <- function(savepath) {
   utils::download.file(url = cwe.url, destfile = destfile)
 }
 
-#' Extract compressed files
-#'
-#' @param savepath String, the directory containing the files to be extracted
 ExtractCWEFiles <- function(savepath) {
   # Uncompress gzip XML files
   cwes.zip <- paste(savepath, "cwe", "2000.xml.zip", sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
@@ -61,12 +48,6 @@ ExtractCWEFiles <- function(savepath) {
   return(cwes.xml)
 }
 
-
-#' Arrange CWE information into data frame
-#'
-#' @param cwes.file String
-#'
-#' @return Data frame
 ParseCWEData <- function(cwes.file) {
 
   doc <- XML::xmlParse(cwes.file)
@@ -337,12 +318,6 @@ OrdinalitiesNodesToJson <- function(doc) {
   return(x)
 }
 
-#' Get parents from a given CWE
-#' Given a CWE code, returns its direct parents.set compact=T and results will be semicolon-separated
-#'
-#' @param cwes data frame
-#' @param CWE number
-#' @param compact boolean
 GetParents <- function(cwes, CWE = "", compact = FALSE) {
   # Workaround for non standard evaluation
   # http://stackoverflow.com/questions/9439256/how-can-i-handle-r-cmd-check-no-visible-binding-for-global-variable-notes-when
