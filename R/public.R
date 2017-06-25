@@ -8,7 +8,7 @@
 #'
 #' @param ds Selects the data set for this operation. Default set to "all".
 #'           Check available option with DataSetList()
-#' @return Pairs of datasate
+#' @return Print information about data set status.
 #' @export
 #' @examples
 #' DataSetStatus("cves")

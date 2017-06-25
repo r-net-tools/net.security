@@ -11,7 +11,7 @@ DataSetStatus(ds = "all")
 Check available option with DataSetList()}
 }
 \value{
-Pairs of datasate
+Print information about data set status.
 }
 \description{
 \code{DataSetStatus} prints to console size of data set, download date and date of new public raw data.
