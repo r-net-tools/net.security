@@ -50,108 +50,113 @@ ExtractCWEFiles <- function(savepath) {
 
 ParseCWEData <- function(cwes.file) {
 
-  doc <- XML::xmlParse(cwes.file)
-  raw.cwes <- XML::xpathApply(doc, "//Weakness")
-  cwes <- as.data.frame(t(XML::xmlSApply(raw.cwes, XML::xmlAttrs)),
-                        stringsAsFactors = FALSE)
-  cwes$code_standard <- paste("CWE-", cwes$ID, sep = "")
-  cwes.basic <- XML::xmlToDataFrame(raw.cwes)
-  cwes$Status <- as.factor(XML::xpathSApply(doc, "//Weakness/@Status"))
-  cwes$Weakness_Abstraction <- as.factor(XML::xpathSApply(doc, "//Weakness/@Weakness_Abstraction"))
+  doc <- rvest::html(cwes.file)
+  raw.cwes <- rvest::html_nodes(doc, "weakness")
+  cwes <- as.data.frame(t(sapply(raw.cwes, rvest::html_attrs)), stringsAsFactors = F)
+  cwes$code_standard <- paste("CWE-", cwes$id, sep = "")
 
-  #Description
-  raw.cwes.descr <- XML::xpathSApply(doc, "//Weakness/Description")
-  cwes$descr.summary <- sapply(raw.cwes.descr,
-                               function(x)
-                                 XML::xmlValue(x[["Description_Summary"]]))
-  cwes$descr.details <- sapply(raw.cwes.descr,
-                               function(x)
-                                 XML::xmlValue(x[["Extended_Description"]]))
-  #Relationships
-  raw.cwes.rels <- GetListNodes(raw.cwes, "Relationships")
-  cwes$relationships <- ListNodesToJson(raw.cwes.rels)
-  cwes$cwe.parents <- sapply(cwes$ID, function(x) GetParents(cwes, x, compact = T))
-
-  #Weakness_Ordinalities
-  raw.cwes.ord <- GetListNodes(raw.cwes, "Weakness_Ordinalities")
-  cwes$ordinalities <- OrdinalitiesNodesToJson(raw.cwes.ord)
-
-  #Applicable_Platforms
-  cwes$platforms <- stringr::str_wrap(cwes.basic$Applicable_Platforms)
-  cwes$platforms[is.na(cwes$platforms)] <- ""
-  cwes$platforms[nchar(cwes$platforms) == 0] <- NA
-
-  #Time_of_Introduction
-  raw.cwes.toi <- GetListNodes(raw.cwes, "Time_of_Introduction")
-  cwes$time.intro <- TimeIntroNodesToJson(raw.cwes.toi)
-
-  #Common_Consequences
-  raw.cwes.cc <- GetListNodes(raw.cwes, "Common_Consequences")
-  cwes$consequences <- CommonConsequencesNodesToJSON(raw.cwes.cc)
-
-  #Potential_Mitigations
-  raw.cwes.mitigation <- GetListNodes(raw.cwes, "Potential_Mitigations")
-  cwes$mitigation <- MitigationNodesToJSON(raw.cwes.mitigation)
-
-  #Causal_Nature
-  cwes$causal <- cwes.basic$Causal_Nature
-
-  #Demonstrative_Examples
-  raw.cwes.demos <- GetListNodes(raw.cwes, "Demonstrative_Examples")
-  cwes$demos <- ListNodesToXML(raw.cwes.demos)
-
-  #Taxonomy_Mappings
-  raw.cwes.map <- GetListNodes(raw.cwes, "Taxonomy_Mappings")
-  cwes$mapping <- ListNodesToJson(raw.cwes.map)
-
-  #Content_History
-  raw.cwes.hist <- GetListNodes(raw.cwes, "Content_History")
-  cwes$history <- ListNodesToXML(raw.cwes.hist)
-
-  #Relationship_Notes
-  raw.cwes.rels.notes <- GetListNodes(raw.cwes, "Relationship_Notes")
-  cwes$relationship.notes <- ListNodesToXML(raw.cwes.rels.notes)
-
-  #Maintenance_Notes
-  raw.cwes.maint.notes <- GetListNodes(raw.cwes, "Maintenance_Notes")
-  cwes$maintenance.notes <- ListNodesToXML(raw.cwes.maint.notes)
-
-  #Background_Details
-  raw.cwes.back <- GetListNodes(raw.cwes, "Background_Details")
-  cwes$background <- ListNodesToJson(raw.cwes.back)
-
-  #Modes_of_Introduction
-  raw.cwes.mintro <- GetListNodes(raw.cwes, "Modes_of_Introduction")
-  cwes$introduction.mode <- ModeIntroductionNodesToJson(raw.cwes.mintro)
-
-  #Other_Notes
-  raw.cwes.other <- GetListNodes(raw.cwes, "Other_Notes")
-  cwes$other.notes <- ListNodesToJson(raw.cwes.other)
-
-  #References
-
-  #Related_Attack_Patterns
-  raw.cwes.capec <- GetListNodes(raw.cwes, "Related_Attack_Patterns")
-  cwes$related.capec <- RelatedAttackPatternsNodesToJson(raw.cwes.capec)
-
-  #Observed_Examples
-  #Theoretical_Notes
-  #Affected_Resources
-  cwes$aff.resources <- cwes.basic$Affected_Resources
-
-  #Research_Gaps
-  #Alternate_Terms
-  #Terminology_Notes
-  #Likelihood_of_Exploit
-  cwes$exploits <- cwes.basic$Likelihood_of_Exploit
-
-  #Detection_Methods
-  #Functional_Areas
-  cwes$functional.areas <- cwes.basic$Functional_Areas
-
-  #White_Box_Definitions
-  #Enabling_Factors_for_Exploitation
-  #Relevant_Properties
+  # doc <- XML::xmlParse(cwes.file)
+  # raw.cwes <- XML::xpathApply(doc, "//Weakness")
+  # cwes <- as.data.frame(t(XML::xmlSApply(raw.cwes, XML::xmlAttrs)),
+  #                       stringsAsFactors = FALSE)
+  # cwes$code_standard <- paste("CWE-", cwes$ID, sep = "")
+  # cwes.basic <- XML::xmlToDataFrame(raw.cwes)
+  # cwes$Status <- as.factor(XML::xpathSApply(doc, "//Weakness/@Status"))
+  # cwes$Weakness_Abstraction <- as.factor(XML::xpathSApply(doc, "//Weakness/@Weakness_Abstraction"))
+  #
+  # #Description
+  # raw.cwes.descr <- XML::xpathSApply(doc, "//Weakness/Description")
+  # cwes$descr.summary <- sapply(raw.cwes.descr,
+  #                              function(x)
+  #                                XML::xmlValue(x[["Description_Summary"]]))
+  # cwes$descr.details <- sapply(raw.cwes.descr,
+  #                              function(x)
+  #                                XML::xmlValue(x[["Extended_Description"]]))
+  # #Relationships
+  # raw.cwes.rels <- GetListNodes(raw.cwes, "Relationships")
+  # cwes$relationships <- ListNodesToJson(raw.cwes.rels)
+  # cwes$cwe.parents <- sapply(cwes$ID, function(x) GetParents(cwes, x, compact = T))
+  #
+  # #Weakness_Ordinalities
+  # raw.cwes.ord <- GetListNodes(raw.cwes, "Weakness_Ordinalities")
+  # cwes$ordinalities <- OrdinalitiesNodesToJson(raw.cwes.ord)
+  #
+  # #Applicable_Platforms
+  # cwes$platforms <- stringr::str_wrap(cwes.basic$Applicable_Platforms)
+  # cwes$platforms[is.na(cwes$platforms)] <- ""
+  # cwes$platforms[nchar(cwes$platforms) == 0] <- NA
+  #
+  # #Time_of_Introduction
+  # raw.cwes.toi <- GetListNodes(raw.cwes, "Time_of_Introduction")
+  # cwes$time.intro <- TimeIntroNodesToJson(raw.cwes.toi)
+  #
+  # #Common_Consequences
+  # raw.cwes.cc <- GetListNodes(raw.cwes, "Common_Consequences")
+  # cwes$consequences <- CommonConsequencesNodesToJSON(raw.cwes.cc)
+  #
+  # #Potential_Mitigations
+  # raw.cwes.mitigation <- GetListNodes(raw.cwes, "Potential_Mitigations")
+  # cwes$mitigation <- MitigationNodesToJSON(raw.cwes.mitigation)
+  #
+  # #Causal_Nature
+  # cwes$causal <- cwes.basic$Causal_Nature
+  #
+  # #Demonstrative_Examples
+  # raw.cwes.demos <- GetListNodes(raw.cwes, "Demonstrative_Examples")
+  # cwes$demos <- ListNodesToXML(raw.cwes.demos)
+  #
+  # #Taxonomy_Mappings
+  # raw.cwes.map <- GetListNodes(raw.cwes, "Taxonomy_Mappings")
+  # cwes$mapping <- ListNodesToJson(raw.cwes.map)
+  #
+  # #Content_History
+  # raw.cwes.hist <- GetListNodes(raw.cwes, "Content_History")
+  # cwes$history <- ListNodesToXML(raw.cwes.hist)
+  #
+  # #Relationship_Notes
+  # raw.cwes.rels.notes <- GetListNodes(raw.cwes, "Relationship_Notes")
+  # cwes$relationship.notes <- ListNodesToXML(raw.cwes.rels.notes)
+  #
+  # #Maintenance_Notes
+  # raw.cwes.maint.notes <- GetListNodes(raw.cwes, "Maintenance_Notes")
+  # cwes$maintenance.notes <- ListNodesToXML(raw.cwes.maint.notes)
+  #
+  # #Background_Details
+  # raw.cwes.back <- GetListNodes(raw.cwes, "Background_Details")
+  # cwes$background <- ListNodesToJson(raw.cwes.back)
+  #
+  # #Modes_of_Introduction
+  # raw.cwes.mintro <- GetListNodes(raw.cwes, "Modes_of_Introduction")
+  # cwes$introduction.mode <- ModeIntroductionNodesToJson(raw.cwes.mintro)
+  #
+  # #Other_Notes
+  # raw.cwes.other <- GetListNodes(raw.cwes, "Other_Notes")
+  # cwes$other.notes <- ListNodesToJson(raw.cwes.other)
+  #
+  # #References
+  #
+  # #Related_Attack_Patterns
+  # raw.cwes.capec <- GetListNodes(raw.cwes, "Related_Attack_Patterns")
+  # cwes$related.capec <- RelatedAttackPatternsNodesToJson(raw.cwes.capec)
+  #
+  # #Observed_Examples
+  # #Theoretical_Notes
+  # #Affected_Resources
+  # cwes$aff.resources <- cwes.basic$Affected_Resources
+  #
+  # #Research_Gaps
+  # #Alternate_Terms
+  # #Terminology_Notes
+  # #Likelihood_of_Exploit
+  # cwes$exploits <- cwes.basic$Likelihood_of_Exploit
+  #
+  # #Detection_Methods
+  # #Functional_Areas
+  # cwes$functional.areas <- cwes.basic$Functional_Areas
+  #
+  # #White_Box_Definitions
+  # #Enabling_Factors_for_Exploitation
+  # #Relevant_Properties
 
   return(cwes)
 }
