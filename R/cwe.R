@@ -70,27 +70,58 @@ ParseCWEData <- function(cwes.file) {
                                                           no = rvest::html_text(rvest::html_nodes(x, "extended_description")))})
   cwes$Related_Weakness <- sapply(raw.cwes,
                                   function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "related_weakness")), character(0)),
-                                                      yes = jsonlite::toJSON(""),
-                                                      no = jsonlite::toJSON(lapply(rvest::html_nodes(x, "related_weakness"),
-                                                                                   rvest::html_attrs),
+                                                      yes = RJSONIO::toJSON(""),
+                                                      no = RJSONIO::toJSON(lapply(rvest::html_nodes(x, "related_weakness"),
+                                                                                  rvest::html_attrs),
                                                                             pretty = T))
                                               }
                                   )
   cwes$Weakness_Ordinality <- sapply(raw.cwes,
                                     function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "weakness_ordinality")), character(0)),
-                                                        yes = jsonlite::toJSON(""),
-                                                        no = jsonlite::toJSON(lapply(rvest::html_nodes(x, "weakness_ordinality"),
+                                                        yes = RJSONIO::toJSON(""),
+                                                        no = RJSONIO::toJSON(lapply(rvest::html_nodes(x, "weakness_ordinality"),
                                                                                      function(x) rvest::html_text(rvest::html_children(x))),
                                                                               pretty = T))
                                     }
   )
   cwes$Applicable_Platforms <- sapply(raw.cwes,
                                   function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "applicable_platforms")), character(0)),
-                                                      yes = jsonlite::toJSON(""),
-                                                      no = jsonlite::toJSON(lapply(rvest::html_nodes(x, "applicable_platforms"),
-                                                                                   rvest::html_attrs),
-                                                                            pretty = T))
+                                                      yes = RJSONIO::toJSON(""),
+                                                      no = {
+                                                             y <- lapply(rvest::html_children(rvest::html_nodes(x, "applicable_platforms")), rvest::html_attrs)
+                                                             names(y) <- rvest::html_name(rvest::html_children(rvest::html_nodes(x, "applicable_platforms")))
+                                                             RJSONIO::toJSON(y, pretty = T)
+                                                      })
                                   }
+  )
+  cwes$Background_Details <- sapply(raw.cwes,
+                                  function(x) ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "background_details")), character(0)),
+                                                     yes = RJSONIO::toJSON(""),
+                                                     no = RJSONIO::toJSON(lapply(rvest::html_nodes(x, "background_details"),
+                                                                                 rvest::html_text),
+                                                                          pretty = T))
+  )
+  cwes$Alternate_Terms <- sapply(raw.cwes,
+                                    function(x) ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "alternate_terms")), character(0)),
+                                                       yes = RJSONIO::toJSON(""),
+                                                       no = RJSONIO::toJSON(lapply(rvest::html_children(rvest::html_nodes(x, "alternate_terms")),
+                                                                                   rvest::html_text),
+                                                                            pretty = T))
+  )
+
+  cwes$Modes_Of_Introduction <- sapply(raw.cwes,
+                                 function(x) ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "modes_of_introduction")), character(0)),
+                                                    yes = RJSONIO::toJSON(""),
+                                                    no = RJSONIO::toJSON(lapply(
+                                                                                  lapply(rvest::html_children(rvest::html_nodes(x, "modes_of_introduction")),
+                                                                                         function(x) rvest::html_children(x)),
+                                                                                  function(y) {
+                                                                                    z <- rvest::html_text(y)
+                                                                                    names(z) <- rvest::html_name(y)
+                                                                                    z
+                                                                                  }
+                                                                                ),
+                                                    pretty = T))
   )
 
   # doc <- XML::xmlParse(cwes.file)
