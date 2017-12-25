@@ -49,11 +49,49 @@ ExtractCWEFiles <- function(savepath) {
 }
 
 ParseCWEData <- function(cwes.file) {
-
+  # Load Weakness raw data
   doc <- rvest::html(cwes.file)
   raw.cwes <- rvest::html_nodes(doc, "weakness")
+  # Extract Weakness node attributes
   cwes <- as.data.frame(t(sapply(raw.cwes, rvest::html_attrs)), stringsAsFactors = F)
-  cwes$code_standard <- paste("CWE-", cwes$id, sep = "")
+  names(cwes) <- c("ID", "Name", "Abstraction", "Structure", "Status")
+  # Set factors (improve setting levels according to XSD)
+  cwes$Abstraction <- as.factor(cwes$Abstraction)
+  cwes$Structure <- as.factor(cwes$Structure)
+  cwes$Status <- as.factor(cwes$Status)
+  # Add extra field with code standard
+  cwes$Code_Standard <- paste("CWE-", cwes$ID, sep = "")
+
+  cwes$Description <- sapply(rvest::html_nodes(doc, xpath = "//weakness/description"),
+                             rvest::html_text)
+  cwes$Extended_Description <- sapply(raw.cwes,
+                                      function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "extended_description")), character(0)),
+                                                          yes = "",
+                                                          no = rvest::html_text(rvest::html_nodes(x, "extended_description")))})
+  cwes$Related_Weakness <- sapply(raw.cwes,
+                                  function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "related_weakness")), character(0)),
+                                                      yes = jsonlite::toJSON(""),
+                                                      no = jsonlite::toJSON(lapply(rvest::html_nodes(x, "related_weakness"),
+                                                                                   rvest::html_attrs),
+                                                                            pretty = T))
+                                              }
+                                  )
+  cwes$Weakness_Ordinality <- sapply(raw.cwes,
+                                    function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "weakness_ordinality")), character(0)),
+                                                        yes = jsonlite::toJSON(""),
+                                                        no = jsonlite::toJSON(lapply(rvest::html_nodes(x, "weakness_ordinality"),
+                                                                                     function(x) rvest::html_text(rvest::html_children(x))),
+                                                                              pretty = T))
+                                    }
+  )
+  cwes$Applicable_Platforms <- sapply(raw.cwes,
+                                  function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "applicable_platforms")), character(0)),
+                                                      yes = jsonlite::toJSON(""),
+                                                      no = jsonlite::toJSON(lapply(rvest::html_nodes(x, "applicable_platforms"),
+                                                                                   rvest::html_attrs),
+                                                                            pretty = T))
+                                  }
+  )
 
   # doc <- XML::xmlParse(cwes.file)
   # raw.cwes <- XML::xpathApply(doc, "//Weakness")
