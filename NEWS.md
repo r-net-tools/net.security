@@ -1,6 +1,8 @@
 # net.security 0.3.1
 
- * CWE Standard changed its schema. New parser for CWE data.frame.  
+ * CWE Standard changed its schema. New parser for CWE data.frame.
+ * Updated samples.
+ * Solved CPE status check error.
  
 # net.security 0.3.0
 

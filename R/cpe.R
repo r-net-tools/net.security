@@ -13,13 +13,8 @@ GetCPEData <- function(savepath = tempdir()) {
 
 LastDownloadCPEDate <- function(){
   doc.html <- XML::htmlParse(paste(readLines("https://nvd.nist.gov/cpe.cfm")))
-  ltxt <- XML::xpathSApply(doc.html, '//li')
-  i <- sapply(ltxt, function(x) grepl("official-cpe-dictionary_v2.3.xml", XML::saveXML(x)))
-  txt <- XML::xmlValue(ltxt[[which(i)]])
-  last <- stringr::str_sub(txt,
-                           stringr::str_locate(txt, "Updated")[1,1],
-                           stringr::str_locate(txt, "- gz")[1,1]-2)
-  last <- strptime(last, "Updated: %m/%d/%Y %I:%M:%S %p", tz="EST")
+  last <- as.character(XML::getChildrenStrings(XML::xpathSApply(doc.html, '//span[@data-testid="cpe-feed-23-gz-date"]')[[1]]))
+  last <- strptime(last, "%m/%d/%Y %I:%M:%S %p", tz = "EST")
   last <- as.character.POSIXt(last)
   return(last)
 }

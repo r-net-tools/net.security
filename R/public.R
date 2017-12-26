@@ -140,22 +140,22 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
                     destfile = paste(tempdir(),"sysdata.rda",sep = "\\"))
       load(file = paste(tempdir(),"sysdata.rda",sep = "\\"))
       if (tolower(ds) %in% c("cves", "all")) {
-        #  Update local cves data.frame from official sources
+        #  Update local cves data.frame from r-net-tools
         cves <- netsec.data$datasets$cves
         cves.ini <- netsec.data$dwinfo[["cves.ini"]]
       }
       if (tolower(ds) %in% c("cpes", "all")) {
-        #  Update local cpes data.frame from official sources
+        #  Update local cpes data.frame from r-net-tools
         cpes <- netsec.data$datasets$cpes
         cpes.ini <- netsec.data$dwinfo[["cpes.ini"]]
       }
       if (tolower(ds) %in% c("cwes", "all")) {
-        #  Update local cwes data.frame from official sources
+        #  Update local cwes data.frame from r-net-tools
         cwes <- netsec.data$datasets$cwes
         cwes.ini <- netsec.data$dwinfo[["cwes.ini"]]
       }
       if (tolower(ds) %in% c("capec", "all")) {
-        #  Update local capec data.frame from official sources
+        #  Update local capec data.frame from r-net-tools
         capec <- netsec.data$datasets$capec
         capec.ini <- netsec.data$dwinfo[["capec.ini"]]
       }
