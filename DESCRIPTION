@@ -1,6 +1,6 @@
 Package: net.security
 Title: Security Standards Data Sets
-Version: 0.3.0
+Version: 0.3.1
 Authors@R: c(
     person("Humbert", "Costas", email = "humbert.costas@gmail.com", role = c("aut", "cre")),
     person("Arnau", "Sangra", email = "arnsangra@gmail.com", role = "ctb"))
@@ -18,7 +18,10 @@ Imports:
     dplyr,
     jsonlite,
     plyr,
-    stringr
+    stringr,
+    RJSONIO,
+    xml2,
+    rvest
 Suggests: 
     testthat, 
     covr 
