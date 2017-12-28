@@ -3,7 +3,7 @@
 [![Project Status: Active - The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active) 
 [![Build Status](https://travis-ci.org/r-net-tools/net.security.svg?branch=master)](https://travis-ci.org/r-net-tools/net.security) 
 [![Coverage Status](https://coveralls.io/repos/github/r-net-tools/net.security/badge.svg?branch=master)](https://coveralls.io/github/r-net-tools/net.security?branch=master)
-[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/net.security)](http://cran.r-project.org/package=net.security)
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/net.security)](http://CRAN.R-project.org/package=net.security)
 
 
 #### Package for Data Driven Security purposes.
@@ -23,7 +23,7 @@ devtools::install_github(repo = "r-net-tools/net.security", ref = "devel")
 ```  
 
 ### Linux - Debian
-If you need to upgrade R to latest version, follow [this](https://cran.r-project.org/bin/linux/debian/) instructions step by step.
+If you need to upgrade R to latest version, follow [this](https://CRAN.R-project.org/bin/linux/debian/) instructions step by step.
 
 Latest versions of R automate the installation of package dependencies. Check the DESCRIPTION file for required packages. Openssl, curl and XML packages will need system libraries that are not installed by default. Perhaps you will need to install:  
 
