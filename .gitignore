@@ -6,6 +6,8 @@
 # downloaded data
 inst/tmpdata/*
 inst/extdata/*
+inst/raw.data/*
+inst/testing/*
 
 # produced vignettes
 vignettes/*.html

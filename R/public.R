@@ -186,7 +186,7 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
       netsec.data$dwinfo[["cves.fin"]] <- cves.ini
       datasets[["cves"]] <- cves
       new.cves <- as.character(nrow(cves) - cves.nrow)
-      print(paste("Updated CVEs data.frame has", new.cves, " new observations."))
+      print(paste("Updated CVEs data.frame has", new.cves, "new observations."))
     }
     if (tolower(ds) %in% c("cpes", "all")) {
       #  Update package datasets with updated cpes data.frame
@@ -194,7 +194,7 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
       netsec.data$dwinfo[["cpes.fin"]] <- cpes.ini
       datasets[["cpes"]] <- cpes
       new.cpes <- as.character(nrow(cpes) - cpes.nrow)
-      print(paste("Updated CPEs data.frame has", new.cpes, " new observations."))
+      print(paste("Updated CPEs data.frame has", new.cpes, "new observations."))
     }
     if (tolower(ds) %in% c("cwes", "all")) {
       #  Update package datasets with updated cwes data.frame
@@ -202,7 +202,7 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
       netsec.data$dwinfo[["cwes.fin"]] <- cwes.ini
       datasets[["cwes"]] <- cwes
       new.cwes <- as.character(nrow(cwes) - cwes.nrow)
-      print(paste("Updated CWEs data.frame has", new.cwes, " new observations."))
+      print(paste("Updated CWEs data.frame has", new.cwes, "new observations."))
     }
     if (tolower(ds) %in% c("capec", "all")) {
       #  Update package datasets with updated capec data.frame
@@ -210,7 +210,7 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
       netsec.data$dwinfo[["capec.fin"]] <- capec.ini
       datasets[["capec"]] <- capec
       new.capec <- as.character(nrow(capec) - capec.nrow)
-      print(paste("Updated CAPECs data.frame has", new.capec, " new observations."))
+      print(paste("Updated CAPECs data.frame has", new.capec, "new observations."))
     }
     netsec.data$datasets <- datasets
 
