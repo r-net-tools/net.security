@@ -1,452 +1,216 @@
-LastDownloadCVEDate <- function(){
+GetCVEData <- function(savepath = tempdir(), verbose = TRUE,
+                       from.year = 2002L,
+                       to.year = as.integer(format(Sys.Date(), "%Y"))) {
+  if (verbose) print("Downloading raw data from sources...")
+  DownloadCVEData(savepath, verbose, from.year, to.year)
+  if (verbose) print(paste("Unzip, extract, etc..."))
+  ExtractCVEFiles(savepath, verbose)
+
+  # Parse MITRE data
+  if (verbose) print("Processing MITRE raw data...")
+  cves.mitre <- ParseCVEMITREData(savepath, verbose)
+
+  # Parse NIST data
+  if (verbose) print("Processing NIST raw data...")
+  cves.nist <- ParseCVENISTData(savepath, from.year, to.year, verbose)
+
+  if (verbose) print("Joining MITRE and NIST data...")
+  # cves <- list(cves.mitre, cves.nist)
+  cves <- cves.nist
+
+  return(cves)
+}
+
+#### MITRE Private Functions ---------------------------------------------------
+
+ParseCVEMITREData <- function(savepath, verbose) {
+  # TODO: Parse XML files
+  cve.file <-   paste(savepath, "cve", "mitre", "allitems.csv",
+                      sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
+  column.names <- c("cve","mitre.status","mitre.description","mitre.references",
+                    "mitre.phase","mitre.votes","mitre.comments")
+  column.classes <- c("character","factor","character","character","character",
+                      "character","character")
+  if (verbose) print("Parsing MITRE cves from CSV source...")
+  cves <- utils::read.csv(file = cve.file,
+                          skip = 9,
+                          col.names = column.names,
+                          colClasses = column.classes)
+  if (verbose) print("Tidy MITRE data frame...")
+  if (verbose) print("Parsing MITRE data finished.")
+  return(cves)
+}
+
+
+##### NIST Private Functions ---------------------------------------------------
+
+ParseCVENISTData <- function(savepath, from.year, to.year, verbose) {
+  cves <- NewNISTEntry()
+  for (year in from.year:to.year) {
+    cves <- dplyr::bind_rows(cves, GetNISTvulnsByYear(savepath, year, verbose))
+  }
+  if (verbose) print("Tidy NIST data frame...")
+  cves$cvss3.av <- as.factor(cves$cvss3.av)
+  cves$cvss3.ac <- as.factor(cves$cvss3.ac)
+  cves$cvss3.pr <- as.factor(cves$cvss3.pr)
+  cves$cvss3.ui <- as.factor(cves$cvss3.ui)
+  cves$cvss3.s <- as.factor(cves$cvss3.s)
+  cves$cvss3.c <- as.factor(cves$cvss3.c)
+  cves$cvss3.i <- as.factor(cves$cvss3.i)
+  cves$cvss3.a <- as.factor(cves$cvss3.a)
+  cves$cvss3.severity <- as.factor(cves$cvss3.severity)
+  cves$cvss2.av <- as.factor(cves$cvss2.av)
+  cves$cvss2.ac <- as.factor(cves$cvss2.ac)
+  cves$cvss2.au <- as.factor(cves$cvss2.au)
+  cves$cvss2.c <- as.factor(cves$cvss2.c)
+  cves$cvss2.i <- as.factor(cves$cvss2.i)
+  cves$cvss2.a <- as.factor(cves$cvss2.a)
+  cves$published.date <- strptime(cves$published.date, "%Y-%m-%dT%H:%MZ")
+  cves$last.modified <- strptime(cves$last.modified, "%Y-%m-%dT%H:%MZ")
+
+  if (verbose) print("Parsing NIST data finished.")
+  return(cves)
+}
+
+GetNISTvulnsByYear <- function(savepath, year, verbose) {
+  if (verbose) print(paste("Parsing cves (year ", year, ") from json source...", sep = ""))
+  nistfile <- paste("nvdcve-1.0-", year, ".json", sep = "")
+  nistpath <- paste(savepath, "cve","nist", nistfile,
+                    sep = ifelse(.Platform$OS.type == "windows","\\","/"))
+  cve.entries <- jsonlite::fromJSON(nistpath)
+  cve.entries <- cve.entries$CVE_Items
+
+  cves <- data.frame(cve.id = cve.entries$cve$CVE_data_meta$ID,
+                     stringsAsFactors = F)
+  cves$affects <- unlist(lapply(cve.entries$cve$affects$vendor$vendor_data, jsonlite::toJSON))
+  cves$problem.type <- unlist(lapply(cve.entries$cve$problemtype$problemtype_data, function(x) jsonlite::toJSON(x[[1]][[1]]$value)))
+  cves$references <- unlist(lapply(cve.entries$cve$references$reference_data, jsonlite::toJSON))
+  cves$description <- unlist(lapply(cve.entries$cve$description$description_data, jsonlite::toJSON))
+  cves$vulnerable.configuration <- unlist(lapply(cve.entries$configurations$nodes, jsonlite::toJSON))
+  cves$cvss3.vector <- cve.entries$impact$baseMetricV3$cvssV3$vectorString
+  cves$cvss3.av <- cve.entries$impact$baseMetricV3$cvssV3$attackVector
+  cves$cvss3.ac <- cve.entries$impact$baseMetricV3$cvssV3$attackComplexity
+  cves$cvss3.pr <- cve.entries$impact$baseMetricV3$cvssV3$privilegesRequired
+  cves$cvss3.ui <- cve.entries$impact$baseMetricV3$cvssV3$userInteraction
+  cves$cvss3.s <- cve.entries$impact$baseMetricV3$cvssV3$scope
+  cves$cvss3.c <- cve.entries$impact$baseMetricV3$cvssV3$confidentialityImpact
+  cves$cvss3.i <- cve.entries$impact$baseMetricV3$cvssV3$integrityImpact
+  cves$cvss3.a <- cve.entries$impact$baseMetricV3$cvssV3$availabilityImpact
+  cves$cvss3.score <- cve.entries$impact$baseMetricV3$cvssV3$baseScore
+  cves$cvss3.severity <- cve.entries$impact$baseMetricV3$cvssV3$baseSeverity
+  cves$cvss3.score.exploit <- cve.entries$impact$baseMetricV3$exploitabilityScore
+  cves$cvss3.score.impact <- cve.entries$impact$baseMetricV3$impactScore
+  cves$cvss2.vector <- cve.entries$impact$baseMetricV2$cvssV2$vectorString
+  cves$cvss2.av <- cve.entries$impact$baseMetricV2$cvssV2$accessVector
+  cves$cvss2.ac <- cve.entries$impact$baseMetricV2$cvssV2$accessComplexity
+  cves$cvss2.au <- cve.entries$impact$baseMetricV2$cvssV2$authentication
+  cves$cvss2.c <- cve.entries$impact$baseMetricV2$cvssV2$confidentialityImpact
+  cves$cvss2.i <- cve.entries$impact$baseMetricV2$cvssV2$integrityImpact
+  cves$cvss2.a <- cve.entries$impact$baseMetricV2$cvssV2$availabilityImpact
+  cves$cvss2.score <- cve.entries$impact$baseMetricV2$cvssV2$baseScore
+  cves$cvss2.severity <- cve.entries$impact$baseMetricV2$cvssV2$baseSeverity
+  cves$cvss2.score.exploit <- cve.entries$impact$baseMetricV2$exploitabilityScore
+  cves$cvss2.score.impact <- cve.entries$impact$baseMetricV2$impactScore
+  cves$cvss2.getallprivilege <- cve.entries$impact$baseMetricV2$obtainAllPrivilege
+  cves$cvss2.getusrprivilege <- cve.entries$impact$baseMetricV2$obtainUserPrivilege
+  cves$cvss2.getothprivilege <- cve.entries$impact$baseMetricV2$obtainOtherPrivilege
+  cves$cvss2.requsrinter <- cve.entries$impact$baseMetricV2$userInteractionRequired
+  cves$published.date <- cve.entries$publishedDate
+  cves$last.modified <- cve.entries$lastModifiedDate
+
+  return(cves)
+}
+
+NewNISTEntry <- function() {
+  return(data.frame(cve.id = character(),
+                    affects = character(),
+                    problem.type = character(),
+                    references = character(),
+                    description = character(),
+                    vulnerable.configuration = character(),
+                    cvss3.vector = character(),
+                    cvss3.av = character(),
+                    cvss3.ac = character(),
+                    cvss3.pr = character(),
+                    cvss3.ui = character(),
+                    cvss3.s = character(),
+                    cvss3.c = character(),
+                    cvss3.i = character(),
+                    cvss3.a = character(),
+                    cvss3.score = numeric(),
+                    cvss3.severity = character(),
+                    cvss3.score.exploit = numeric(),
+                    cvss3.score.impact = numeric(),
+                    cvss2.vector = character(),
+                    cvss2.av = character(),
+                    cvss2.ac = character(),
+                    cvss2.au = character(),
+                    cvss2.c = character(),
+                    cvss2.i = character(),
+                    cvss2.a = character(),
+                    cvss2.score = numeric(),
+                    cvss2.score.exploit = numeric(),
+                    cvss2.score.impact = numeric(),
+                    cvss2.getallprivilege = logical(),
+                    cvss2.getusrprivilege = logical(),
+                    cvss2.getothprivilege = logical(),
+                    cvss2.requsrinter = logical(),
+                    published.date = character(),
+                    last.modified = character(),
+                    stringsAsFactors = FALSE)
+  )
+}
+##### Source files management (download, extract, ...)
+
+LastDownloadMITRECVEDate <- function(){
   doc.html <- XML::htmlParse("http://cve.mitre.org/data/downloads/index.html#download")
   txt <- XML::xmlValue(XML::xpathSApply(doc.html, '//div[@class="smaller"]')[[1]])
   last <- stringr::str_extract_all(pattern = "(.*-.*)", string = txt, simplify = T)[1,1]
   return(last)
 }
 
-GetCVEData <- function(origin = "all", savepath = tempdir()) {
-  DownloadCVEData(dest = savepath)
-  ExtractCVEFiles(path = savepath)
-
-  # TODO: Tidy data
-  if (origin %in% c("mitre","all")) {
-    if (origin == "all") {
-      # TODO: Unify the data.frames columns (references, ...)
-      cves.mitre <- ParseCVEMITREData(path = savepath)
-      cves.nist <- ParseCVENISTData(path = savepath, years = "all")
-      print(paste("Indexing data..."))
-      cves <- dplyr::left_join(cves.mitre, cves.nist, by = c("cve" = "cve.id"))
-      print(paste("Tidy data..."))
-      cves$cvss.vector <- unlist(lapply(cves$cvss, GetCVSS2Vector))
-      cves$cvss <- unlist(lapply(cves$cvss, GetCVSS2Score))
-      names(cves) <- c("cve", "status", "description", "ref.mitre", "phase", "votes",
-                       "comments", "osvdb", "cpe.config", "cpe.software", "discovered.datetime",
-                       "disclosure.datetime", "exploit.publish.datetime", "published.datetime",
-                       "last.modified.datetime", "cvss", "security.protection",
-                       "assessment.check", "cwe", "ref.nist", "fix.action",
-                       "scanner", "summary", "technical.description", "attack.scenario","cvss.vector")
-      cves <- cves[c("cve", "status", "description", "ref.mitre", "phase", "votes",
-                     "comments", "osvdb", "cpe.config", "cpe.software", "discovered.datetime",
-                     "disclosure.datetime", "exploit.publish.datetime", "published.datetime",
-                     "last.modified.datetime", "cvss", "cvss.vector", "security.protection",
-                     "assessment.check", "cwe", "ref.nist", "fix.action", "scanner",
-                     "summary", "technical.description", "attack.scenario")]
-    } else {
-      cves <- ParseCVEMITREData(path = savepath)
-    }
-  }
-  if (origin == "nist") {
-    cves <- ParseCVENISTData(path = savepath, years = "all")
-  }
-
-  # Add spanish translations
-  # TODO: Solve encoding issue. See devtools:check() log.
-  # cves.sp <- ParseCVETranslations(path = savepath, years = "all")
-  # cves <- dplyr::left_join(cves, cves.sp)
-
-  # Remove WIP columns parsing
-  wip.cols <- c("descr.sp", "osvdb")
-  cve.lite.cols <- names(cves)[!(names(cves) %in% wip.cols)]
-  cves <- cves[, cve.lite.cols]
-
-  print(paste("CVES data frame building process finished."))
-
-  return(cves)
-}
-
-
-#### MITRE Private Functions -----------------------------------------------------------------------------
-
-ParseCVEMITREData <- function(path) {
-  # TODO: Parse XML files
-  cve.file <-   paste(path, "cve", "mitre", "allitems.csv",
-                      sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
-  column.names <- c("cve","status","description","references","phase","votes","comments")
-  column.classes <- c("character","factor","character","character","character","character","character")
-  cves <- utils::read.csv(file = cve.file,
-                          skip = 9,
-                          col.names = column.names,
-                          colClasses = column.classes)
-  print(paste("Processing MITRE raw data..."))
-  return(cves)
-}
-
-
-#### NIST Private Functions -----------------------------------------------------------------------------
-
-ParseCVENISTData <- function(path, years = as.integer(format(Sys.Date(), "%Y"))) {
-  if (years == "all") years <- 2002:as.integer(format(Sys.Date(), "%Y"))
-  years.ok <- 2002:as.integer(format(Sys.Date(), "%Y"))
-  if (any(!(years %in% years.ok))) {
-    # wrong years defined
-    cves <- data.frame(stringsAsFactors = F)
-  } else {
-    cves <- NewNISTEntry()
-    for (year in years) {
-      print(paste("Processing NIST", year, "raw data..."))
-      cves <- dplyr::bind_rows(cves, GetNISTvulnsByYear(path, year))
-    }
-  }
-  return(cves)
-}
-
-GetNISTvulnsByYear <- function(path = tempdir(), year = as.integer(format(Sys.Date(), "%Y"))) {
-  # Reference: https://scap.nist.gov/schema/nvd/vulnerability_0.4.xsd
-  # TODO: Improve efficience 1 lapply instead of 2
-  nistfile <- paste("nvdcve-2.0-", year, ".xml", sep = "")
-  nistpath <- paste(path, "cve","nist", nistfile,
-                    sep = ifelse(.Platform$OS.type == "windows","\\","/"))
-  doc <- XML::xmlTreeParse(file = nistpath, useInternalNodes = T)
-  entries <- XML::xmlChildren(XML::xmlRoot(doc))
-  lentries <- lapply(entries, GetNISTEntry)
-  df <- plyr::ldply(lentries, data.frame)
-
-  # Tidy Data
-  df$.id    <- NULL
-  df$cve.id <- as.character(df$cve.id)
-  df$cwe    <- as.character(sapply(as.character(df$cwe), function(x) jsonlite::fromJSON(x)))
-  df$cwe    <- sub(pattern = "list()",replacement = NA, x = df$cwe)
-
-  return(df)
-}
-
-GetNISTEntry <- function(node) {
-  # TODO: Tidy data frame
-
-  entry <- NewNISTEntry()
-  lnode <- XML::xmlChildren(node)
-
-  # Parse "xsd:*:vulnerabilityType" fields
-  osvdb.ext <- osvdb.ext2df(lnode[["osvdb-ext"]])
-  vulnerable.configuration <- vulnerable.configuration2df(lnode[["vulnerable-configuration"]])
-  vulnerable.software.list <- vulnerable.software.list2df(lnode[["vulnerable-software-list"]])
-  cve.id <- cve.id2df((lnode[["cve-id"]]))
-  discovered.datetime <- discovered.datetime2df(lnode[["discovered-datetime"]])
-  disclosure.datetime <- disclosure.datetime2df(lnode[["disclosure-datetime"]])
-  exploit.publish.datetime <- exploit.publish.datetime2df(lnode[["exploit-publish-datetime"]])
-  published.datetime <- published.datetime2df(lnode[["published-datetime"]])
-  last.modified.datetime <- last.modified.datetime2df(lnode[["last-modified-datetime"]])
-  cvss <- cvss2df(lnode[["cvss"]])
-  security.protection <- security.protection2df(lnode[["security-protection"]])
-  assessment.check <- assessment.check2df(lnode[["assessment_check"]])
-  cwe <- cwe2df(lnode[["cwe"]])
-  references <- references2df(lnode[["references"]])
-  fix.action <- fix.action2df(lnode[["fix_action"]])
-  scanner <- scanner2df(lnode[["scanner"]])
-  summary <- summary2df(lnode[["summary"]])
-  technical.description <- technical.description2df(lnode[["technical_description"]])
-  attack.scenario <- attack.scenario2df(lnode[["attack_scenario"]])
-
-  entry <- rbind(entry,
-                 c(osvdb.ext,
-                   vulnerable.configuration,
-                   vulnerable.software.list,
-                   cve.id,
-                   discovered.datetime,
-                   disclosure.datetime,
-                   exploit.publish.datetime,
-                   published.datetime,
-                   last.modified.datetime,
-                   cvss,
-                   security.protection,
-                   assessment.check,
-                   cwe,
-                   references,
-                   fix.action,
-                   scanner,
-                   summary,
-                   technical.description,
-                   attack.scenario)
-  )
-  names(entry) <- names(NewNISTEntry())
-
-  return(entry)
-}
-
-
-osvdb.ext2df <- function(node) {
-  # TODO: Improve parser
-  return(NodeToJson(node))
-}
-
-vulnerable.configuration2df <- function(node) {
-  # TODO: Improve parser
-
-  if (is.null(node)) return(jsonlite::toJSON(node))
-  # detect first logical test type
-  logic.type <- XML::xmlAttrs(XML::xmlChildren(node)[[1]])[["operator"]]
-  if (logic.type == "OR") {
-    # Configuration list of CPE's
-    rdf <- as.character(grep(pattern = "cpe",
-                             x = unlist(XML::xmlToList(XML::xmlChildren(node)[[1]])),
-                             value = T))
-    rdf <- jsonlite::toJSON(rdf)
-  } else {
-    if (logic.type == "AND") {
-      node.cpes <- XML::xmlChildren(XML::xmlChildren(node)[[1]])
-      if (length(node.cpes) == 3){
-        if (is.null(dim(node.cpes))) {
-          # Malformed configuration? (ex: CVE-2008-6714)
-          rdf <- as.character(grep(pattern = "cpe",
-                                   x = unlist(XML::xmlToList(XML::xmlChildren(node)[[1]])),
-                                   value = T))
-        } else {
-          if (all(sapply(node.cpes, XML::xmlAttrs)[1,] == "OR")) {
-            # Configuration applies in certantly OS, APP and Configuration (ex: CVE-2007-2583)
-            osver <- as.character(grep(pattern = "cpe",
-                                       x = unlist(XML::xmlToList(node.cpes[[1]])),
-                                       value = T))
-            soft <- as.character(grep(pattern = "cpe",
-                                      x = unlist(XML::xmlToList(node.cpes[[2]])),
-                                      value = T))
-            conf <- as.character(grep(pattern = "cpe",
-                                      x = unlist(XML::xmlToList(node.cpes[[3]])),
-                                      value = T))
-            rdf <- as.data.frame.matrix(data.table::CJ(osver, soft))
-            rdf2 <- as.data.frame.matrix(data.table::CJ(soft, conf))
-            # names(rdf2) <- c("V2","V3")
-            rdf <- dplyr::left_join(rdf, rdf2, by = c("V1" = "V2"))
-            names(rdf) <- NULL
-          } else {
-            # TODO: understand what is the meaning of this case
-            rdf <- XML::xmlToList(node.cpes)
-          }
-        }
-      } else {
-        if (length(node.cpes) == 2) {
-          if (any(names(XML::xmlToList(node.cpes[[2]])) %in% c("operator","negate"))) {
-            # Malformed configuration? (ex: CVE-2009-2044)
-            rdf <- as.character(grep(pattern = "cpe",
-                                      x = unlist(XML::xmlToList(node.cpes[[1]])),
-                                      value = T))
-            names(rdf) <- NULL
-          } else {
-            # Configuration applies in pairs OS-APP, APP-Conf, OS-Update, App-Plugin, etc.
-            soft <- as.character(grep(pattern = "cpe",
-                                      x = unlist(XML::xmlToList(node.cpes[[1]])),
-                                      value = T))
-            conf <- as.character(grep(pattern = "cpe",
-                                      x = unlist(XML::xmlToList(node.cpes[[2]])),
-                                      value = T))
-            rdf <- as.data.frame.matrix(data.table::CJ(soft, conf))
-            names(rdf) <- NULL
-          }
-        } else {
-          if (length(node.cpes) == 1) {
-            # Configuration list of CPE's
-            rdf <- as.character(grep(pattern = "cpe",
-                                     x = unlist(XML::xmlToList(XML::xmlChildren(node)[[1]])),
-                                     value = T))
-          } else {
-            # Malformed -> Configuration list of CPE's (ex. CVE-2009-2044)
-            rdf <- lapply(node.cpes, XML::xmlToList)
-          }
-        }
-      }
-      rdf <- jsonlite::toJSON(rdf)
-    } else {
-      rdf <- NodeToJson(node)
-    }
-  }
-
-  return(rdf)
-}
-
-vulnerable.software.list2df <- function(node) {
-  # TODO: Improve parser
-  if (is.null(node)) return(jsonlite::toJSON(node))
-  rdf <- jsonlite::toJSON(sapply(XML::xmlChildren(node), XML::xmlValue))
-  return(rdf)
-}
-
-cve.id2df <- function(node) {
-  # TODO: Improve parser
-  return(NodeToChar(node))
-}
-
-discovered.datetime2df <- function(node) {
-  # TODO: Improve parser
-  return(NodeToJson(node))
-}
-
-disclosure.datetime2df <- function(node) {
-  # TODO: Improve parser
-  return(NodeToJson(node))
-}
-
-exploit.publish.datetime2df <- function(node) {
-  # TODO: Improve parser
-  return(NodeToJson(node))
-}
-
-published.datetime2df <- function(node) {
-  # TODO: Improve parser
-  return(NodeToJson(node))
-}
-
-last.modified.datetime2df <- function(node) {
-  # TODO: Improve parser
-  return(NodeToJson(node))
-}
-
-cvss2df <- function(node) {
-  # TODO: Improve parser
-  return(NodeToJson(node))
-}
-
-security.protection2df <- function(node) {
-  # TODO: Improve parser
-  return(NodeToJson(node))
-}
-
-assessment.check2df <- function(node) {
-  # TODO: Improve parser
-  return(NodeToJson(node))
-}
-
-cwe2df <- function(node) {
-  # TODO: Improve parser
-  return(NodeToJson(node))
-}
-
-references2df <- function(node) {
-  # TODO: Improve parser
-  return(NodeToJson(node))
-}
-
-fix.action2df <- function(node) {
-  # TODO: Improve parser
-  if (!is.null(node)) {
-    kk <- node
-  }
-  return(NodeToJson(node))
-}
-
-scanner2df <- function(node) {
-  # TODO: Improve parser
-  return(NodeToJson(node))
-}
-
-summary2df <- function(node) {
-  # TODO: Improve parser
-  return(NodeToJson(node))
-}
-
-technical.description2df <- function(node) {
-  # TODO: Improve parser
-  return(NodeToJson(node))
-}
-
-attack.scenario2df <- function(node) {
-  # TODO: Improve parser
-  return(NodeToJson(node))
-}
-
-NewNISTEntry <- function() {
-  return(data.frame(osvdb.ext = character(),
-                    vulnerable.configuration = character(),
-                    vulnerable.software.list = character(),
-                    cve.id = character(),
-                    discovered.datetime = character(),
-                    disclosure.datetime = character(),
-                    exploit.publish.datetime = character(),
-                    published.datetime = character(),
-                    last.modified.datetime = character(),
-                    cvss = character(),
-                    security.protection = character(),
-                    assessment.check = character(),
-                    cwe = character(),
-                    references = character(),
-                    fix.action = character(),
-                    scanner = character(),
-                    summary = character(),
-                    technical.description = character(),
-                    attack.scenario = character(),
-                    stringsAsFactors = FALSE)
-  )
-}
-
-#### INCIBE Private Functions -----------------------------------------------------------------------------
-
-ParseCVETranslations <- function(path, years = as.integer(format(Sys.Date(), "%Y"))) {
-  if (years == "all") years <- 2002:as.integer(format(Sys.Date(), "%Y"))
-  cves.sp <- data.frame(cve = character(), descr.sp = character(), stringsAsFactors = F)
-  for (year in years){
-    nist.file <- paste("nvdcve-", year, "trans.xml", sep = "")
-    nist.path <- paste(path, "cve","nist", nist.file,
-                      sep = ifelse(.Platform$OS.type == "windows","\\","/"))
-    doc <- XML::htmlParse(nist.path, useInternalNodes = T)
-    cves.sp.year <- data.frame(cve = XML::xpathSApply(doc, "//nvdtrans/entry/@name"),
-                               descr.sp = XML::xpathSApply(doc, "//nvdtrans/entry/desc", XML::xmlValue),
-                               stringsAsFactors = F)
-
-    cves.sp <- dplyr::bind_rows(cves.sp, cves.sp.year)
-    print(paste("Processing INCIBE", year, "spanish translations..."))
-
-    # cve.type <- XML::xpathSApply(doc, "//nvdtrans/entry/@type")
-    # cve.desc.date <- XML::xpathSApply(doc, "//nvdtrans/entry/desc/@modified")
-  }
-  return(cves.sp)
-}
-
-
-DownloadCVEData <- function(dest) {
+DownloadCVEData <- function(savepath, verbose, from.year, to.year) {
   # Data folders
-  if (!dir.exists(paste(dest, "cve", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
-    dir.create(paste(dest, "cve", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
+  if (!dir.exists(paste(savepath, "cve", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
+    dir.create(paste(savepath, "cve", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
   }
-  if (!dir.exists(paste(dest, "cve", "mitre", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
-    dir.create(paste(dest, "cve", "mitre", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
+  if (!dir.exists(paste(savepath, "cve", "mitre", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
+    dir.create(paste(savepath, "cve", "mitre", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
   }
-  if (!dir.exists(paste(dest, "cve", "nist", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
-    dir.create(paste(dest, "cve", "nist", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
+  if (!dir.exists(paste(savepath, "cve", "nist", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
+    dir.create(paste(savepath, "cve", "nist", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
   }
 
-  # Download MITRE data (http://cve.mitre.org/data/downloads/index.html#download)
-  # utils::download.file(url = "http://cve.mitre.org/data/downloads/allitems.xml.gz",
-  #               destfile = paste(dest, "cve", "mitre", "allitems.xml.gz",
-  #                                sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
-  # utils::download.file(url = "http://cve.mitre.org/schema/cve/cve_1.0.xsd",
-  #               destfile = paste(dest, "cve", "mitre", "cve_1.0.xsd",
-  #                                sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
+  # Download MITRE source data
   utils::download.file(url = "http://cve.mitre.org/data/downloads/allitems.csv.gz",
-                destfile = paste(dest, "cve", "mitre","allitems.csv.gz",
-                                 sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
+                       destfile = paste(savepath, "cve", "mitre","allitems.csv.gz",
+                                        sep = ifelse(.Platform$OS.type == "windows", "\\", "/")),
+                       quiet = !verbose)
 
-  # Download NIST data ()
-  for (year in 2002:as.integer(format(Sys.Date(), "%Y"))) {
-    nist.file <- paste("nvdcve-2.0-", year, ".xml.gz", sep = "")
-    nist.url <- paste("https://static.nvd.nist.gov/feeds/xml/cve/", nist.file, sep = "")
+  # Download NIST data
+  for (year in from.year:to.year) {
+    # JSON sources
+    nist.file <- paste("nvdcve-1.0-", year, ".json.gz", sep = "")
+    nist.url <- paste("https://static.nvd.nist.gov/feeds/json/cve/1.0/", nist.file, sep = "")
     utils::download.file(url = nist.url,
-                         destfile = paste(dest, "cve", "nist", nist.file,
-                                          sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
+                         destfile = paste(savepath, "cve", "nist", nist.file,
+                                          sep = ifelse(.Platform$OS.type == "windows", "\\", "/")),
+                         quiet = !verbose)
+
     # Spanish translations by INCIBE
     nist.file <- paste("nvdcve-", year, "trans.xml.gz", sep = "")
     nist.url <- paste("https://nvd.nist.gov/download/", nist.file, sep = "")
     utils::download.file(url = nist.url,
-                         destfile = paste(dest, "cve", "nist", nist.file,
-                                          sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
+                         destfile = paste(savepath, "cve", "nist", nist.file,
+                                          sep = ifelse(.Platform$OS.type == "windows", "\\", "/")),
+                         quiet = !verbose)
   }
 }
 
-ExtractCVEFiles <- function(path) {
+ExtractCVEFiles <- function(savepath, verbose) {
   # Uncompress gzip XML files
-  print(paste("Unzip, extract, etc..."))
-
-  gzs <- list.files(path = paste(path, "cve", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")),
+  gzs <- list.files(path = paste(savepath, "cve", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")),
                     pattern = ".gz", full.names = TRUE, recursive = TRUE)
   apply(X = data.frame(gzs = gzs, stringsAsFactors = F),
         1, function(x) R.utils::gunzip(x, overwrite = TRUE, remove = TRUE))
 }
-
-NodeToChar <- function(x) {
-  if (is.null(x)) x <- ""
-  return(as.character(unlist(XML::xmlToList(x))))
-}
-
-NodeToJson <- function(x) {
-  if (is.null(x)) x <- "<xml></xml>"
-  return(jsonlite::toJSON(XML::xmlToList(x)))
-}
-
