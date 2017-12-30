@@ -162,20 +162,24 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
       rm(netsec.data)
     } else {
       if (tolower(ds) %in% c("cves", "all")) {
-        print("Updating local cves data.frame from official sources.")
+        print("Updating CVES data.frame...")
         cves <- GetCVEData()
+        print("CVES data.frame UPDATED!")
       }
       if (tolower(ds) %in% c("cpes", "all")) {
-        print("Updating local cpes data.frame from official sources.")
+        print("Updating CPES data.frame...")
         cpes <- GetCPEData()
+        print("CPES data.frame UPDATED!")
       }
       if (tolower(ds) %in% c("cwes", "all")) {
-        print("Updating local cwes data.frame from official sources.")
+        print("Updating CWES data.frame...")
         cwes <- GetCWEData()
+        print("CWES data.frame UPDATED!")
       }
       if (tolower(ds) %in% c("capec", "all")) {
-        print("Updating local capec data.frame from official sources.")
+        print("Updating CAPEC data.frame...")
         capec <- GetCAPECData()
+        print("CAPEC data.frame UPDATED!")
       }
     }
 
@@ -216,11 +220,11 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
 
     # Save samples if needed
     if (samples) {
+      print("Building, compressing and saving samples...")
       if (tolower(ds) %in% c("cves", "all")) {
         #  Update local cves data.frame from official sources
         # Save sample cves data frame
         cves.sample <- cves[sample(nrow(cves), 1000), ]
-        cves.sample[] <- lapply(cves.sample, as.character)
         save(object = cves.sample, file = "data/cves.sample.rda", compress = "xz")
       }
       if (tolower(ds) %in% c("cpes", "all")) {
@@ -228,8 +232,6 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
         # Save sample cves data frame
         cpes.sample <- cpes[sample(nrow(cpes), 1000), ]
         cpes.sample[] <- lapply(cpes.sample, as.character)
-        # cols <- names(cves)[sapply(cves, class) == "factor"]
-        # cpes.sample[cols] <- lapply(cpes.sample[cols], factor)
         save(object = cpes.sample, file = "data/cpes.sample.rda", compress = "xz")
       }
       if (tolower(ds) %in% c("cwes", "all")) {
@@ -237,8 +239,6 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
         # Save sample cves data frame
         cwes.sample <- cwes[sample(nrow(cwes), 100), ]
         cwes.sample[] <- lapply(cwes.sample, as.character)
-        # cols <- names(cves)[sapply(cves, class) == "factor"]
-        # cpes.sample[cols] <- lapply(cpes.sample[cols], factor)
         save(object = cwes.sample, file = "data/cwes.sample.rda", compress = "xz")
       }
       if (tolower(ds) %in% c("capec", "all")) {
@@ -246,8 +246,6 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
         # Save sample capec data frame
         capec.sample <- capec[sample(nrow(capec), 100), ]
         capec.sample[] <- lapply(capec.sample, as.character)
-        # cols <- names(capec)[sapply(capec, class) == "factor"]
-        # capec.sample[cols] <- lapply(capec.sample[cols], factor)
         save(object = capec.sample, file = "data/capec.sample.rda", compress = "xz")
       }
     }
