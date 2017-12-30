@@ -33,7 +33,7 @@ ExtractCWEFiles <- function(savepath) {
 
 ParseCWEData <- function(cwes.file) {
 
-  print("Parsing basic attributes...")
+  print("Parsing Basic attributes...")
 
   # Load Weakness raw data
   doc <- suppressWarnings(rvest::html(cwes.file))
