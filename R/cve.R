@@ -161,6 +161,20 @@ NewNISTEntry <- function() {
   )
 }
 ##### Source files management (download, extract, ...)
+LastDownloadCVEDate <- function() {
+  mitre <- strptime(LastDownloadMITRECVEDate(), format = "%Y-%m-%d")
+  nist <- strptime(LastDownloadNISTCVEDate(), format = "%Y-%m-%d")
+  return(as.character(max(nist, mitre)))
+}
+
+LastDownloadNISTCVEDate <- function(){
+  doc <- xml2::read_html("https://nvd.nist.gov/vuln/data-feeds")
+  txt <- rvest::html_table(rvest::html_nodes(doc, "#body-section > div:nth-child(2) > div:nth-child(11) > div > table"), fill = T)[[1]]
+  names(txt) <- txt[2,]
+  txt <- txt[3:nrow(txt),]
+  txt$Updated <- strptime(txt$Updated, format = "%m/%d/%Y")
+  return(as.character(max(txt$Updated)))
+}
 
 LastDownloadMITRECVEDate <- function(){
   doc.html <- XML::htmlParse("http://cve.mitre.org/data/downloads/index.html#download")
