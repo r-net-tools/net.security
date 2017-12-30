@@ -71,10 +71,10 @@ ParseCPEData <- function(cpe.file) {
   cpes <- plyr::ldply(cpes.raw, GetCPEItem)
 
   # TidyData
-  cpes$title <- as.character(cpes$cpe.22)
+  cpes$cpe.22 <- as.character(cpes$cpe.22)
   cpes$cpe.23 <- as.character(cpes$cpe.23)
   cpes$cpe.ref <- as.character(cpes$cpe.ref)
-  cpes <- cpes[,c("cpe.23", "cpe.ref", "title")]
+  cpes <- cpes[,c("cpe.22", "cpe.23", "cpe.ref")]
 
   # Augment CPE2.3
   cpes.23 <- stringr::str_replace_all(string = cpes$cpe.23, pattern = "\\\\:", replacement = "_")
