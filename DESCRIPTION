@@ -13,8 +13,8 @@ LazyData: true
 RoxygenNote: 6.0.1
 Imports: 
     R.utils,
+    utils,
     XML,
-    data.table,
     dplyr,
     jsonlite,
     plyr,

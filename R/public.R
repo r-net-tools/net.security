@@ -124,7 +124,7 @@ DataSetStatus <- function(ds = "all") {
 DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.update = FALSE, wizard = FALSE) {
 
   if (wizard) {
-      switch(menu(choices = c("no", "yes"), title = "Be sure that your working directory -use getwd()- is set up to net.security repository, in other case this function will crash. Is your working directory set to net.security repository folder?") + 1,
+      switch(utils::menu(choices = c("no", "yes"), title = "Be sure that your working directory -use getwd()- is set up to net.security repository, in other case this function will crash. Is your working directory set to net.security repository folder?") + 1,
              # EXIT: press 0
              {
                cat("Nothing done\n")
@@ -138,7 +138,7 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
              # YES: press 2
              {
                cat("Ok, let's begin the process. But, when it finished it will need to rebuild the package.")
-               switch(menu(choices = c("no", "yes"), title = "Do you want to rebuid the package at the end of this process?") + 1,
+               switch(utils::menu(choices = c("no", "yes"), title = "Do you want to rebuid the package at the end of this process?") + 1,
                       # EXIT: press 0
                       {
                         cat("Nothing done\n")
@@ -154,7 +154,7 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
                         force.update <- TRUE
                       }
                )
-               switch(menu(choices = c("From r-net-tools database.", "From official sources. It will build all from scratch (2h aprox.)."), title = "Please, select the update option.") + 1,
+               switch(utils::menu(choices = c("From r-net-tools database.", "From official sources. It will build all from scratch (2h aprox.)."), title = "Please, select the update option.") + 1,
                       # EXIT: press 0
                       {
                         cat("Nothing done\n")
@@ -308,7 +308,7 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
     # TODO: Update netsec.data in parent.env(environment())
     # https://www.r-bloggers.com/package-wide-variablescache-in-r-packages/
     if (force.update) {
-      remove.packages("net.security")
+      utils::remove.packages("net.security")
       devtools::build()
       devtools::install()
     } else {
