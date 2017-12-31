@@ -8,6 +8,7 @@ inst/tmpdata/*
 inst/extdata/*
 inst/raw.data/*
 inst/testing/*
+inst/schemas/*
 
 # produced vignettes
 vignettes/*.html
