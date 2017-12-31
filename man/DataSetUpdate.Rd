@@ -4,7 +4,8 @@
 \alias{DataSetUpdate}
 \title{Update local data sets and update R/sysdata.rda file}
 \usage{
-DataSetUpdate(ds = "all", samples = FALSE, use.remote = TRUE)
+DataSetUpdate(ds = "all", samples = FALSE, use.remote = TRUE,
+  force.update = FALSE, wizard = FALSE)
 }
 \arguments{
 \item{ds}{Selects the data set for this operation. Default set to "all".
@@ -13,6 +14,10 @@ Check available options with DataSetList()}
 \item{samples}{if TRUE it will create sample data.frames and store them in /data}
 
 \item{use.remote}{if TRUE it will download sysdata.rda from net.security github}
+
+\item{force.update}{if TRUE it will rebuil the package at last step.}
+
+\item{wizard}{if TRUE launch an interactive menu with some help.}
 }
 \value{
 Date Official source files download date time.
