@@ -124,7 +124,6 @@ DataSetStatus <- function(ds = "all") {
 DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.update = FALSE, wizard = FALSE) {
 
   if (wizard) {
-    if (!use.remote) {
       switch(menu(choices = c("no", "yes"), title = "Be sure that your working directory -use getwd()- is set up to net.security repository, in other case this function will crash. Is your working directory set to net.security repository folder?") + 1,
              # EXIT: press 0
              {
@@ -155,10 +154,23 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
                         force.update <- TRUE
                       }
                )
-
+               switch(menu(choices = c("From r-net-tools database.", "From official sources. It will build all from scratch (2h aprox.)."), title = "Please, select the update option.") + 1,
+                      # EXIT: press 0
+                      {
+                        cat("Nothing done\n")
+                        return(as.character(Sys.Date()))
+                      },
+                      # Github: press 1
+                      {
+                        use.remote <- TRUE
+                      },
+                      # Official: press 2
+                      {
+                        use.remote <- FALSE
+                      }
+               )
              }
       )
-    }
   }
 
   ds <- tolower(ds)

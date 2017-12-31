@@ -21,7 +21,8 @@ Imports:
     stringr,
     RJSONIO,
     xml2,
-    rvest
+    rvest,
+    devtools
 Suggests: 
     testthat, 
     covr 
