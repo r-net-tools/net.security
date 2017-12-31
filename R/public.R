@@ -108,7 +108,10 @@ DataSetStatus <- function(ds = "all") {
 #' @param ds Selects the data set for this operation. Default set to "all".
 #'           Check available options with DataSetList()
 #' @param samples if TRUE it will create sample data.frames and store them in /data
+#' @param force.update if TRUE it will rebuil the package at last step.
+#' @param wizard if TRUE launch an interactive menu with some help.
 #' @param use.remote if TRUE it will download sysdata.rda from net.security github
+#'
 #' @return Date Official source files download date time.
 #' @export
 #' @examples
@@ -118,7 +121,45 @@ DataSetStatus <- function(ds = "all") {
 #' \dontrun{
 #' net.security::DataSetUpdate(ds = "cves")
 #' }
-DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
+DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.update = FALSE, wizard = FALSE) {
+
+  if (wizard) {
+    if (!use.remote) {
+      switch(menu(choices = c("no", "yes"), title = "Be sure that your working directory -use getwd()- is set up to net.security repository, in other case this function will crash. Is your working directory set to net.security repository folder?") + 1,
+             # EXIT: press 0
+             {
+               cat("Nothing done\n")
+               return(as.character(Sys.Date()))
+             },
+             # NO: press 1
+             {
+               cat("Please, clone the repository from github. Build and install the package, and try again to update.")
+               return(as.character(Sys.Date()))
+             },
+             # YES: press 2
+             {
+               cat("Ok, let's begin the process. But, when it finished it will need to rebuild the package.")
+               switch(menu(choices = c("no", "yes"), title = "Do you want to rebuid the package at the end of this process?") + 1,
+                      # EXIT: press 0
+                      {
+                        cat("Nothing done\n")
+                        return(as.character(Sys.Date()))
+                      },
+                      # NO: press 1
+                      {
+                        cat("OK. You can load updated data by yourself loading this file: ~/net.security/R/sysdata.rda")
+                        return(as.character(Sys.Date()))
+                      },
+                      # YES: press 2
+                      {
+                        force.update <- TRUE
+                      }
+               )
+
+             }
+      )
+    }
+  }
 
   ds <- tolower(ds)
   if (ds %in% c("all", "cves", "cpes", "cwes", "capec")) {
@@ -254,7 +295,14 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE) {
 
     # TODO: Update netsec.data in parent.env(environment())
     # https://www.r-bloggers.com/package-wide-variablescache-in-r-packages/
-    warning("Package needs rebuild to use updated data sets.")
+    if (force.update) {
+      remove.packages("net.security")
+      devtools::build()
+      devtools::install()
+    } else {
+      warning("Package needs rebuild to use updated data sets.")
+    }
+
     # assign(x = netsec.data, value = netsec.data, envir = parent.env(environment()))
   } else {
     warning("Invalid option. Use net.security::DataSetList() to show available options.")
