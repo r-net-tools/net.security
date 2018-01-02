@@ -215,22 +215,22 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
       rm(netsec.data)
     } else {
       if (tolower(ds) %in% c("cves", "all")) {
-        print("Updating CVES data.frame...")
+        print("[*] Updating CVES data.frame...")
         cves <- GetCVEData()
         print("CVES data.frame UPDATED!")
       }
       if (tolower(ds) %in% c("cpes", "all")) {
-        print("Updating CPES data.frame...")
+        print("[*] Updating CPES data.frame...")
         cpes <- GetCPEData()
         print("CPES data.frame UPDATED!")
       }
       if (tolower(ds) %in% c("cwes", "all")) {
-        print("Updating CWES data.frame...")
+        print("[*] Updating CWES data.frame...")
         cwes <- GetCWEData()
         print("CWES data.frame UPDATED!")
       }
       if (tolower(ds) %in% c("capec", "all")) {
-        print("Updating CAPEC data.frame...")
+        print("[*] Updating CAPEC data.frame...")
         capec <- GetCAPECData()
         print("CAPEC data.frame UPDATED!")
       }

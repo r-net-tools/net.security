@@ -1,12 +1,12 @@
 Package: net.security
 Title: Security Standards Data Sets
-Version: 0.3.2
+Version: 0.3.3
 Authors@R: c(
     person("Humbert", "Costas", email = "humbert.costas@gmail.com", role = c("aut", "cre")),
     person("Arnau", "Sangra", email = "arnsangra@gmail.com", role = "ctb"))
 Description: Provides functions for security standards data management. It comes with data frames of 1000 observations for each security standard and updates are possible from official sources to build updated data sets.
 URL: https://github.com/r-net-tools/net.security
-Depends: R (>= 3.3.1)
+Depends: R (>= 3.4.3)
 License: GPL-3 
 Encoding: UTF-8
 LazyData: true
@@ -14,15 +14,16 @@ RoxygenNote: 6.0.1
 Imports: 
     R.utils,
     utils,
-    XML,
     dplyr,
+    tidyr,
     jsonlite,
-    plyr,
-    stringr,
     RJSONIO,
     xml2,
     rvest,
-    devtools
+    stringr,
+    XML,
+    plyr
 Suggests: 
+    devtools,
     testthat, 
     covr 
