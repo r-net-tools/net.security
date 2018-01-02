@@ -12,9 +12,9 @@ GetCPEData <- function(savepath = tempdir(), verbose = T) {
 }
 
 LastDownloadCPEDate <- function(){
-  doc.html <- XML::htmlParse(paste(readLines("https://nvd.nist.gov/cpe.cfm")))
-  last <- as.character(XML::getChildrenStrings(XML::xpathSApply(doc.html, '//span[@data-testid="cpe-feed-23-gz-date"]')[[1]]))
-  last <- strptime(last, "%m/%d/%Y %I:%M:%S %p", tz = "EST")
+  doc <- xml2::read_html("https://nvd.nist.gov/cpe.cfm")
+  txt <- rvest::html_text(rvest::html_nodes(doc, "#body-section > div:nth-child(2) > ol:nth-child(7) > li:nth-child(1) > span:nth-child(3)"))
+  last <- strptime(txt, "%m/%d/%Y %I:%M:%S %p", tz = "EST")
   last <- as.character.POSIXt(last)
   return(last)
 }
