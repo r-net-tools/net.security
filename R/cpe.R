@@ -1,4 +1,4 @@
-GetCPEData <- function(savepath = tempdir()) {
+GetCPEData <- function(savepath = tempdir(), verbose = T) {
   # Schema: https://scap.nist.gov/schema/cpe/2.3/cpe-dictionary_2.3.xsd
   # RawData: http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip
   print(paste("Downloading raw data..."))
@@ -6,7 +6,7 @@ GetCPEData <- function(savepath = tempdir()) {
   print(paste("Extracting data..."))
   cpe.source.file <- ExtractCPEFiles(savepath)
   print(paste("Indexing data..."))
-  cpes <- ParseCPEData(cpe.source.file)
+  cpes <- ParseCPEData(cpe.source.file, verbose)
   print(paste("CPES data frame building process finished."))
   return(cpes)
 }
@@ -37,60 +37,57 @@ DownloadCPEData <- function(savepath) {
   utils::download.file(url = cpe.url, destfile = cpes.zip)
 }
 
-GetCPEItem <- function(cpe.raw) {
-  cpe <- NewCPEItem()
-  cpe.raw <- XML::xmlToList(cpe.raw)
+ParseCPEData <- function(cpe.file, verbose) {
+  doc <- xml2::read_xml(cpe.file)
 
-  cpe.22 <- ifelse(is.null(cpe.raw[["title"]]$text),"",cpe.raw[["title"]]$text)
-  cpe.23 <- ifelse(is.null(cpe.raw[["cpe23-item"]][["name"]]),"",cpe.raw[["cpe23-item"]][["name"]])
-  cpe.ref <- unlist(cpe.raw[["references"]])
-  cpe.ref.names <- cpe.ref[names(cpe.ref) == ""]
-  cpe.ref <- as.character(cpe.ref[names(cpe.ref) == "href"])
-  names(cpe.ref) <- cpe.ref.names
-  cpe.ref <- as.character(jsonlite::toJSON(as.list(cpe.ref)))
+  if (verbose) print("Parsing product title and cpe codes 2.x...")
+  cpes <- data.frame(title = xml2::xml_text(xml2::xml_find_all(doc, "//*[name()='cpe-item']/*[@xml:lang='en-US'][1]")),
+                     cpe.22 = xml2::xml_text(xml2::xml_find_all(doc, "//*[name()='cpe-item']/@name")),
+                     cpe.23 = xml2::xml_text(xml2::xml_find_all(doc, "//*[name()='cpe-item']/*/@name")),
+                     stringsAsFactors = F)
 
-  cpe <- rbind(cpe, c(cpe.22, cpe.23, cpe.ref))
-  names(cpe) <- names(NewCPEItem())
+  if (verbose) print("Extracting factors from cpe 2.3 code...")
+  new.cols <- c("std", "std.v", "part", "vendor", "product",
+                "version", "update", "edition", "language", "sw_edition",
+                "target_sw", "target_hw", "other")
+  cpes$cpe.23 <- stringr::str_replace_all(cpes$cpe.23, "\\\\:", ";")
+  cpes <- tidyr::separate(data = cpes, col = cpe.23, into = new.cols, sep = ":", remove = F)
+  cpes <- dplyr::select(.data = cpes, -std, -std.v)
+  cpes$vendor <- as.factor(cpes$vendor)
+  cpes$product <- as.factor(cpes$product)
+  cpes$language <- as.factor(cpes$language)
+  cpes$sw_edition <- as.factor(cpes$sw_edition)
+  cpes$target_sw <- as.factor(cpes$target_sw)
+  cpes$target_hw <- as.factor(cpes$target_hw)
 
-  return(cpe)
-}
-
-NewCPEItem <- function(){
-  return(data.frame(cpe.22 = character(),
-                    cpe.23 = character(),
-                    cpe.ref = character(),
-                    stringsAsFactors = FALSE)
+  if (verbose) print("Parsing product links and references...")
+  raw.cpes <- rvest::html_nodes(doc, xpath = "//*[name()='cpe-item']")
+  cpes$references <- sapply(raw.cpes,
+                            function(x) {
+                              ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "*[name()='references']")), character(0)),
+                                     yes = "{}",
+                                     no = {
+                                       y2 <- lapply(rvest::html_children(rvest::html_nodes(x, xpath = "*[name()='references']")), xml2::as_list)
+                                       y <- sapply(y2, attributes)
+                                       names(y) <- unlist(y2)
+                                       RJSONIO::toJSON(y, pretty = T)
+                                     }
+                              )
+                            }
   )
-}
 
-ParseCPEData <- function(cpe.file) {
-  # TODO: Improve performance
-  doc <- XML::xmlTreeParse(cpe.file)
-  cpes.raw <- XML::xmlRoot(doc)
-  cpes.raw <- cpes.raw[2:length(cpes.raw)]
-  cpes <- plyr::ldply(cpes.raw, GetCPEItem)
-
-  # TidyData
-  cpes$cpe.22 <- as.character(cpes$cpe.22)
-  cpes$cpe.23 <- as.character(cpes$cpe.23)
-  cpes$cpe.ref <- as.character(cpes$cpe.ref)
-  cpes <- cpes[,c("cpe.22", "cpe.23", "cpe.ref")]
-
-  # Augment CPE2.3
-  cpes.23 <- stringr::str_replace_all(string = cpes$cpe.23, pattern = "\\\\:", replacement = "_")
-  cpes.23 <- stringr::str_split(string = cpes.23, pattern = ":", simplify = T)
-  cpes$part <- as.factor(cpes.23[,3])
-  cpes$vendor <- as.factor(cpes.23[,4])
-  cpes$product <- as.factor(cpes.23[,5])
-  cpes$version <- as.factor(cpes.23[,6])
-  cpes$update <- as.factor(cpes.23[,7])
-  cpes$edition <- as.factor(cpes.23[,8])
-  cpes$language <- as.factor(cpes.23[,9])
-  cpes$sw_edition <- as.factor(cpes.23[,10])
-  cpes$target_sw <- as.factor(cpes.23[,11])
-  cpes$target_hw <- as.factor(cpes.23[,12])
-  cpes$other <- as.factor(cpes.23[,13])
-
+  if (verbose) print("Parsing check and OVAL references...")
+  cpes$checks <- sapply(raw.cpes,
+                            function(x) {
+                              ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "*[name()='check']")), character(0)),
+                                     yes = "{}",
+                                     no = {
+                                       y2 <- lapply(rvest::html_nodes(x, xpath = "*[name()='check']"), xml2::as_list)
+                                       y <- c(unlist(sapply(y2, attributes)[,1]), check = unlist(y2))
+                                       RJSONIO::toJSON(y, pretty = T)
+                                     }
+                              )
+                            }
+  )
   return(cpes)
-
 }
