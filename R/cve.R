@@ -177,10 +177,10 @@ LastDownloadNISTCVEDate <- function(){
 }
 
 LastDownloadMITRECVEDate <- function(){
-  doc.html <- XML::htmlParse("http://cve.mitre.org/data/downloads/index.html#download")
-  txt <- XML::xmlValue(XML::xpathSApply(doc.html, '//div[@class="smaller"]')[[1]])
-  last <- stringr::str_extract_all(pattern = "(.*-.*)", string = txt, simplify = T)[1,1]
-  return(last)
+  doc.html <- xml2::read_html("http://cve.mitre.org/data/downloads/index.html#download")
+  txt <- rvest::html_text(rvest::html_nodes(doc, "#CenterPane > div.smaller"))
+  last <- strptime(stringr::str_split(txt, "\n", simplify = T)[,2], "%Y-%m-%d")
+  return(as.character(last))
 }
 
 DownloadCVEData <- function(savepath, verbose, from.year, to.year) {
