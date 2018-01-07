@@ -177,7 +177,7 @@ LastDownloadNISTCVEDate <- function(){
 }
 
 LastDownloadMITRECVEDate <- function(){
-  doc.html <- xml2::read_html("http://cve.mitre.org/data/downloads/index.html#download")
+  doc <- xml2::read_html("http://cve.mitre.org/data/downloads/index.html#download")
   txt <- rvest::html_text(rvest::html_nodes(doc, "#CenterPane > div.smaller"))
   last <- strptime(stringr::str_split(txt, "\n", simplify = T)[,2], "%Y-%m-%d")
   return(as.character(last))
