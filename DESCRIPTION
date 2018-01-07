@@ -1,6 +1,6 @@
 Package: net.security
 Title: Security Standards Data Sets
-Version: 0.3.3
+Version: 0.3.4
 Authors@R: c(
     person("Humbert", "Costas", email = "humbert.costas@gmail.com", role = c("aut", "cre")),
     person("Arnau", "Sangra", email = "arnsangra@gmail.com", role = "ctb"))

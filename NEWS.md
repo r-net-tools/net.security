@@ -1,3 +1,8 @@
+# net.security 0.3.4
+
+ * New parser for CAPEC Standard, improved fields content.  
+ * Updated samples. 
+ 
 # net.security 0.3.3
 
  * New parser for CPE NIST Standard, improved fields content.  
