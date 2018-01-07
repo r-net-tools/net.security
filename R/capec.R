@@ -151,6 +151,121 @@ ParseCAPECData.attacks <- function(doc) {
                                 function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Payload_Activation_Impact/capec:Description/capec:Text")), character(0)),
                                                     yes = "[]",
                                                     no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Payload_Activation_Impact/capec:Description/capec:Text"))))})
+  att.related.cwe.target <- sapply(raw.capec.atcks,
+                                   function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Weaknesses/capec:Related_Weakness/capec:CWE_ID")), character(0)),
+                                                       yes = "[]",
+                                                       no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Weaknesses/capec:Related_Weakness/capec:CWE_ID[../capec:Weakness_Relationship_Type/text() = 'Targeted']/text()"))))})
+  att.related.cwe.second <- sapply(raw.capec.atcks,
+                                   function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Weaknesses/capec:Related_Weakness/capec:CWE_ID")), character(0)),
+                                                       yes = "[]",
+                                                       no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Weaknesses/capec:Related_Weakness/capec:CWE_ID[../capec:Weakness_Relationship_Type/text() = 'Secondary']/text()"))))})
+  att.related.cves <- sapply(raw.capec.atcks,
+                             function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Vulnerabilities/capec:Related_Vulnerability")), character(0)),
+                                                 yes = "[]",
+                                                 no = {
+                                                   RJSONIO::toJSON(
+                                                     lapply(
+                                                       rvest::html_nodes(x, xpath = "capec:Related_Vulnerabilities/capec:Related_Vulnerability"),
+                                                       function(y) {
+                                                         vulns <- rvest::html_text(rvest::xml_nodes(y, xpath = "capec:Vulnerability_Description/capec:Text"))
+                                                         names(vulns) <- rvest::html_text(rvest::xml_nodes(y, xpath = "capec:Vulnerability_ID"))
+                                                         vulns
+                                                       }
+                                                     )
+                                                   )
+                                                 }
+                             )
+                             }
+  )
+  att.related.capec <- sapply(raw.capec.atcks,
+                                   function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Attack_Patterns/capec:Related_Attack_Pattern")), character(0)),
+                                                       yes = "[]",
+                                                       no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Attack_Patterns/capec:Related_Attack_Pattern/capec:Relationship_Target_ID"))))})
+  att.related.attack.patterns <- sapply(raw.capec.atcks,
+                                               function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Attack_Patterns/capec:Related_Attack_Pattern")), character(0)),
+                                                                   yes = "[]",
+                                                                   no = {
+                                                                     RJSONIO::toJSON(lapply(rvest::html_nodes(x, xpath = "capec:Related_Attack_Patterns/capec:Related_Attack_Pattern"),
+                                                                                            function(y) {
+                                                                                              con <- list(
+                                                                                                related.view = rvest::html_text(rvest::html_nodes(y, xpath = "capec:Relationship_Views/capec:Relationship_View_ID")),
+                                                                                                target.form = rvest::html_text(rvest::html_nodes(y, xpath = "capec:Relationship_Target_Form")),
+                                                                                                nature = rvest::html_text(rvest::html_nodes(y, xpath = "capec:Relationship_Nature")),
+                                                                                                target.id = rvest::html_text(rvest::html_nodes(y, xpath = "capec:Relationship_Target_ID"))
+                                                                                              )
+                                                                                            }))
+                                                                   })})
+  att.relevant.security.requirements <- sapply(raw.capec.atcks,
+                              function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Relevant_Security_Requirements/capec:Relevant_Security_Requirement/capec:Text")), character(0)),
+                                                  yes = "[]",
+                                                  no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Relevant_Security_Requirements/capec:Relevant_Security_Requirement/capec:Text"))))})
+  att.related.security.principles <- sapply(raw.capec.atcks,
+                                               function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Security_Principles/capec:Related_Security_Principle/capec:Text")), character(0)),
+                                                                   yes = "[]",
+                                                                   no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Security_Principles/capec:Related_Security_Principle/capec:Text"))))})
+  att.related.guidelines <- sapply(raw.capec.atcks,
+                                            function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Guidelines/capec:Related_Guideline/capec:Text")), character(0)),
+                                                                yes = "[]",
+                                                                no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Guidelines/capec:Related_Guideline/capec:Text"))))})
+  att.purposes <- sapply(raw.capec.atcks,
+                                   function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Purposes/capec:Purpose")), character(0)),
+                                                       yes = "[]",
+                                                       no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Purposes/capec:Purpose"))))})
+  att.impact.confidentiality <- sapply(raw.capec.atcks,
+                         function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:CIA_Impact/capec:Confidentiality_Impact")), character(0)),
+                                             yes = "",
+                                             no = rvest::html_text(rvest::html_nodes(x, xpath = "capec:CIA_Impact/capec:Confidentiality_Impact")))})
+  att.impact.integrity <- sapply(raw.capec.atcks,
+                                       function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:CIA_Impact/capec:Integrity_Impact")), character(0)),
+                                                           yes = "",
+                                                           no = rvest::html_text(rvest::html_nodes(x, xpath = "capec:CIA_Impact/capec:Integrity_Impact")))})
+  att.impact.availability <- sapply(raw.capec.atcks,
+                                       function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:CIA_Impact/capec:Availability_Impact")), character(0)),
+                                                           yes = "",
+                                                           no = rvest::html_text(rvest::html_nodes(x, xpath = "capec:CIA_Impact/capec:Availability_Impact")))})
+  att.impact.availability <- sapply(raw.capec.atcks,
+                                    function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:CIA_Impact/capec:Availability_Impact")), character(0)),
+                                                        yes = "",
+                                                        no = rvest::html_text(rvest::html_nodes(x, xpath = "capec:CIA_Impact/capec:Availability_Impact")))})
+  att.tech.architectural.paradigms <- sapply(raw.capec.atcks,
+                                            function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Technical_Context/capec:Architectural_Paradigms/capec:Architectural_Paradigm")), character(0)),
+                                                                yes = "[]",
+                                                                no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Technical_Context/capec:Architectural_Paradigms/capec:Architectural_Paradigm"))))})
+  att.tech.frameworks <- sapply(raw.capec.atcks,
+                                             function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Technical_Context/capec:Frameworks/capec:Framework")), character(0)),
+                                                                 yes = "[]",
+                                                                 no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Technical_Context/capec:Frameworks/capec:Framework"))))})
+  att.tech.platforms <- sapply(raw.capec.atcks,
+                                function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Technical_Context/capec:Platforms/capec:Platform")), character(0)),
+                                                    yes = "[]",
+                                                    no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Technical_Context/capec:Platforms/capec:Platform"))))})
+  att.tech.languages <- sapply(raw.capec.atcks,
+                               function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Technical_Context/capec:Languages/capec:Language")), character(0)),
+                                                   yes = "[]",
+                                                   no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Technical_Context/capec:Languages/capec:Language"))))})
+  att.references <- sapply(raw.capec.atcks,
+                           function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Attack_Patterns/capec:Related_Attack_Pattern")), character(0)),
+                                               yes = "[]",
+                                               no = {
+                                                 RJSONIO::toJSON(lapply(rvest::html_nodes(x, xpath = "capec:References/capec:Reference"),
+                                                                        function(y) {
+                                                                          con <- list(
+                                                                            author = rvest::html_text(rvest::html_nodes(y, xpath = "capec:Reference_Author")),
+                                                                            title = rvest::html_text(rvest::html_nodes(y, xpath = "capec:Reference_Title")),
+                                                                            section = rvest::html_text(rvest::html_nodes(y, xpath = "capec:Reference_Section")),
+                                                                            edition = rvest::html_text(rvest::html_nodes(y, xpath = "capec:Reference_Edition")),
+                                                                            publication = rvest::html_text(rvest::html_nodes(y, xpath = "capec:Reference_Publication")),
+                                                                            publisher = rvest::html_text(rvest::html_nodes(y, xpath = "capec:Reference_Publisher")),
+                                                                            date = rvest::html_text(rvest::html_nodes(y, xpath = "capec:Reference_Date")),
+                                                                            pubDate = rvest::html_text(rvest::html_nodes(y, xpath = "capec:Reference_PubDate")),
+                                                                            link = rvest::html_text(rvest::html_nodes(y, xpath = "capec:Reference_Link"))
+                                                                          )
+                                                                          con <- con[sapply(con, function(x) !identical(x, character(0)))]
+                                                                          con
+                                                                        }))
+                                               })})
+
+
 
 
 
