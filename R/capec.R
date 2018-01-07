@@ -5,7 +5,11 @@ GetCAPECData <- function(savepath = tempdir()) {
   capec <- data.frame()
   capec.source.file <- paste(savepath, "capec", "capec_v2.10.xml",
                              sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
-  doc <- XML::xmlParse(capec.source.file)
+
+  doc <- xml2::read_xml(capec.source.file)
+
+  #################################
+  doc2 <- XML::xmlParse(capec.source.file)
   # capec.views <- ParseCAPECData.views(doc)
   # capec.categories <- ParseCAPECData.categories(doc)
   capec.attacks <- ParseCAPECData.attacks(doc)
@@ -29,32 +33,38 @@ DownloadCAPECData <- function(savepath) {
 }
 
 ParseCAPECData.views <- function(doc) {
-  # TODO
-  raw.capec.views <- XML::xpathApply(doc, "//capec:View")
-  # View IDs
-  view.id <- sapply(XML::getNodeSet(doc, "//capec:View/@ID"), function(x) x[1])
-  # View Names
-  view.name <- sapply(XML::getNodeSet(doc, "//capec:View/@Name"), function(x) x[1])
-  # Category Status
-  view.status <- sapply(XML::getNodeSet(doc, "//capec:View/@Status"), function(x) x[1])
-  # View objective
-  view.objective <- sapply(XML::getNodeSet(doc, "//capec:View/capec:View_Objective", fun = XML::xmlValue), function(x) x[1])
-  # Category Parent Views
-  targets <- XMLChildren2JSON(doc, "capec:View", view.id,
-                              "/capec:Relationships/capec:Relationship/capec:Relationship_Target_ID")
-
+  raw.capec.views <- rvest::xml_nodes(doc, xpath = "//capec:View")
+  view.id <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:View/@ID"))
+  view.name <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:View/@Name"))
+  view.status <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:View/@Status"))
+  view.objective <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:View/capec:View_Objective"))
+  # TODO: Improve realitonship using capec:View_Filter node as xpath to find related IDs
+  view.relationship <- sapply(raw.capec.views, function(x) RJSONIO::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Relationships/capec:Relationship/capec:Relationship_Target_ID"))))
   views <- data.frame(stringsAsFactors = FALSE)
   views <- data.frame(id = view.id,
                       name = view.name,
                       status = view.status,
                       objective = view.objective,
-                      targets = targets,
+                      view.relationship = view.relationship,
                       stringsAsFactors = FALSE
   )
   return(views)
 }
 
 ParseCAPECData.categories <- function(doc) {
+  raw.capec.cats <- rvest::xml_nodes(doc, xpath = "//capec:Category")
+  cat.id <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Category/@ID"))
+  cat.name <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Category/@Name"))
+  cat.status <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Category/@Status"))
+  # TODO: Improve realitonship using capec:View_Filter node as xpath to find related IDs
+  cat.relationship <- sapply(raw.capec.cats, function(x) RJSONIO::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Relationships/capec:Relationship/capec:Relationship_Target_ID"))))
+  cats <- data.frame(stringsAsFactors = FALSE)
+  cats <- data.frame(id = cat.id,
+                      name = cat.name,
+                      status = cat.status,
+                      cat.relationship = cat.relationship,
+                      stringsAsFactors = FALSE
+  )
 
   raw.capec.cates <- XML::xmlToDataFrame(XML::xpathApply(doc, "//capec:Category"))
 
