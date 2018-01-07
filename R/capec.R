@@ -8,12 +8,11 @@ GetCAPECData <- function(savepath = tempdir()) {
 
   doc <- xml2::read_xml(capec.source.file)
 
-  #################################
-  doc2 <- XML::xmlParse(capec.source.file)
-  # capec.views <- ParseCAPECData.views(doc)
-  # capec.categories <- ParseCAPECData.categories(doc)
+  capec.views <- ParseCAPECData.views(doc)
+  capec.categories <- ParseCAPECData.categories(doc)
   capec.attacks <- ParseCAPECData.attacks(doc)
 
+  # TODO: Unify data.frames
   # capec <- list(views = capec.views,
   #               categories = capec.categories,
   #               attacks = capec.attacks)
@@ -81,63 +80,174 @@ ParseCAPECData.attacks <- function(doc) {
   att.status <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Attack_Pattern/@Status"))
   att.pattern.abstraction <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Attack_Pattern/@Pattern_Abstraction"))
   att.pattern.completeness <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Attack_Pattern/@Pattern_Completeness"))
+  att.descr <- sapply(raw.capec.atcks, function(x) RJSONIO::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Description/capec:Summary"))))
+  # TODO: Parse extended description using capec:Attack_Execution_Flow node as xpath
+  att.attack.prerequisites <- sapply(raw.capec.atcks, function(x) RJSONIO::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Attack_Prerequisites/capec:Attack_Prerequisite/capec:Text"))))
+  att.severity <- sapply(raw.capec.atcks,
+                         function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Typical_Severity")), character(0)),
+                                             yes = "",
+                                             no = rvest::html_text(rvest::html_nodes(x, xpath = "capec:Typical_Severity")))})
+  att.likelihood.exploit <- sapply(raw.capec.atcks,
+                                   function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Typical_Likelihood_of_Exploit/capec:Likelihood")), character(0)),
+                                                       yes = "",
+                                                       no = rvest::html_text(rvest::html_nodes(x, xpath = "capec:Typical_Likelihood_of_Exploit/capec:Likelihood")))})
+  att.likelihood.exploit.descr <- sapply(raw.capec.atcks,
+                                   function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Typical_Likelihood_of_Exploit/capec:Explanation")), character(0)),
+                                                       yes = "",
+                                                       no = rvest::html_text(rvest::html_nodes(x, xpath = "capec:Typical_Likelihood_of_Exploit/capec:Explanation")))})
+  att.methods.of.attack <- sapply(raw.capec.atcks, function(x) RJSONIO::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Methods_of_Attack/capec:Method_of_Attack"))))
+  att.examples.cves <- sapply(raw.capec.atcks,
+                              function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Examples-Instances/capec:Example-Instance/capec:Example-Instance_Related_Vulnerabilities")), character(0)),
+                                                  yes = "[]",
+                                                  no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Examples-Instances/capec:Example-Instance/capec:Example-Instance_Related_Vulnerabilities"))))})
+  att.hack.skills <- sapply(raw.capec.atcks,
+                            function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Attacker_Skills_or_Knowledge_Required/capec:Attacker_Skill_or_Knowledge_Required")), character(0)),
+                                                yes = "[]",
+                                                no = RJSONIO::toJSON(xml2::as_list(rvest::html_nodes(x, xpath = "capec:Attacker_Skills_or_Knowledge_Required/capec:Attacker_Skill_or_Knowledge_Required"))))})
+  att.resources.required <- sapply(raw.capec.atcks, function(x) RJSONIO::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Resources_Required/capec:Text"))))
+  att.relationship <- sapply(raw.capec.atcks, function(x) RJSONIO::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Related_Attack_Patterns/capec:Related_Attack_Pattern/capec:Relationship_Target_ID"))))
+  att.proving.techniques <- sapply(raw.capec.atcks,
+                                   function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Probing_Techniques/capec:Probing_Technique")), character(0)),
+                                                       yes = "[]",
+                                                       no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Probing_Techniques/capec:Probing_Technique"))))})
+  att.indicators.warnings.of.Attack <- sapply(raw.capec.atcks,
+                                   function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Indicators-Warnings_of_Attack/capec:Indicator-Warning_of_Attack")), character(0)),
+                                                       yes = "[]",
+                                                       no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Indicators-Warnings_of_Attack/capec:Indicator-Warning_of_Attack"))))})
+  att.obfuscation.techniques <- sapply(raw.capec.atcks,
+                                              function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Obfuscation_Techniques/capec:Obfuscation_Technique")), character(0)),
+                                                                  yes = "[]",
+                                                                  no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Obfuscation_Techniques/capec:Obfuscation_Technique"))))})
+  att.solutions.mitigations <- sapply(raw.capec.atcks,
+                                       function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Solutions_and_Mitigations/capec:Solution_or_Mitigation")), character(0)),
+                                                           yes = "",
+                                                           no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Solutions_and_Mitigations/capec:Solution_or_Mitigation"))))})
+  att.attack.motivation.consequences <- sapply(raw.capec.atcks,
+                                      function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Attack_Motivation-Consequences/capec:Attack_Motivation-Consequence")), character(0)),
+                                                          yes = "[]",
+                                                          no = {
+                                                              RJSONIO::toJSON(lapply(rvest::html_nodes(x, xpath = "capec:Attack_Motivation-Consequences/capec:Attack_Motivation-Consequence"),
+                                                                                   function(y) {
+                                                                                     con <- list(
+                                                                                       scope = rvest::html_text(rvest::html_nodes(y, xpath = "capec:Consequence_Scope")),
+                                                                                       impact = rvest::html_text(rvest::html_nodes(y, xpath = "capec:Consequence_Technical_Impact")),
+                                                                                       note = rvest::html_text(rvest::html_nodes(y, xpath = "capec:Consequence_Note"))
+                                                                                     )
+                                                                                   }))
+                                                          })})
+  att.injection.vector <- sapply(raw.capec.atcks,
+                                       function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Injection_Vector/capec:Text")), character(0)),
+                                                           yes = "[]",
+                                                           no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Injection_Vector/capec:Text"))))})
+  att.payload <- sapply(raw.capec.atcks,
+                                 function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Payload/capec:Text")), character(0)),
+                                                     yes = "[]",
+                                                     no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Payload/capec:Text"))))})
+  att.activation.zone <- sapply(raw.capec.atcks,
+                        function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Activation_Zone/capec:Text")), character(0)),
+                                            yes = "[]",
+                                            no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Activation_Zone/capec:Text"))))})
+  att.payload.activation.impact <- sapply(raw.capec.atcks,
+                                function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Payload_Activation_Impact/capec:Description/capec:Text")), character(0)),
+                                                    yes = "[]",
+                                                    no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Payload_Activation_Impact/capec:Description/capec:Text"))))})
 
-  # Attack IDs
-  att.id = as.character(sapply(XML::getNodeSet(doc, "//capec:Attack_Pattern/@ID"), function(x) x[1]))
-  # Attack Names
-  att.name = as.character(sapply(XML::getNodeSet(doc, "//capec:Attack_Pattern/@Name"), function(x) x[1]))
-  # Attack Status
-  att.status = as.factor(sapply(XML::getNodeSet(doc, "//capec:Attack_Pattern/@Status"), function(x) x[1]))
-  # Attack Pattern_Abstraction
-  att.pattern.abstraction = as.factor(sapply(XML::getNodeSet(doc, "//capec:Attack_Pattern/@Pattern_Abstraction"), function(x) x[1]))
-  # Attack Pattern_Completeness
-  att.pattern.completeness = as.factor(sapply(XML::getNodeSet(doc, "//capec:Attack_Pattern/@Pattern_Completeness"), function(x) x[1]))
-  # Attack Methods
-  att.method <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Methods_of_Attack/capec:Method_of_Attack")
-  # Attacker Skills
-  att.acker.skills.lvl <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id,
-                                       "/capec:Attacker_Skills_or_Knowledge_Required/capec:Attacker_Skill_or_Knowledge_Required/capec:Skill_or_Knowledge_Level")
-  att.acker.skills.type <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id,
-                                           "/capec:Attacker_Skills_or_Knowledge_Required/capec:Attacker_Skill_or_Knowledge_Required/capec:Skill_or_Knowledge_Type")
-  # Resources Required
-  att.requirements.resources <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Resources_Required/capec:Text")
-  # Probing Techniques
-  att.probing.techniques <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Probing_Techniques/capec:Probing_Technique/capec:Description")
-  # Solutions and Mitigations
-  att.solutions.mitigations <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Solutions_and_Mitigations/capec:Solution_or_Mitigation/capec:Text")
-  # Attack Motivation and Consequences
-  att.motivation.consquences <- GetConsequences(doc, att.id)
-  # Injection Vector
-  att.inject.vect <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Injection_Vector/capec:Text")
-  # Payload
-  att.payload <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Payload/capec:Text")
-  # Activation_Zone
-  att.act.zone <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Activation_Zone/capec:Text")
-  # Related CWEs
-  att.cwes <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Related_Weaknesses/capec:Related_Weakness/capec:CWE_ID")
-  # Related CVEs
-  att.cves <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Related_Vulnerabilities/capec:Related_Vulnerability/capec:Vulnerability_ID")
-  # Relevant Security Requirements
-  att.sec.req <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Relevant_Security_Requirements/capec:Relevant_Security_Requirement/capec:Text")
-  # Related Security Principles
-  att.sec.pples <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Related_Security_Principles/capec:Related_Security_Principle/capec:Text")
-  # Related guidelines
-  att.guidelines <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Related_Guidelines/capec:Related_Guideline/capec:Text")
-  # Purposes
-  att.purposes <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Purposes/capec:Purpose")
-  # IMPACT
-  att.impact.conf <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:CIA_Impact/capec:Confidentiality_Impact")
-  att.impact.inte <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:CIA_Impact/capec:Integrity_Impact")
-  att.impact.avai <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:CIA_Impact/capec:Availability_Impact")
-  # Technical Context
-  att.architectural.ctxt <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Technical_Context/capec:Architectural_Paradigms/capec:Architectural_Paradigm")
-  att.frameworks.ctxt <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Technical_Context/capec:Frameworks/capec:Framework")
-  att.platforms.ctxt <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Technical_Context/capec:Platforms/capec:Platform")
-  att.languages.ctxt <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Technical_Context/capec:Languages/capec:Language")
-  # Obfuscation Techniques
-  att.obfuscation <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Obfuscation_Techniques/capec:Obfuscation_Technique/capec:Description/capec:Text")
-  # Indicators-Warnings_of_Attack
-  att.indicators.of.attack <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Indicators-Warnings_of_Attack/capec:Indicator-Warning_of_Attack/capec:Description/capec:Text")
+
+
+
+  # Attacks Data Frame
+  attacks <- data.frame(id = att.id,
+                        name = att.name,
+                        status = att.status,
+                        pattern.abstraction = att.pattern.abstraction,
+                        pattern.completeness = att.pattern.completeness,
+                        description = att.descr,
+                        prerequisites = raw.capec.atcks$Attack_Prerequisites,
+                        severeity = as.factor(raw.capec.atcks$Typical_Severity),
+                        exploit.likehood = as.factor(raw.capec.atcks$Typical_Likelihood_of_Exploit),
+                        exploit.likehood.descr = att.likelihood.exploit.descr,
+                        attack.method = att.method,
+                        attacker.skills = att.hack.skills,
+                        resources.required = att.requirements.resources,
+                        probing.techniques = att.probing.techniques,
+                        solutions.mitigations = att.solutions.mitigations,
+                        motivation.consequences = att.motivation.consquences,
+                        injection.vector = att.inject.vect,
+                        payload = att.payload,
+                        activation.zone = att.act.zone,
+                        related.cwes = att.cwes,
+                        related.cves = att.cves,
+                        related.security.principles = att.sec.pples,
+                        related.guidelines = att.guidelines,
+                        security.requirements = att.sec.req,
+                        purposes = att.purposes,
+                        impact.confidentiality = att.impact.conf,
+                        impact.integrity = att.impact.inte,
+                        impact.availability = att.impact.avai,
+                        context.architecture = att.architectural.ctxt,
+                        context.framework = att.frameworks.ctxt,
+                        context.platform = att.platforms.ctxt,
+                        context.language = att.languages.ctxt,
+                        obfuscation.techniques = att.obfuscation,
+                        attack.warnings = att.indicators.of.attack,
+                        stringsAsFactors = FALSE)
+
+  # # Attack IDs
+  # att.id = as.character(sapply(XML::getNodeSet(doc, "//capec:Attack_Pattern/@ID"), function(x) x[1]))
+  # # Attack Names
+  # att.name = as.character(sapply(XML::getNodeSet(doc, "//capec:Attack_Pattern/@Name"), function(x) x[1]))
+  # # Attack Status
+  # att.status = as.factor(sapply(XML::getNodeSet(doc, "//capec:Attack_Pattern/@Status"), function(x) x[1]))
+  # # Attack Pattern_Abstraction
+  # att.pattern.abstraction = as.factor(sapply(XML::getNodeSet(doc, "//capec:Attack_Pattern/@Pattern_Abstraction"), function(x) x[1]))
+  # # Attack Pattern_Completeness
+  # att.pattern.completeness = as.factor(sapply(XML::getNodeSet(doc, "//capec:Attack_Pattern/@Pattern_Completeness"), function(x) x[1]))
+  # # Attack Methods
+  # att.method <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Methods_of_Attack/capec:Method_of_Attack")
+  # # Attacker Skills
+  # att.acker.skills.lvl <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id,
+  #                                      "/capec:Attacker_Skills_or_Knowledge_Required/capec:Attacker_Skill_or_Knowledge_Required/capec:Skill_or_Knowledge_Level")
+  # att.acker.skills.type <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id,
+  #                                          "/capec:Attacker_Skills_or_Knowledge_Required/capec:Attacker_Skill_or_Knowledge_Required/capec:Skill_or_Knowledge_Type")
+  # # Resources Required
+  # att.requirements.resources <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Resources_Required/capec:Text")
+  # # Probing Techniques
+  # att.probing.techniques <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Probing_Techniques/capec:Probing_Technique/capec:Description")
+  # # Solutions and Mitigations
+  # att.solutions.mitigations <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Solutions_and_Mitigations/capec:Solution_or_Mitigation/capec:Text")
+  # # Attack Motivation and Consequences
+  # att.motivation.consquences <- GetConsequences(doc, att.id)
+  # # Injection Vector
+  # att.inject.vect <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Injection_Vector/capec:Text")
+  # # Payload
+  # att.payload <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Payload/capec:Text")
+  # # Activation_Zone
+  # att.act.zone <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Activation_Zone/capec:Text")
+  # # Related CWEs
+  # att.cwes <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Related_Weaknesses/capec:Related_Weakness/capec:CWE_ID")
+  # # Related CVEs
+  # att.cves <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Related_Vulnerabilities/capec:Related_Vulnerability/capec:Vulnerability_ID")
+  # # Relevant Security Requirements
+  # att.sec.req <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Relevant_Security_Requirements/capec:Relevant_Security_Requirement/capec:Text")
+  # # Related Security Principles
+  # att.sec.pples <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Related_Security_Principles/capec:Related_Security_Principle/capec:Text")
+  # # Related guidelines
+  # att.guidelines <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Related_Guidelines/capec:Related_Guideline/capec:Text")
+  # # Purposes
+  # att.purposes <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Purposes/capec:Purpose")
+  # # IMPACT
+  # att.impact.conf <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:CIA_Impact/capec:Confidentiality_Impact")
+  # att.impact.inte <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:CIA_Impact/capec:Integrity_Impact")
+  # att.impact.avai <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:CIA_Impact/capec:Availability_Impact")
+  # # Technical Context
+  # att.architectural.ctxt <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Technical_Context/capec:Architectural_Paradigms/capec:Architectural_Paradigm")
+  # att.frameworks.ctxt <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Technical_Context/capec:Frameworks/capec:Framework")
+  # att.platforms.ctxt <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Technical_Context/capec:Platforms/capec:Platform")
+  # att.languages.ctxt <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Technical_Context/capec:Languages/capec:Language")
+  # # Obfuscation Techniques
+  # att.obfuscation <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Obfuscation_Techniques/capec:Obfuscation_Technique/capec:Description/capec:Text")
+  # # Indicators-Warnings_of_Attack
+  # att.indicators.of.attack <- XMLChildren2JSON(doc, "capec:Attack_Pattern", att.id, "/capec:Indicators-Warnings_of_Attack/capec:Indicator-Warning_of_Attack/capec:Description/capec:Text")
 
   # Attacks Data Frame
   attacks <- data.frame(id = att.id,
