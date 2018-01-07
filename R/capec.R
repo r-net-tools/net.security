@@ -56,43 +56,31 @@ ParseCAPECData.categories <- function(doc) {
   cat.id <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Category/@ID"))
   cat.name <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Category/@Name"))
   cat.status <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Category/@Status"))
-  # TODO: Improve realitonship using capec:View_Filter node as xpath to find related IDs
+  cat.descr <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Category/capec:Description"))
+  cat.related.cwes <- sapply(raw.capec.cats, function(x) RJSONIO::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Related_Weaknesses/capec:Related_Weakness/capec:CWE_ID"))))
+  cat.attack.prerequisites <- sapply(raw.capec.cats, function(x) RJSONIO::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Attack_Prerequisites/capec:Attack_Prerequisite/capec:Text"))))
+  cat.resources.required <- sapply(raw.capec.cats, function(x) RJSONIO::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Resources_Required/capec:Text"))))
   cat.relationship <- sapply(raw.capec.cats, function(x) RJSONIO::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Relationships/capec:Relationship/capec:Relationship_Target_ID"))))
-  cats <- data.frame(stringsAsFactors = FALSE)
-  cats <- data.frame(id = cat.id,
-                      name = cat.name,
-                      status = cat.status,
-                      cat.relationship = cat.relationship,
-                      stringsAsFactors = FALSE
-  )
-
-  raw.capec.cates <- XML::xmlToDataFrame(XML::xpathApply(doc, "//capec:Category"))
-
-  # Category IDs
-  cat.id = sapply(XML::getNodeSet(doc, "//capec:Category/@ID"), function(x) x[1])
-  # Category Names
-  cat.name = sapply(XML::getNodeSet(doc, "//capec:Category/@Name"), function(x) x[1])
-  # Category Status
-  cat.status = sapply(XML::getNodeSet(doc, "//capec:Category/@Status"), function(x) x[1])
-  # Category Parent Views
-  parents <- XMLChildren2JSON(doc, "capec:Category", cat.id,
-                              "/capec:Relationships/capec:Relationship/capec:Relationship_Views/capec:Relationship_View_ID")
-
   categories <- data.frame(id = cat.id,
                            name = cat.name,
                            status = cat.status,
-                           description = raw.capec.cates$Description,
-                           attack.prerequisites = raw.capec.cates$Attack_Prerequisites,
-                           resources.required = raw.capec.cates$Resources_Required,
-                           parent.view = parents,
+                           description = cat.descr,
+                           related.cwes = cat.related.cwes,
+                           attack.prerequisites = cat.attack.prerequisites,
+                           resources.required = cat.resources.required,
+                           relationship = cat.relationship,
                            stringsAsFactors = FALSE
-                           )
+  )
   return(categories)
 }
 
-
 ParseCAPECData.attacks <- function(doc) {
-  raw.capec.atcks <- XML::xmlToDataFrame(XML::xpathApply(doc, "//capec:Attack_Pattern"))
+  raw.capec.atcks <- rvest::xml_nodes(doc, xpath = "//capec:Attack_Pattern")
+  att.id <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Attack_Pattern/@ID"))
+  att.name <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Attack_Pattern/@Name"))
+  att.status <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Attack_Pattern/@Status"))
+  att.pattern.abstraction <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Attack_Pattern/@Pattern_Abstraction"))
+  att.pattern.completeness <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Attack_Pattern/@Pattern_Completeness"))
 
   # Attack IDs
   att.id = as.character(sapply(XML::getNodeSet(doc, "//capec:Attack_Pattern/@ID"), function(x) x[1]))
