@@ -1,3 +1,8 @@
+# net.security 0.3.3
+
+ * New parser for CPE NIST Standard, improved fields content.  
+ * Updated samples. 
+ 
 # net.security 0.3.2
 
  * CVE NIST Standard changed its schema. New parser for CVES data.frame.  
