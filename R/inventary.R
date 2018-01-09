@@ -97,8 +97,17 @@ GetInventary <- function(){
     df.sw <- dplyr::arrange(df.sw, name)
 
     return(df.sw)
-  } else {
-    print("Only tested on Windows 10. Sorry.")
-    return(NA)
   }
+
+  if (.Platform$OS.type == "unix") {
+    # Debian
+    sw <- system("dpkg-query -W -f='${binary:Package}\\;${Architecture}\\;${Version}\\;${Maintainer}\\n'", intern = T)
+    df.sw <- read.csv(text = sw, sep = ";", header = F,
+                   col.names = c("name", "architecture", "version", "mantainer"))
+    df.sw$name <- sapply(df.sw$name, function(x) stringr::str_split(x, ":")[[1]][1])
+    return(df.sw)
+  }
+
+  print("Only tested on Windows 10 and Debian. Sorry.")
+  return(NA)
 }
