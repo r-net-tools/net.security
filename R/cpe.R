@@ -4,9 +4,9 @@ GetCPEData <- function(savepath = tempdir(), verbose = T) {
   print(paste("Downloading raw data..."))
   DownloadCPEData(savepath)
   print(paste("Extracting data..."))
-  cpe.source.file <- ExtractCPEFiles(savepath)
-  print(paste("Indexing data..."))
-  cpes <- ParseCPEData(cpe.source.file, verbose)
+  cpe.file <- ExtractCPEFiles(savepath)
+  print(paste("Building data frame..."))
+  cpes <- ParseCPEData(cpe.file, verbose)
   print(paste("CPES data frame building process finished."))
   return(cpes)
 }
@@ -38,12 +38,14 @@ DownloadCPEData <- function(savepath) {
 }
 
 ParseCPEData <- function(cpe.file, verbose) {
+  if (verbose) print("Indexing CPE XML and namespace schemas...")
   doc <- xml2::read_xml(cpe.file)
+  # xml2::xml_ns_strip(doc)
 
   if (verbose) print("Parsing product title and cpe codes 2.x...")
-  cpes <- data.frame(title = xml2::xml_text(xml2::xml_find_all(doc, "//*[name()='cpe-item']/*[@xml:lang='en-US'][1]")),
-                     cpe.22 = xml2::xml_text(xml2::xml_find_all(doc, "//*[name()='cpe-item']/@name")),
-                     cpe.23 = xml2::xml_text(xml2::xml_find_all(doc, "//*[name()='cpe-item']/*/@name")),
+  cpes <- data.frame(title = xml2::xml_text(xml2::xml_find_all(doc, "//*[cpe-23:cpe23-item]/*[@xml:lang='en-US'][1]")),
+                     cpe.22 = xml2::xml_text(xml2::xml_find_all(doc, "//cpe-23:cpe23-item/@name")),
+                     cpe.23 = xml2::xml_text(xml2::xml_find_all(doc, "//*[cpe-23:cpe23-item]/*/@name")),
                      stringsAsFactors = F)
 
   if (verbose) print("Extracting factors from cpe 2.3 code...")
@@ -61,33 +63,25 @@ ParseCPEData <- function(cpe.file, verbose) {
   cpes$target_hw <- as.factor(cpes$target_hw)
 
   if (verbose) print("Parsing product links and references...")
-  raw.cpes <- rvest::html_nodes(doc, xpath = "//*[name()='cpe-item']")
-  cpes$references <- sapply(raw.cpes,
-                            function(x) {
-                              ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "*[name()='references']")), character(0)),
-                                     yes = "{}",
-                                     no = {
-                                       y2 <- lapply(rvest::html_children(rvest::html_nodes(x, xpath = "*[name()='references']")), xml2::as_list)
-                                       y <- sapply(y2, attributes)
-                                       names(y) <- unlist(y2)
-                                       RJSONIO::toJSON(y, pretty = T)
-                                     }
-                              )
-                            }
-  )
+  raw.refs <- xml2::as_list(xml2::xml_find_all(doc, "//*[name()='cpe-item']/*[name()='references']"))
+  refs <- sapply(raw.refs,
+                 function(x) {
+                    refs <- as.character(unlist(sapply(x, attributes)))
+                    names(refs) <- as.character(unlist(x))
+                    RJSONIO::toJSON(refs, pretty = T)
+                 })
+  if (verbose) print("Adding references to data.frame ...")
+  refs.cpe.23 <- xml2::xml_text(xml2::xml_find_all(doc, "//*[name()='cpe-item']/*[name()='references']/parent::*/cpe-23:cpe23-item/@name"))
+  df.refs <- data.frame(cpe.23 = refs.cpe.23, references = refs, stringsAsFactors = F)
+  cpes <- dplyr::left_join(cpes, df.refs, by = c("cpe.23"))
 
   if (verbose) print("Parsing check and OVAL references...")
-  cpes$checks <- sapply(raw.cpes,
-                            function(x) {
-                              ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "*[name()='check']")), character(0)),
-                                     yes = "{}",
-                                     no = {
-                                       y2 <- lapply(rvest::html_nodes(x, xpath = "*[name()='check']"), xml2::as_list)
-                                       y <- c(unlist(sapply(y2, attributes)[,1]), check = unlist(y2))
-                                       RJSONIO::toJSON(y, pretty = T)
-                                     }
-                              )
-                            }
-  )
+  checks <- sapply(xml2::as_list(xml2::xml_find_all(doc, "//*[name()='cpe-item']/*[name()='check']")),
+                   function(x) RJSONIO::toJSON(attributes(x)))
+  if (verbose) print("Adding checks to data.frame ...")
+  checks.cpe.23 <- xml2::xml_text(xml2::xml_find_all(doc, "//*[name()='cpe-item']/*[name()='check']/parent::*/cpe-23:cpe23-item/@name"))
+  df.checks <- data.frame(cpe.23 = checks.cpe.23, checks = checks, stringsAsFactors = F)
+  cpes <- dplyr::left_join(cpes, df.checks, by = c("cpe.23"))
+
   return(cpes)
 }
