@@ -31,7 +31,7 @@
 #'
 #' @usage data(cpes.sample)
 #'
-#' @format A data frame with 1000 rows and 14 columns.
+#' @format A data frame with 1000 rows and 16 columns.
 #'
 #' @keywords cpe
 #'

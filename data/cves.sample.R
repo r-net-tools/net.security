@@ -4,13 +4,6 @@
 #'
 #' \describe{
 #'   \item{cve.id}{CVE Identifier (also referred to by the community as "CVE IDs," "CVE entries," "CVE names," "CVE numbers," and "CVEs") are unique, common identifiers for publicly known cyber security vulnerabilities. (MITRE)}
-#'   \item{status}{CANDIDATE or ENTRY. (MITRE)}
-#'   \item{description}{The "Description" portion of CVE Identifier (CVE ID) entries are typically written by CVE Numbering Authorities (CNAs), MITRE's CVE Content Team, or individuals requesting a CVE ID. (MITRE)}
-#'   \item{ref.mitre}{Each CVE Identifier includes appropriate references. The CVE website also includes a Reference Maps page with links to documents from the commonly used information sources that are used as references for CVE entries. More info: http://cve.mitre.org/data/refs/refkey.html (MITRE)}
-#'   \item{phase}{Values can be Proposed, Interim, Modified or Assigned. Some time are followed with date with format %Y%m%d (MITRE)}
-#'   \item{votes}{Values can be accept, modify, noop, recast, reject, reviewing or revote. They are usually followed by voter name. (MITRE)}
-#'   \item{comments}{Comments about the vulnerability. (MITRE)}
-#'   \item{}{}
 #'   \item{affects}{Affected vendor product list as json.}
 #'   \item{problem.type}{Related weaknesses, usually CWE ids.}
 #'   \item{references}{References as json list.}
@@ -53,7 +46,7 @@
 #'
 #' @usage data(cves.sample)
 #'
-#' @format A data frame with 1000 rows and 24 columns.
+#' @format A data frame with 1000 rows and 35 columns.
 #'
 #' @keywords cve
 #'
