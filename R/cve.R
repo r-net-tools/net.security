@@ -74,20 +74,31 @@ ParseCVENISTData <- function(savepath, from.year, to.year, verbose) {
 
 GetNISTvulnsByYear <- function(savepath, year, verbose) {
   if (verbose) print(paste("Parsing cves (year ", year, ") from json source...", sep = ""))
+  i <- 1
+  if (verbose) pb <- txtProgressBar(min = 0, max = 15, style = 3, title = "CVE data")
+
   nistfile <- paste("nvdcve-1.0-", year, ".json", sep = "")
   nistpath <- paste(savepath, "cve","nist", nistfile,
                     sep = ifelse(.Platform$OS.type == "windows","\\","/"))
   cve.entries <- jsonlite::fromJSON(nistpath)
   cve.entries <- cve.entries$CVE_Items
+  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
 
   cves <- data.frame(cve.id = cve.entries$cve$CVE_data_meta$ID,
                      stringsAsFactors = F)
+  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
   cves$affects <- unlist(lapply(cve.entries$cve$affects$vendor$vendor_data, jsonlite::toJSON))
+  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
   cves$problem.type <- unlist(lapply(cve.entries$cve$problemtype$problemtype_data, function(x) jsonlite::toJSON(x[[1]][[1]]$value)))
+  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
   cves$references <- unlist(lapply(cve.entries$cve$references$reference_data, jsonlite::toJSON))
+  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
   cves$description <- unlist(lapply(cve.entries$cve$description$description_data, jsonlite::toJSON))
+  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
   cves$vulnerable.configuration <- unlist(lapply(cve.entries$configurations$nodes, jsonlite::toJSON))
+  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
   cves$cvss3.vector <- cve.entries$impact$baseMetricV3$cvssV3$vectorString
+  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
   cves$cvss3.av <- cve.entries$impact$baseMetricV3$cvssV3$attackVector
   cves$cvss3.ac <- cve.entries$impact$baseMetricV3$cvssV3$attackComplexity
   cves$cvss3.pr <- cve.entries$impact$baseMetricV3$cvssV3$privilegesRequired
@@ -96,28 +107,36 @@ GetNISTvulnsByYear <- function(savepath, year, verbose) {
   cves$cvss3.c <- cve.entries$impact$baseMetricV3$cvssV3$confidentialityImpact
   cves$cvss3.i <- cve.entries$impact$baseMetricV3$cvssV3$integrityImpact
   cves$cvss3.a <- cve.entries$impact$baseMetricV3$cvssV3$availabilityImpact
+  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
   cves$cvss3.score <- cve.entries$impact$baseMetricV3$cvssV3$baseScore
   cves$cvss3.severity <- cve.entries$impact$baseMetricV3$cvssV3$baseSeverity
   cves$cvss3.score.exploit <- cve.entries$impact$baseMetricV3$exploitabilityScore
   cves$cvss3.score.impact <- cve.entries$impact$baseMetricV3$impactScore
+  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
   cves$cvss2.vector <- cve.entries$impact$baseMetricV2$cvssV2$vectorString
+  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
   cves$cvss2.av <- cve.entries$impact$baseMetricV2$cvssV2$accessVector
   cves$cvss2.ac <- cve.entries$impact$baseMetricV2$cvssV2$accessComplexity
   cves$cvss2.au <- cve.entries$impact$baseMetricV2$cvssV2$authentication
   cves$cvss2.c <- cve.entries$impact$baseMetricV2$cvssV2$confidentialityImpact
   cves$cvss2.i <- cve.entries$impact$baseMetricV2$cvssV2$integrityImpact
   cves$cvss2.a <- cve.entries$impact$baseMetricV2$cvssV2$availabilityImpact
+  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
   cves$cvss2.score <- cve.entries$impact$baseMetricV2$cvssV2$baseScore
   cves$cvss2.severity <- cve.entries$impact$baseMetricV2$cvssV2$baseSeverity
   cves$cvss2.score.exploit <- cve.entries$impact$baseMetricV2$exploitabilityScore
   cves$cvss2.score.impact <- cve.entries$impact$baseMetricV2$impactScore
+  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
   cves$cvss2.getallprivilege <- cve.entries$impact$baseMetricV2$obtainAllPrivilege
   cves$cvss2.getusrprivilege <- cve.entries$impact$baseMetricV2$obtainUserPrivilege
   cves$cvss2.getothprivilege <- cve.entries$impact$baseMetricV2$obtainOtherPrivilege
   cves$cvss2.requsrinter <- cve.entries$impact$baseMetricV2$userInteractionRequired
+  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
   cves$published.date <- cve.entries$publishedDate
   cves$last.modified <- cve.entries$lastModifiedDate
+  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
 
+  close(pb)
   return(cves)
 }
 

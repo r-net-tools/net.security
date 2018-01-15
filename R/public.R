@@ -79,12 +79,12 @@ DataSetStatus <- function(ds = "all") {
       print(paste(" |- Last update for CAPEC dataset at", as.character(capec.timestamp)))
       print(paste(" |- Data set with", as.character(nrow(netsec.data[[2]][["capec"]])), "rows and",
                   as.character(ncol(netsec.data[[2]][["capec"]])), "variables."))
-      # cweonline <- strptime(LastDownloadCWEDate(), format = "%Y-%m-%d")
-      # print(paste(" |- Online RAW data updated at", cweonline))
-      # if ((cweonline-cwes.timestamp)<=0) {
-      #   print(paste(" |- No updates needed for CWES dataset."))
+      # capeconline <- strptime(LastDownloadCAPECDate(), format = "%Y-%m-%d")
+      # print(paste(" |- Online RAW data updated at", capeconline))
+      # if ((capeconline-capec.timestamp)<=0) {
+      #   print(paste(" |- No updates needed for CAPEC dataset."))
       # } else {
-      #   print(paste(" |- CWES dataset", as.character(cweonline-cwes.timestamp), "days outdated."))
+      #   print(paste(" |- CAPEC dataset", as.character(capeconline-capec.timestamp), "days outdated."))
       # }
     }
   }
