@@ -1,6 +1,6 @@
 Package: net.security
 Title: Security Standards Data Sets
-Version: 0.3.4
+Version: 0.3.5
 Authors@R: c(
     person("Humbert", "Costas", email = "humbert.costas@gmail.com", role = c("aut", "cre")),
     person("Arnau", "Sangra", email = "arnsangra@gmail.com", role = "ctb"))
@@ -20,9 +20,7 @@ Imports:
     RJSONIO,
     xml2,
     rvest,
-    stringr,
-    XML,
-    plyr
+    stringr
 Suggests: 
     devtools,
     testthat, 
