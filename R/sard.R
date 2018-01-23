@@ -24,7 +24,7 @@ ParseSARDData <- function(sards.file, verbose) {
   i <- 1
   if (verbose) {
     print("Moving data from SARD XML to data.frame ...")
-    pb <- txtProgressBar(min = 0, max = 14, style = 3, title = "SARD data")
+    pb <- txtProgressBar(min = 0, max = 15, style = 3, title = "SARD data")
   }
   doc <- xml2::read_xml(sards.file)
   if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
@@ -78,8 +78,8 @@ ParseSARDData <- function(sards.file, verbose) {
   samples <- data.frame(id = xml2::xml_text(xml2::xml_find_all(doc, "//testcase[file]/@id")),
                         files = sapply(samples,
                                        function(x) {
-                                         notmixed <- lapply(XML::xpathApply(x, "file[not(mixed)]", XML::xmlAttrs), function(x) list(file = x))
-                                         mixed <- lapply(XML::xpathApply(x, "file/mixed/parent::*"),
+                                         notmixed <- lapply(XML::xpathApply(x, "file[not(mixed)][not(flaw)][not(fix)]", XML::xmlAttrs), function(x) list(file = x))
+                                         mixed <- lapply(XML::xpathApply(x, "file[mixed|flaw|fix]"),
                                                          function(y)
                                                            list(file = list(c(XML::xmlAttrs(y),
                                                                               XML::xmlApply(y, XML::xmlAttrs)))
@@ -90,6 +90,9 @@ ParseSARDData <- function(sards.file, verbose) {
                                        ),
                         stringsAsFactors = FALSE)
   sards <- dplyr::left_join(sards, samples, by = c("id"))
+  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
+  sards$related.cwe <- sapply(stringr::str_extract_all(string = sards$files, pattern = "CWE-\\d+"),
+                              function(x) RJSONIO::toJSON(unique(x)))
   if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
   return(sards)
 }
