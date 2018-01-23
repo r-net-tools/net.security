@@ -174,17 +174,19 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
   }
 
   ds <- tolower(ds)
-  if (ds %in% c("all", "cves", "cpes", "cwes", "capec")) {
+  if (ds %in% c("all", "cves", "cpes", "cwes", "capec", "sard")) {
     cves.ini <- Sys.Date()
     cpes.ini <- Sys.Date()
     cwes.ini <- Sys.Date()
     capec.ini <- Sys.Date()
+    sard.ini <- Sys.Date()
     timestamp <- list()
     datasets <- netsec.data$datasets
     cves.nrow <- nrow(netsec.data$datasets$cves)
     cpes.nrow <- nrow(netsec.data$datasets$cpes)
     cwes.nrow <- nrow(netsec.data$datasets$cwes)
     capec.nrow <- nrow(netsec.data$datasets$capec)
+    sard.nrow <- nrow(netsec.data$datasets$sard)
 
     # Get updated data.frames
     if (use.remote) {
@@ -232,6 +234,11 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
       if (tolower(ds) %in% c("capec", "all")) {
         print("[*] Updating CAPEC data.frame...")
         capec <- GetCAPECData()
+        print("CAPEC data.frame UPDATED!")
+      }
+      if (tolower(ds) %in% c("sard", "all")) {
+        print("[*] Updating SARD data.frame...")
+        sard <- GetSARDData(savepath = tempdir(), verbose = T)
         print("CAPEC data.frame UPDATED!")
       }
     }
