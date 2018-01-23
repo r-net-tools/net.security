@@ -188,7 +188,7 @@ LastDownloadCVEDate <- function() {
 
 LastDownloadNISTCVEDate <- function(){
   doc <- xml2::read_html("https://nvd.nist.gov/vuln/data-feeds")
-  txt <- rvest::html_table(rvest::html_nodes(doc, "#body-section > div:nth-child(2) > div:nth-child(11) > div > table"), fill = T)[[1]]
+  txt <- rvest::html_table(rvest::html_nodes(doc, xpath = '//*[@id="page-content"]/div[3]/div/table'), fill = T)[[1]]
   names(txt) <- txt[2,]
   txt <- txt[3:nrow(txt),]
   txt$Updated <- strptime(txt$Updated, format = "%m/%d/%Y")
