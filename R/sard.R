@@ -66,16 +66,19 @@ ParseSARDData <- function(sards.file, verbose) {
                             stringsAsFactors = FALSE)
   sards <- dplyr::left_join(sards, description, by = c("id"))
   if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
-  association <- data.frame(id = xml2::xml_text(xml2::xml_find_all(doc, "//testcase[association]/@id")),
-                            association = sapply(xml2::xml_find_all(doc, "//testcase/association/parent::*"),
-                                                 function(x) RJSONIO::toJSON(xml2::xml_attrs(xml2::xml_find_all(x, "./association")))),
-                            stringsAsFactors = FALSE)
-  sards <- dplyr::left_join(sards, association, by = c("id"))
-
-  # samples
   doc2 <- XML::xmlParse(file = sards.file)
-  samples <- XML::xmlChildren(XML::xmlChildren(doc2)[["container"]])
-  samples <- data.frame(id = xml2::xml_text(xml2::xml_find_all(doc, "//testcase[file]/@id")),
+
+  association <- XML::xpathApply(doc2, "//testcase[association]")
+  association <- data.frame(id = as.character(XML::xpathSApply(doc2, "//testcase[association]/@id")),
+                            associations = sapply(association,
+                                           function(x) {
+                                             RJSONIO::toJSON(XML::xpathApply(x, "association", XML::xmlAttrs), pretty = T)
+                                           }
+                            ), stringsAsFactors = FALSE)
+  sards <- dplyr::left_join(sards, association, by = c("id"))
+  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
+  samples <- XML::xpathApply(doc2, "//testcase[file]")
+  samples <- data.frame(id = as.character(XML::xpathSApply(doc2, "//testcase[file]/@id")),
                         files = sapply(samples,
                                        function(x) {
                                          notmixed <- lapply(XML::xpathApply(x, "file[not(mixed)][not(flaw)][not(fix)]", XML::xmlAttrs), function(x) list(file = x))
