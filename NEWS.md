@@ -1,3 +1,7 @@
+# net.security 0.3.6
+
+ * Added SARD standard  
+
 # net.security 0.3.5
 
  * Improved parsers for CPE and CWE Standard.  
