@@ -24,48 +24,48 @@ ParseSARDData <- function(sards.file, verbose) {
   i <- 1
   if (verbose) {
     print("Moving data from SARD XML to data.frame ...")
-    pb <- txtProgressBar(min = 0, max = 15, style = 3, title = "SARD data")
+    pb <- utils::txtProgressBar(min = 0, max = 15, style = 3, title = "SARD data")
   }
   doc <- xml2::read_xml(sards.file)
-  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   sards <- data.frame(id = xml2::xml_text(xml2::xml_find_all(doc, "//testcase/@id")),
                       stringsAsFactors = FALSE)
-  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   sards$type <- xml2::xml_text(xml2::xml_find_all(doc, "//testcase/@type"))
-  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   sards$status <- xml2::xml_text(xml2::xml_find_all(doc, "//testcase/@status"))
-  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   sards$submissionDate <- xml2::xml_text(xml2::xml_find_all(doc, "//testcase/@submissionDate"))
-  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   instruction <- data.frame(id = xml2::xml_text(xml2::xml_find_all(doc, "//testcase[@instruction]/@id")),
                             instruction = xml2::xml_text(xml2::xml_find_all(doc, "//testcase/@instruction")),
                             stringsAsFactors = FALSE)
   sards <- dplyr::left_join(sards, instruction, by = c("id"))
-  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   sards$language <- xml2::xml_text(xml2::xml_find_all(doc, "//testcase/@language"))
-  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   author <- data.frame(id = xml2::xml_text(xml2::xml_find_all(doc, "//testcase[@author]/@id")),
                             author = xml2::xml_text(xml2::xml_find_all(doc, "//testcase/@author")),
                             stringsAsFactors = FALSE)
   sards <- dplyr::left_join(sards, author, by = c("id"))
-  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   sards$numberOfFiles <- xml2::xml_text(xml2::xml_find_all(doc, "//testcase/@numberOfFiles"))
-  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   testsuiteid <- data.frame(id = xml2::xml_text(xml2::xml_find_all(doc, "//testcase[@testsuiteid]/@id")),
                        testsuiteid = xml2::xml_text(xml2::xml_find_all(doc, "//testcase/@testsuiteid")),
                        stringsAsFactors = FALSE)
   sards <- dplyr::left_join(sards, testsuiteid, by = c("id"))
-  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   applicationid <- data.frame(id = xml2::xml_text(xml2::xml_find_all(doc, "//testcase[@applicationid]/@id")),
                        applicationid = xml2::xml_text(xml2::xml_find_all(doc, "//testcase/@applicationid")),
                        stringsAsFactors = FALSE)
   sards <- dplyr::left_join(sards, applicationid, by = c("id"))
-  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   description <- data.frame(id = xml2::xml_text(xml2::xml_find_all(doc, "//testcase[description]/@id")),
                             description = xml2::xml_text(xml2::xml_find_all(doc, "//testcase/description")),
                             stringsAsFactors = FALSE)
   sards <- dplyr::left_join(sards, description, by = c("id"))
-  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   doc2 <- XML::xmlParse(file = sards.file)
 
   association <- XML::xpathApply(doc2, "//testcase[association]")
@@ -76,7 +76,7 @@ ParseSARDData <- function(sards.file, verbose) {
                                            }
                             ), stringsAsFactors = FALSE)
   sards <- dplyr::left_join(sards, association, by = c("id"))
-  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   samples <- XML::xpathApply(doc2, "//testcase[file]")
   samples <- data.frame(id = as.character(XML::xpathSApply(doc2, "//testcase[file]/@id")),
                         files = sapply(samples,
@@ -93,10 +93,10 @@ ParseSARDData <- function(sards.file, verbose) {
                                        ),
                         stringsAsFactors = FALSE)
   sards <- dplyr::left_join(sards, samples, by = c("id"))
-  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   sards$related.cwe <- sapply(stringr::str_extract_all(string = sards$files, pattern = "CWE-\\d+"),
                               function(x) RJSONIO::toJSON(unique(x)))
-  if (verbose) {setTxtProgressBar(pb, i); i <- i + 1}
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   return(sards)
 }
 

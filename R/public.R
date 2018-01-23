@@ -92,7 +92,7 @@ DataSetStatus <- function(ds = "all") {
     # Get Status from local sard data.frame
     if (DataSetAvailable("sard")) {
       print("-: SARD dataset:")
-      capec.timestamp <- strptime(netsec.data[[1]][["sard.ini"]], format = "%Y-%m-%d")
+      sard.timestamp <- strptime(netsec.data[[1]][["sard.ini"]], format = "%Y-%m-%d")
       print(paste(" |- Last update for SARD dataset at", as.character(sard.timestamp)))
       print(paste(" |- Data set with", as.character(nrow(netsec.data[[2]][["sard"]])), "rows and",
                   as.character(ncol(netsec.data[[2]][["sard"]])), "variables."))
