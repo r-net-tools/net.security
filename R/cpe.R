@@ -40,18 +40,18 @@ DownloadCPEData <- function(savepath) {
 ParseCPEData <- function(cpe.file, verbose) {
   i <- 1
   if (verbose) pb <- utils::txtProgressBar(min = 0, max = 10, style = 3, title = "CPE data")
-  if (verbose) print("Indexing CPE XML and namespace schemas...")
+  # if (verbose) print("Indexing CPE XML and namespace schemas...")
   doc <- xml2::read_xml(cpe.file)
   if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
 
-  if (verbose) print("Parsing product title and cpe codes 2.x...")
+  # if (verbose) print("Parsing product title and cpe codes 2.x...")
   cpes <- data.frame(title = xml2::xml_text(xml2::xml_find_all(doc, "//*[cpe-23:cpe23-item]/*[@xml:lang='en-US'][1]")),
                      cpe.22 = xml2::xml_text(xml2::xml_find_all(doc, "//cpe-23:cpe23-item/@name")),
                      cpe.23 = xml2::xml_text(xml2::xml_find_all(doc, "//*[cpe-23:cpe23-item]/*/@name")),
                      stringsAsFactors = F)
   if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
 
-  if (verbose) print("Extracting factors from cpe 2.3 code...")
+  # if (verbose) print("Extracting factors from cpe 2.3 code...")
   new.cols <- c("std", "std.v", "part", "vendor", "product",
                 "version", "update", "edition", "language", "sw_edition",
                 "target_sw", "target_hw", "other")
@@ -68,7 +68,7 @@ ParseCPEData <- function(cpe.file, verbose) {
   cpes$target_hw <- as.factor(cpes$target_hw)
   if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
 
-  if (verbose) print("Parsing product links and references...")
+  # if (verbose) print("Parsing product links and references...")
   raw.refs <- xml2::as_list(xml2::xml_find_all(doc, "//*[name()='cpe-item']/*[name()='references']"))
   if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   refs <- sapply(raw.refs,
@@ -77,18 +77,18 @@ ParseCPEData <- function(cpe.file, verbose) {
                     names(refs) <- as.character(unlist(x))
                     RJSONIO::toJSON(refs, pretty = T)
                  })
-  if (verbose) print("Adding references to data.frame ...")
   if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  # if (verbose) print("Adding references to data.frame ...")
   refs.cpe.23 <- xml2::xml_text(xml2::xml_find_all(doc, "//*[name()='cpe-item']/*[name()='references']/parent::*/cpe-23:cpe23-item/@name"))
   df.refs <- data.frame(cpe.23 = refs.cpe.23, references = refs, stringsAsFactors = F)
   cpes <- dplyr::left_join(cpes, df.refs, by = c("cpe.23"))
   if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
 
-  if (verbose) print("Parsing check and OVAL references...")
+  # if (verbose) print("Parsing check and OVAL references...")
   checks <- sapply(xml2::as_list(xml2::xml_find_all(doc, "//*[name()='cpe-item']/*[name()='check']")),
                    function(x) RJSONIO::toJSON(attributes(x)))
   if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
-  if (verbose) print("Adding checks to data.frame ...")
+  # if (verbose) print("Adding checks to data.frame ...")
   checks.cpe.23 <- xml2::xml_text(xml2::xml_find_all(doc, "//*[name()='cpe-item']/*[name()='check']/parent::*/cpe-23:cpe23-item/@name"))
   df.checks <- data.frame(cpe.23 = checks.cpe.23, checks = checks, stringsAsFactors = F)
   cpes <- dplyr::left_join(cpes, df.checks, by = c("cpe.23"))
