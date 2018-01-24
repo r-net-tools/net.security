@@ -42,7 +42,8 @@ ParseCWEData <- function(cwes.file, verbose) {
   if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   # Extract Weakness node attributes
   cwes <- as.data.frame(t(sapply(raw.cwes, rvest::html_attrs)), stringsAsFactors = F)
-  names(cwes) <- c("ID", "Name", "Abstraction", "Structure", "Status")
+  names(cwes) <- c("xmlns", "ID", "Name", "Abstraction", "Structure", "Status")
+  cwes$xmlns <- NULL
   # Set factors (improve setting levels according to XSD)
   cwes$Abstraction <- as.factor(cwes$Abstraction)
   cwes$Structure <- as.factor(cwes$Structure)
