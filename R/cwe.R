@@ -32,21 +32,77 @@ ExtractCWEFiles <- function(savepath) {
 }
 
 ParseCWEData <- function(cwes.file, verbose) {
+  # Load Weakness raw data
+  doc <- suppressWarnings(rvest::html(cwes.file))
+  cwes.weaknesses <- ParseCWEWeaknesses(doc, cwes.file, verbose)
+  cwes.categories <- ParseCWECategories(doc, cwes.file, verbose)
+  cwes.views <- ParseCWEViews(doc, cwes.file, verbose)
+  cwes <- dplyr::bind_rows(cwes.weaknesses, cwes.categories, cwes.views)
+  cwes$CWE_Type <- as.factor(cwes$CWE_Type)
+
+  return(cwes)
+}
+
+ParseCWEViews <- function(doc, cwes.file, verbose) {
+  raw.cwes <- rvest::html_nodes(doc, "view")
+  cwes <- as.data.frame(t(sapply(raw.cwes, rvest::html_attrs)), stringsAsFactors = F)
+  # View attribute "Type" overwriten with character "View"
+  names(cwes) <- c("ID", "Name", "CWE_Type", "Status")
+  cwes$CWE_Type <- rep("View", nrow(cwes))
+  cwes$Code_Standard <- paste("CWE-", cwes$ID, sep = "")
+  cwes$Description <- sapply(rvest::html_nodes(doc, xpath = "//view/objective"),
+                             rvest::html_text)
+  ids <- xml2::xml_text(xml2::xml_find_all(doc, "//view/members/parent::*/@id"))
+  vals <- sapply(xml2::xml_find_all(doc, "//view/members"),
+                 function(x) {
+                   members <- rvest::html_attrs(rvest::html_children(x))
+                   names(members) <- rvest::html_name(rvest::html_children(x))
+                   RJSONIO::toJSON(members, pretty = T)
+                 }
+  )
+  df <- data.frame(ID = ids, Related_Weakness = vals, stringsAsFactors = F)
+  cwes <- dplyr::left_join(cwes, df, by = c("ID"))
+  return(cwes)
+}
+
+ParseCWECategories <- function(doc, cwes.file, verbose) {
+  raw.cwes <- rvest::html_nodes(doc, "category")
+  cwes <- as.data.frame(t(sapply(raw.cwes, rvest::html_attrs)), stringsAsFactors = F)
+  names(cwes) <- c("ID", "Name", "Status")
+  cwes$CWE_Type <- rep("Category", nrow(cwes))
+  cwes$Code_Standard <- paste("CWE-", cwes$ID, sep = "")
+
+  cwes$Description <- sapply(rvest::html_nodes(doc, xpath = "//category/summary"),
+                             rvest::html_text)
+
+  ids <- xml2::xml_text(xml2::xml_find_all(doc, "//category/relationships/parent::*/@id"))
+  vals <- sapply(xml2::xml_find_all(doc, "//category/relationships"),
+                 function(x) {
+                   members <- rvest::html_attrs(rvest::html_children(x))
+                   names(members) <- rvest::html_name(rvest::html_children(x))
+                   RJSONIO::toJSON(members, pretty = T)
+                 }
+  )
+  df <- data.frame(ID = ids, Related_Weakness = vals, stringsAsFactors = F)
+  cwes <- dplyr::left_join(cwes, df, by = c("ID"))
+  return(cwes)
+}
+
+ParseCWEWeaknesses <- function(doc, cwes.file, verbose) {
   print("Parsing Basic attributes...")
   i <- 1
   if (verbose) pb <- utils::txtProgressBar(min = 0, max = 17, style = 3, title = "CWE data")
 
-  # Load Weakness raw data
-  doc <- suppressWarnings(rvest::html(cwes.file))
   raw.cwes <- rvest::html_nodes(doc, "weakness")
   if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   # Extract Weakness node attributes
   cwes <- as.data.frame(t(sapply(raw.cwes, rvest::html_attrs)), stringsAsFactors = F)
   names(cwes) <- c("ID", "Name", "Abstraction", "Structure", "Status")
+  cwes$CWE_Type <- rep("Weakness", nrow(cwes))
   # Set factors (improve setting levels according to XSD)
   cwes$Abstraction <- as.factor(cwes$Abstraction)
   cwes$Structure <- as.factor(cwes$Structure)
-  cwes$Status <- as.factor(cwes$Status)
+  # cwes$Status <- as.factor(cwes$Status)
   # Add extra field with code standard
   cwes$Code_Standard <- paste("CWE-", cwes$ID, sep = "")
 
@@ -65,10 +121,10 @@ ParseCWEData <- function(cwes.file, verbose) {
   if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   ids <- xml2::xml_text(xml2::xml_find_all(doc, "//weakness/related_weaknesses/parent::*/@id"))
   vals <- sapply(xml2::xml_find_all(doc, "//weakness/related_weaknesses"),
-                   function(x) RJSONIO::toJSON(lapply(rvest::html_children(x),
-                                                      rvest::html_attrs),
-                                               pretty = T)
-                   )
+                 function(x) RJSONIO::toJSON(lapply(rvest::html_children(x),
+                                                    rvest::html_attrs),
+                                             pretty = T)
+  )
   df <- data.frame(ID = ids, Related_Weakness = vals, stringsAsFactors = F)
   cwes <- dplyr::left_join(cwes, df, by = c("ID"))
 
