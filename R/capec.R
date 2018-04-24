@@ -80,6 +80,8 @@ ParseCAPECData.categories <- function(doc) {
 }
 
 ParseCAPECData.attacks <- function(doc, verbose = TRUE) {
+  i <- 1
+  if (verbose) pb <- utils::txtProgressBar(min = 0, max = 28, style = 3, title = "CAPEC data")
   if (verbose) print("Parsing Attacks basic attributes ...")
   raw.capec.atcks <- rvest::xml_nodes(doc, xpath = "//capec:Attack_Pattern")
   att.id <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Attack_Pattern/@ID"))
@@ -88,15 +90,17 @@ ParseCAPECData.attacks <- function(doc, verbose = TRUE) {
   att.pattern.abstraction <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Attack_Pattern/@Pattern_Abstraction"))
   att.pattern.completeness <- rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Attack_Pattern/@Pattern_Completeness"))
   att.descr <- sapply(raw.capec.atcks, function(x) RJSONIO::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Description/capec:Summary"))))
-  # TODO: Parse extended description using capec:Attack_Execution_Flow node as xpath
   if (verbose) print("Parsing attacks prerequisites ...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.attack.prerequisites <- sapply(raw.capec.atcks, function(x) RJSONIO::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Attack_Prerequisites/capec:Attack_Prerequisite/capec:Text"))))
   if (verbose) print("Parsing attacks severity ...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.severity <- sapply(raw.capec.atcks,
                          function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Typical_Severity")), character(0)),
                                              yes = "",
                                              no = rvest::html_text(rvest::html_nodes(x, xpath = "capec:Typical_Severity")))})
   if (verbose) print("Parsing exploitability info ...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.likelihood.exploit <- sapply(raw.capec.atcks,
                                    function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Typical_Likelihood_of_Exploit/capec:Likelihood")), character(0)),
                                                        yes = "",
@@ -106,18 +110,21 @@ ParseCAPECData.attacks <- function(doc, verbose = TRUE) {
                                                        yes = "",
                                                        no = rvest::html_text(rvest::html_nodes(x, xpath = "capec:Typical_Likelihood_of_Exploit/capec:Explanation")))})
   if (verbose) print("Parsing methods of attack and cve examples ...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.methods.of.attack <- sapply(raw.capec.atcks, function(x) RJSONIO::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Methods_of_Attack/capec:Method_of_Attack"))))
   att.examples.cves <- sapply(raw.capec.atcks,
                               function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Examples-Instances/capec:Example-Instance/capec:Example-Instance_Related_Vulnerabilities")), character(0)),
                                                   yes = "[]",
                                                   no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Examples-Instances/capec:Example-Instance/capec:Example-Instance_Related_Vulnerabilities"))))})
   if (verbose) print("Parsing hacking skills and resources required ...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.hack.skills <- sapply(raw.capec.atcks,
                             function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Attacker_Skills_or_Knowledge_Required/capec:Attacker_Skill_or_Knowledge_Required")), character(0)),
                                                 yes = "[]",
                                                 no = RJSONIO::toJSON(xml2::as_list(rvest::html_nodes(x, xpath = "capec:Attacker_Skills_or_Knowledge_Required/capec:Attacker_Skill_or_Knowledge_Required"))))})
   att.resources.required <- sapply(raw.capec.atcks, function(x) RJSONIO::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Resources_Required/capec:Text"))))
   if (verbose) print("Parsing proving and obfuscation techniques, also indicators of attack ...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.proving.techniques <- sapply(raw.capec.atcks,
                                    function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Probing_Techniques/capec:Probing_Technique")), character(0)),
                                                        yes = "[]",
@@ -131,11 +138,13 @@ ParseCAPECData.attacks <- function(doc, verbose = TRUE) {
                                                                   yes = "[]",
                                                                   no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Obfuscation_Techniques/capec:Obfuscation_Technique"))))})
   if (verbose) print("Parsing solutions and mitigations ...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.solutions.mitigations <- sapply(raw.capec.atcks,
                                        function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Solutions_and_Mitigations/capec:Solution_or_Mitigation")), character(0)),
                                                            yes = "",
                                                            no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Solutions_and_Mitigations/capec:Solution_or_Mitigation"))))})
   if (verbose) print("Parsing motivation consequences ...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.attack.motivation.consequences <- sapply(raw.capec.atcks,
                                       function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Attack_Motivation-Consequences/capec:Attack_Motivation-Consequence")), character(0)),
                                                           yes = "[]",
@@ -152,6 +161,7 @@ ParseCAPECData.attacks <- function(doc, verbose = TRUE) {
                                                                                    }))
                                                           })})
   if (verbose) print("Parsing injection vector, activation zone and payload info ...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.injection.vector <- sapply(raw.capec.atcks,
                                        function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Injection_Vector/capec:Text")), character(0)),
                                                            yes = "[]",
@@ -169,14 +179,17 @@ ParseCAPECData.attacks <- function(doc, verbose = TRUE) {
                                                     yes = "[]",
                                                     no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Payload_Activation_Impact/capec:Description/capec:Text"))))})
   if (verbose) print("Parsing related CWE, CVE, CAPEC and other standards ...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.related.cwe.target <- sapply(raw.capec.atcks,
                                    function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Weaknesses/capec:Related_Weakness/capec:CWE_ID")), character(0)),
                                                        yes = "[]",
                                                        no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Weaknesses/capec:Related_Weakness/capec:CWE_ID[../capec:Weakness_Relationship_Type/text() = 'Targeted']/text()"))))})
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.related.cwe.second <- sapply(raw.capec.atcks,
                                    function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Weaknesses/capec:Related_Weakness/capec:CWE_ID")), character(0)),
                                                        yes = "[]",
                                                        no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Weaknesses/capec:Related_Weakness/capec:CWE_ID[../capec:Weakness_Relationship_Type/text() = 'Secondary']/text()"))))})
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.related.cves <- sapply(raw.capec.atcks,
                              function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Vulnerabilities/capec:Related_Vulnerability")), character(0)),
                                                  yes = "[]",
@@ -196,10 +209,12 @@ ParseCAPECData.attacks <- function(doc, verbose = TRUE) {
                              )
                              }
   )
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.related.capec <- sapply(raw.capec.atcks,
                                    function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Attack_Patterns/capec:Related_Attack_Pattern")), character(0)),
                                                        yes = "[]",
                                                        no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Attack_Patterns/capec:Related_Attack_Pattern/capec:Relationship_Target_ID"))))})
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.related.attack.patterns <- sapply(raw.capec.atcks,
                                                function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Attack_Patterns/capec:Related_Attack_Pattern")), character(0)),
                                                                    yes = "[]",
@@ -215,54 +230,66 @@ ParseCAPECData.attacks <- function(doc, verbose = TRUE) {
                                                                                             }))
                                                                    })})
   if (verbose) print("Parsing security requirements, principles and guidelines ...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.relevant.security.requirements <- sapply(raw.capec.atcks,
                               function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Relevant_Security_Requirements/capec:Relevant_Security_Requirement/capec:Text")), character(0)),
                                                   yes = "[]",
                                                   no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Relevant_Security_Requirements/capec:Relevant_Security_Requirement/capec:Text"))))})
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.related.security.principles <- sapply(raw.capec.atcks,
                                                function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Security_Principles/capec:Related_Security_Principle/capec:Text")), character(0)),
                                                                    yes = "[]",
                                                                    no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Security_Principles/capec:Related_Security_Principle/capec:Text"))))})
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.related.guidelines <- sapply(raw.capec.atcks,
                                             function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Guidelines/capec:Related_Guideline/capec:Text")), character(0)),
                                                                 yes = "[]",
                                                                 no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Guidelines/capec:Related_Guideline/capec:Text"))))})
   if (verbose) print("Parsing purposes ...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.purposes <- sapply(raw.capec.atcks,
                                    function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Purposes/capec:Purpose")), character(0)),
                                                        yes = "[]",
                                                        no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Purposes/capec:Purpose"))))})
   if (verbose) print("Parsing impact CIA values ...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.impact.confidentiality <- sapply(raw.capec.atcks,
                          function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:CIA_Impact/capec:Confidentiality_Impact")), character(0)),
                                              yes = "",
                                              no = rvest::html_text(rvest::html_nodes(x, xpath = "capec:CIA_Impact/capec:Confidentiality_Impact")))})
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.impact.integrity <- sapply(raw.capec.atcks,
                                        function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:CIA_Impact/capec:Integrity_Impact")), character(0)),
                                                            yes = "",
                                                            no = rvest::html_text(rvest::html_nodes(x, xpath = "capec:CIA_Impact/capec:Integrity_Impact")))})
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.impact.availability <- sapply(raw.capec.atcks,
                                        function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:CIA_Impact/capec:Availability_Impact")), character(0)),
                                                            yes = "",
                                                            no = rvest::html_text(rvest::html_nodes(x, xpath = "capec:CIA_Impact/capec:Availability_Impact")))})
   if (verbose) print("Parsing context technical architectures, frameworks, platforms and languages ...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.tech.architectural.paradigms <- sapply(raw.capec.atcks,
                                             function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Technical_Context/capec:Architectural_Paradigms/capec:Architectural_Paradigm")), character(0)),
                                                                 yes = "[]",
                                                                 no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Technical_Context/capec:Architectural_Paradigms/capec:Architectural_Paradigm"))))})
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.tech.frameworks <- sapply(raw.capec.atcks,
                                              function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Technical_Context/capec:Frameworks/capec:Framework")), character(0)),
                                                                  yes = "[]",
                                                                  no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Technical_Context/capec:Frameworks/capec:Framework"))))})
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.tech.platforms <- sapply(raw.capec.atcks,
                                 function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Technical_Context/capec:Platforms/capec:Platform")), character(0)),
                                                     yes = "[]",
                                                     no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Technical_Context/capec:Platforms/capec:Platform"))))})
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.tech.languages <- sapply(raw.capec.atcks,
                                function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Technical_Context/capec:Languages/capec:Language")), character(0)),
                                                    yes = "[]",
                                                    no = RJSONIO::toJSON(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Technical_Context/capec:Languages/capec:Language"))))})
   if (verbose) print("Parsing references, books, links ...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   att.references <- sapply(raw.capec.atcks,
                            function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Related_Attack_Patterns/capec:Related_Attack_Pattern")), character(0)),
                                                yes = "[]",
@@ -285,6 +312,7 @@ ParseCAPECData.attacks <- function(doc, verbose = TRUE) {
                                                                         }))
                                                })})
   if (verbose) print("Building attacks tidy data.frame ...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
 
   # Attacks Data Frame
   attacks <- data.frame(id = att.id,
@@ -328,6 +356,8 @@ ParseCAPECData.attacks <- function(doc, verbose = TRUE) {
                         tech.languages = att.tech.languages,
                         references = att.references,
                         stringsAsFactors = FALSE)
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
 
+  close(pb)
   return(attacks)
 }

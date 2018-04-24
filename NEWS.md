@@ -1,3 +1,15 @@
+# net.security 0.3.6
+
+ * Added SARD standard  
+
+# net.security 0.3.5
+
+ * Improved parsers for CPE and CWE Standard.  
+ * Major performance improvement on update: from ~2h to ~20m  
+ * Added parsing progress bar.  
+ * Updated samples.  
+ * BETA: Update wizard option.  
+ 
 # net.security 0.3.4
 
  * New parser for CAPEC Standard, improved fields content.  

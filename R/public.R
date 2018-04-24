@@ -79,12 +79,29 @@ DataSetStatus <- function(ds = "all") {
       print(paste(" |- Last update for CAPEC dataset at", as.character(capec.timestamp)))
       print(paste(" |- Data set with", as.character(nrow(netsec.data[[2]][["capec"]])), "rows and",
                   as.character(ncol(netsec.data[[2]][["capec"]])), "variables."))
-      # cweonline <- strptime(LastDownloadCWEDate(), format = "%Y-%m-%d")
-      # print(paste(" |- Online RAW data updated at", cweonline))
-      # if ((cweonline-cwes.timestamp)<=0) {
-      #   print(paste(" |- No updates needed for CWES dataset."))
+      # capeconline <- strptime(LastDownloadCAPECDate(), format = "%Y-%m-%d")
+      # print(paste(" |- Online RAW data updated at", capeconline))
+      # if ((capeconline-capec.timestamp)<=0) {
+      #   print(paste(" |- No updates needed for CAPEC dataset."))
       # } else {
-      #   print(paste(" |- CWES dataset", as.character(cweonline-cwes.timestamp), "days outdated."))
+      #   print(paste(" |- CAPEC dataset", as.character(capeconline-capec.timestamp), "days outdated."))
+      # }
+    }
+  }
+  if (tolower(ds) %in% c("sard", "all")) {
+    # Get Status from local sard data.frame
+    if (DataSetAvailable("sard")) {
+      print("-: SARD dataset:")
+      sard.timestamp <- strptime(netsec.data[[1]][["sard.ini"]], format = "%Y-%m-%d")
+      print(paste(" |- Last update for SARD dataset at", as.character(sard.timestamp)))
+      print(paste(" |- Data set with", as.character(nrow(netsec.data[[2]][["sard"]])), "rows and",
+                  as.character(ncol(netsec.data[[2]][["sard"]])), "variables."))
+      # sardonline <- strptime(LastDownloadSARDDate(), format = "%Y-%m-%d")
+      # print(paste(" |- Online RAW data updated at", sardonline))
+      # if ((sardonline-sard.timestamp)<=0) {
+      #   print(paste(" |- No updates needed for SARD dataset."))
+      # } else {
+      #   print(paste(" |- SARD dataset", as.character(sardonline-sard.timestamp), "days outdated."))
       # }
     }
   }
@@ -174,17 +191,19 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
   }
 
   ds <- tolower(ds)
-  if (ds %in% c("all", "cves", "cpes", "cwes", "capec")) {
+  if (ds %in% c("all", "cves", "cpes", "cwes", "capec", "sard")) {
     cves.ini <- Sys.Date()
     cpes.ini <- Sys.Date()
     cwes.ini <- Sys.Date()
     capec.ini <- Sys.Date()
+    sard.ini <- Sys.Date()
     timestamp <- list()
     datasets <- netsec.data$datasets
     cves.nrow <- nrow(netsec.data$datasets$cves)
     cpes.nrow <- nrow(netsec.data$datasets$cpes)
     cwes.nrow <- nrow(netsec.data$datasets$cwes)
     capec.nrow <- nrow(netsec.data$datasets$capec)
+    sard.nrow <- nrow(netsec.data$datasets$sard)
 
     # Get updated data.frames
     if (use.remote) {
@@ -212,6 +231,11 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
         capec <- netsec.data$datasets$capec
         capec.ini <- netsec.data$dwinfo[["capec.ini"]]
       }
+      if (tolower(ds) %in% c("sard", "all")) {
+        #  Update local sard data.frame from r-net-tools
+        sard <- netsec.data$datasets$sard
+        sard.ini <- netsec.data$dwinfo[["sard.ini"]]
+      }
       rm(netsec.data)
     } else {
       if (tolower(ds) %in% c("cves", "all")) {
@@ -232,6 +256,11 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
       if (tolower(ds) %in% c("capec", "all")) {
         print("[*] Updating CAPEC data.frame...")
         capec <- GetCAPECData()
+        print("CAPEC data.frame UPDATED!")
+      }
+      if (tolower(ds) %in% c("sard", "all")) {
+        print("[*] Updating SARD data.frame...")
+        sard <- GetSARDData(savepath = tempdir(), verbose = T)
         print("CAPEC data.frame UPDATED!")
       }
     }
@@ -269,6 +298,14 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
       new.capec <- as.character(nrow(capec) - capec.nrow)
       print(paste("Updated CAPECs data.frame has", new.capec, "new observations."))
     }
+    if (tolower(ds) %in% c("sard", "all")) {
+      #  Update package datasets with updated sard data.frame
+      netsec.data$dwinfo[["sard.ini"]] <- sard.ini
+      netsec.data$dwinfo[["sard.fin"]] <- sard.ini
+      datasets[["sard"]] <- sard
+      new.sard <- as.character(nrow(sard) - sard.nrow)
+      print(paste("Updated SARD data.frame has", new.sard, "new observations."))
+    }
     netsec.data$datasets <- datasets
 
     # Save samples if needed
@@ -300,6 +337,13 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
         capec.sample <- capec[sample(nrow(capec), 100), ]
         capec.sample[] <- lapply(capec.sample, as.character)
         save(object = capec.sample, file = "data/capec.sample.rda", compress = "xz")
+      }
+      if (tolower(ds) %in% c("sard", "all")) {
+        #  Update local sard data.frame from official sources
+        # Save sample sard data frame
+        sard.sample <- sard[sample(nrow(sard), 1000), ]
+        sard.sample[] <- lapply(sard.sample, as.character)
+        save(object = sard.sample, file = "data/sard.sample.rda", compress = "xz")
       }
     }
     print("Compressing and saving data sets to local file...")
@@ -363,6 +407,12 @@ DataSetList <- function(){
     ifelse(datasets == "",
            yes = datasets <- "capec",
            no = datasets[length(datasets) + 1] <- "capec")
+  }
+  # Search SARD dataset
+  if (DataSetAvailable(ds = "sard")) {
+    ifelse(datasets == "",
+           yes = datasets <- "sard",
+           no = datasets[length(datasets) + 1] <- "sard")
   }
 
   # Check if no datasets available

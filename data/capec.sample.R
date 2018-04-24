@@ -51,7 +51,7 @@
 #'
 #' @usage data(capec.sample)
 #'
-#' @format A data frame with 100 rows and 34 columns.
+#' @format A data frame with 100 rows and 40 columns.
 #'
 #' @keywords capec
 #'

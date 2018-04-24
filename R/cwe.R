@@ -2,13 +2,13 @@ LastDownloadCWEDate <- function(){
   return(Sys.Date())
 }
 
-GetCWEData <- function(savepath = tempdir()) {
+GetCWEData <- function(savepath = tempdir(), verbose = T) {
   print("Downloading raw data from MITRE...")
   DownloadCWEData(savepath)
   print("Unzip, extract, etc...")
   cwes.file <- ExtractCWEFiles(savepath)
   print("Processing CWE raw data...")
-  cwes <- ParseCWEData(cwes.file)
+  cwes <- ParseCWEData(cwes.file, verbose)
   print(paste("CWES data frame building process finished."))
   return(cwes)
 }
@@ -31,16 +31,19 @@ ExtractCWEFiles <- function(savepath) {
   return(cwes.xml)
 }
 
-ParseCWEData <- function(cwes.file) {
-
+ParseCWEData <- function(cwes.file, verbose) {
   print("Parsing Basic attributes...")
+  i <- 1
+  if (verbose) pb <- utils::txtProgressBar(min = 0, max = 17, style = 3, title = "CWE data")
 
   # Load Weakness raw data
   doc <- suppressWarnings(rvest::html(cwes.file))
   raw.cwes <- rvest::html_nodes(doc, "weakness")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
   # Extract Weakness node attributes
   cwes <- as.data.frame(t(sapply(raw.cwes, rvest::html_attrs)), stringsAsFactors = F)
-  names(cwes) <- c("ID", "Name", "Abstraction", "Structure", "Status")
+  names(cwes) <- c("xmlns", "ID", "Name", "Abstraction", "Structure", "Status")
+  cwes$xmlns <- NULL
   # Set factors (improve setting levels according to XSD)
   cwes$Abstraction <- as.factor(cwes$Abstraction)
   cwes$Structure <- as.factor(cwes$Structure)
@@ -48,205 +51,216 @@ ParseCWEData <- function(cwes.file) {
   # Add extra field with code standard
   cwes$Code_Standard <- paste("CWE-", cwes$ID, sep = "")
 
-  print("Parsing Description...")
+  if (verbose) print("Parsing Description...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
 
   cwes$Description <- sapply(rvest::html_nodes(doc, xpath = "//weakness/description"),
                              rvest::html_text)
-  cwes$Extended_Description <- sapply(raw.cwes,
-                                      function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "extended_description")), character(0)),
-                                                          yes = "",
-                                                          no = rvest::html_text(rvest::html_nodes(x, "extended_description")))})
 
-  print("Parsing Related Weakness...")
+  ids <- xml2::xml_text(xml2::xml_find_all(doc, "//weakness/extended_description/parent::*/@id"))
+  vals <- sapply(xml2::xml_find_all(doc, "//weakness/extended_description"), xml2::xml_text)
+  df <- data.frame(ID = ids, Extended_Description = vals, stringsAsFactors = F)
+  cwes <- dplyr::left_join(cwes, df, by = c("ID"))
 
-  cwes$Related_Weakness <- sapply(raw.cwes,
-                                  function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "related_weakness")), character(0)),
-                                                      yes = "[\"\"]",
-                                                      no = RJSONIO::toJSON(lapply(rvest::html_nodes(x, "related_weakness"),
-                                                                                  rvest::html_attrs),
-                                                                            pretty = T))
-                                              }
-                                  )
+  if (verbose) print("Parsing Related Weakness...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  ids <- xml2::xml_text(xml2::xml_find_all(doc, "//weakness/related_weaknesses/parent::*/@id"))
+  vals <- sapply(xml2::xml_find_all(doc, "//weakness/related_weaknesses"),
+                   function(x) RJSONIO::toJSON(lapply(rvest::html_children(x),
+                                                      rvest::html_attrs),
+                                               pretty = T)
+                   )
+  df <- data.frame(ID = ids, Related_Weakness = vals, stringsAsFactors = F)
+  cwes <- dplyr::left_join(cwes, df, by = c("ID"))
 
-  print("Parsing Weakness Ordinality...")
-
-  cwes$Weakness_Ordinality <- sapply(raw.cwes,
-                                    function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "weakness_ordinality")), character(0)),
-                                                        yes = "[\"\"]",
-                                                        no = RJSONIO::toJSON(lapply(rvest::html_nodes(x, "weakness_ordinality"),
-                                                                                     function(x) rvest::html_text(rvest::html_children(x))),
-                                                                              pretty = T))
-                                    }
+  if (verbose) print("Parsing Weakness Ordinality...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  ids <- xml2::xml_text(xml2::xml_find_all(doc, "//weakness/weakness_ordinalities/parent::*/@id"))
+  vals <- sapply(xml2::xml_find_all(doc, "//weakness/weakness_ordinalities"),
+                 function(x) RJSONIO::toJSON(lapply(rvest::html_children(x),
+                                                    function(x) rvest::html_text(rvest::html_children(x))),
+                                             pretty = T)
   )
+  df <- data.frame(ID = ids, Weakness_Ordinality = vals, stringsAsFactors = F)
+  cwes <- dplyr::left_join(cwes, df, by = c("ID"))
 
-  print("Parsing Applicable Platforms...")
-
-  cwes$Applicable_Platforms <- sapply(raw.cwes,
-                                  function(x) {ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "applicable_platforms")), character(0)),
-                                                      yes = "{}",
-                                                      no = {
-                                                             y <- lapply(rvest::html_children(rvest::html_nodes(x, "applicable_platforms")), rvest::html_attrs)
-                                                             names(y) <- rvest::html_name(rvest::html_children(rvest::html_nodes(x, "applicable_platforms")))
-                                                             RJSONIO::toJSON(y, pretty = T)
-                                                      })
-                                  }
+  if (verbose) print("Parsing Applicable Platforms...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  ids <- xml2::xml_text(xml2::xml_find_all(doc, "//weakness/applicable_platforms/parent::*/@id"))
+  vals <- sapply(xml2::xml_find_all(doc, "//weakness/applicable_platforms"),
+                 function(x) {
+                   y <- lapply(rvest::html_children(x), rvest::html_attrs)
+                   names(y) <- rvest::html_name(rvest::html_children(x))
+                   RJSONIO::toJSON(y, pretty = T)
+                 }
   )
+  df <- data.frame(ID = ids, Applicable_Platforms = vals, stringsAsFactors = F)
+  cwes <- dplyr::left_join(cwes, df, by = c("ID"))
 
-  print("Parsing Background Details...")
-
-  cwes$Background_Details <- sapply(raw.cwes,
-                                  function(x) ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "background_details")), character(0)),
-                                                     yes = "[\"\"]",
-                                                     no = RJSONIO::toJSON(lapply(rvest::html_nodes(x, "background_details"),
-                                                                                 rvest::html_text),
-                                                                          pretty = T))
+  if (verbose) print("Parsing Background Details...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  ids <- xml2::xml_text(xml2::xml_find_all(doc, "//weakness/background_details/parent::*/@id"))
+  vals <- sapply(xml2::xml_find_all(doc, "//weakness/background_details"),
+                 function(x) RJSONIO::toJSON(xml2::xml_text(x),
+                                             pretty = T)
   )
+  df <- data.frame(ID = ids, Background_Details = vals, stringsAsFactors = F)
+  cwes <- dplyr::left_join(cwes, df, by = c("ID"))
 
-  print("Parsing Alternate Terms...")
-
-  cwes$Alternate_Terms <- sapply(raw.cwes,
-                                    function(x) ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "alternate_terms")), character(0)),
-                                                       yes = "[\"\"]",
-                                                       no = RJSONIO::toJSON(lapply(rvest::html_children(rvest::html_nodes(x, "alternate_terms")),
-                                                                                   rvest::html_text),
-                                                                            pretty = T))
+  if (verbose) print("Parsing Alternate Terms...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  ids <- xml2::xml_text(xml2::xml_find_all(doc, "//weakness/alternate_terms/parent::*/@id"))
+  vals <- sapply(xml2::xml_find_all(doc, "//weakness/alternate_terms"),
+                 function(x) RJSONIO::toJSON(lapply(rvest::html_children(x),
+                                                    rvest::html_text),
+                                             pretty = T)
   )
+  df <- data.frame(ID = ids, Alternate_Terms = vals, stringsAsFactors = F)
+  cwes <- dplyr::left_join(cwes, df, by = c("ID"))
 
-  print("Parsing Modes Of Introduction...")
-
-  cwes$Modes_Of_Introduction <- sapply(raw.cwes,
-                                 function(x) ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "modes_of_introduction")), character(0)),
-                                                    yes = "[\"\"]",
-                                                    no = RJSONIO::toJSON(lapply(
-                                                                                  lapply(rvest::html_children(rvest::html_nodes(x, "modes_of_introduction")),
-                                                                                         function(x) rvest::html_children(x)),
-                                                                                  function(y) {
-                                                                                    z <- rvest::html_text(y)
-                                                                                    names(z) <- rvest::html_name(y)
-                                                                                    z
-                                                                                  }
-                                                                                ),
-                                                    pretty = T))
+  if (verbose) print("Parsing Modes Of Introduction...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  ids <- xml2::xml_text(xml2::xml_find_all(doc, "//weakness/modes_of_introduction/parent::*/@id"))
+  vals <- sapply(xml2::xml_find_all(doc, "//weakness/modes_of_introduction"),
+                 function(x) RJSONIO::toJSON(lapply(
+                   lapply(rvest::html_children(x),
+                          function(x) rvest::html_children(x)),
+                   function(y) {
+                     z <- rvest::html_text(y)
+                     names(z) <- rvest::html_name(y)
+                     z
+                   }
+                 ),
+                 pretty = T)
   )
+  df <- data.frame(ID = ids, Modes_Of_Introduction = vals, stringsAsFactors = F)
+  cwes <- dplyr::left_join(cwes, df, by = c("ID"))
 
-  print("Parsing Likelihood Of Exploit...")
-
-  cwes$Likelihood_Of_Exploit <- sapply(raw.cwes,
-                                 function(x) ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "likelihood_of_exploit")), character(0)),
-                                                    yes = "",
-                                                    no = rvest::html_text(rvest::html_nodes(x, "likelihood_of_exploit"))
-                                                    )
-  )
+  if (verbose) print("Parsing Likelihood Of Exploit...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  ids <- xml2::xml_text(xml2::xml_find_all(doc, "//weakness/likelihood_of_exploit/parent::*/@id"))
+  vals <- sapply(xml2::xml_find_all(doc, "//weakness/likelihood_of_exploit"), rvest::html_text)
+  df <- data.frame(ID = ids, Likelihood_Of_Exploit = vals, stringsAsFactors = F)
+  cwes <- dplyr::left_join(cwes, df, by = c("ID"))
   cwes$Likelihood_Of_Exploit <- as.factor(cwes$Likelihood_Of_Exploit)
 
-  print("Parsing Common Consequences...")
-
-  cwes$Common_Consequences <- sapply(raw.cwes,
-                                       function(x) ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "common_consequences")), character(0)),
-                                                          yes = "[\"\"]",
-                                                          no = RJSONIO::toJSON(lapply(
-                                                            lapply(rvest::html_children(rvest::html_nodes(x, "common_consequences")),
-                                                                   function(x) rvest::html_children(x)),
-                                                            function(y) {
-                                                              z <- rvest::html_text(y)
-                                                              names(z) <- rvest::html_name(y)
-                                                              z
-                                                            }
-                                                          ),
-                                                          pretty = T))
+  if (verbose) print("Parsing Common Consequences...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  ids <- xml2::xml_text(xml2::xml_find_all(doc, "//weakness/common_consequences/parent::*/@id"))
+  vals <- sapply(xml2::xml_find_all(doc, "//weakness/common_consequences"),
+                 function(x) RJSONIO::toJSON(lapply(
+                   lapply(rvest::html_children(x),
+                          function(x) rvest::html_children(x)),
+                   function(y) {
+                     z <- rvest::html_text(y)
+                     names(z) <- rvest::html_name(y)
+                     z
+                   }
+                 ),
+                 pretty = T)
   )
+  df <- data.frame(ID = ids, Common_Consequences = vals, stringsAsFactors = F)
+  cwes <- dplyr::left_join(cwes, df, by = c("ID"))
 
-  print("Parsing Detection Methods...")
-
-  cwes$Detection_Methods <- sapply(raw.cwes,
-                                     function(x) ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "detection_methods")), character(0)),
-                                                        yes = "[\"\"]",
-                                                        no = RJSONIO::toJSON(lapply(
-                                                          lapply(rvest::html_children(rvest::html_nodes(x, "detection_methods")),
-                                                                 function(x) rvest::html_children(x)),
-                                                          function(y) {
-                                                            z <- rvest::html_text(y)
-                                                            names(z) <- rvest::html_name(y)
-                                                            z
-                                                          }
-                                                        ),
-                                                        pretty = T))
+  if (verbose) print("Parsing Detection Methods...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  ids <- xml2::xml_text(xml2::xml_find_all(doc, "//weakness/detection_methods/parent::*/@id"))
+  vals <- sapply(xml2::xml_find_all(doc, "//weakness/detection_methods"),
+                 function(x) RJSONIO::toJSON(lapply(
+                   lapply(rvest::html_children(x),
+                          function(x) rvest::html_children(x)),
+                   function(y) {
+                     z <- rvest::html_text(y)
+                     names(z) <- rvest::html_name(y)
+                     z
+                   }
+                 ),
+                 pretty = T)
   )
+  df <- data.frame(ID = ids, Detection_Methods = vals, stringsAsFactors = F)
+  cwes <- dplyr::left_join(cwes, df, by = c("ID"))
 
-  print("Parsing Potential Mitigations...")
-
-  cwes$Potential_Mitigations <- sapply(raw.cwes,
-                                   function(x) ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "potential_mitigations")), character(0)),
-                                                      yes = "[\"\"]",
-                                                      no = RJSONIO::toJSON(lapply(
-                                                        lapply(rvest::html_children(rvest::html_nodes(x, "potential_mitigations")),
-                                                               function(x) rvest::html_children(x)),
-                                                        function(y) {
-                                                          z <- rvest::html_text(y)
-                                                          names(z) <- rvest::html_name(y)
-                                                          z
-                                                        }
-                                                      ),
-                                                      pretty = T))
+  if (verbose) print("Parsing Potential Mitigations...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  ids <- xml2::xml_text(xml2::xml_find_all(doc, "//weakness/potential_mitigations/parent::*/@id"))
+  vals <- sapply(xml2::xml_find_all(doc, "//weakness/potential_mitigations"),
+                 function(x) RJSONIO::toJSON(lapply(
+                   lapply(rvest::html_children(x),
+                          function(x) rvest::html_children(x)),
+                   function(y) {
+                     z <- rvest::html_text(y)
+                     names(z) <- rvest::html_name(y)
+                     z
+                   }
+                 ),
+                 pretty = T)
   )
+  df <- data.frame(ID = ids, Potential_Mitigations = vals, stringsAsFactors = F)
+  cwes <- dplyr::left_join(cwes, df, by = c("ID"))
 
-  print("Parsing Observed Examples...")
-
-  cwes$Observed_Examples <- sapply(raw.cwes,
-                                       function(x) ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "observed_examples")), character(0)),
-                                                          yes = "[\"\"]",
-                                                          no = RJSONIO::toJSON(lapply(
-                                                            lapply(rvest::html_children(rvest::html_nodes(x, "observed_examples")),
-                                                                   function(x) rvest::html_children(x)),
-                                                            function(y) {
-                                                              z <- rvest::html_text(y)
-                                                              names(z) <- rvest::html_name(y)
-                                                              z
-                                                            }
-                                                          ),
-                                                          pretty = T))
+  if (verbose) print("Parsing Observed Examples...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  ids <- xml2::xml_text(xml2::xml_find_all(doc, "//weakness/observed_examples/parent::*/@id"))
+  vals <- sapply(xml2::xml_find_all(doc, "//weakness/observed_examples"),
+                 function(x) RJSONIO::toJSON(lapply(
+                   lapply(rvest::html_children(x),
+                          function(x) rvest::html_children(x)),
+                   function(y) {
+                     z <- rvest::html_text(y)
+                     names(z) <- rvest::html_name(y)
+                     z
+                   }
+                 ),
+                 pretty = T)
   )
+  df <- data.frame(ID = ids, Observed_Examples = vals, stringsAsFactors = F)
+  cwes <- dplyr::left_join(cwes, df, by = c("ID"))
 
-  print("Parsing Functional Areas...")
-
-  cwes$Functional_Areas <- sapply(raw.cwes,
-                                   function(x) ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "functional_areas")), character(0)),
-                                                      yes = "[\"\"]",
-                                                      no = RJSONIO::toJSON(sapply(rvest::html_children(rvest::html_nodes(x, "functional_areas")), rvest::html_text)))
+  if (verbose) print("Parsing Functional Areas...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  ids <- xml2::xml_text(xml2::xml_find_all(doc, "//weakness/functional_areas/parent::*/@id"))
+  vals <- sapply(xml2::xml_find_all(doc, "//weakness/functional_areas"),
+                 function(x) RJSONIO::toJSON(sapply(rvest::html_children(x), rvest::html_text))
   )
+  df <- data.frame(ID = ids, Functional_Areas = vals, stringsAsFactors = F)
+  cwes <- dplyr::left_join(cwes, df, by = c("ID"))
 
-  print("Parsing Affected Resources...")
-
-  cwes$Affected_Resources <- sapply(raw.cwes,
-                                  function(x) ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "affected_resources")), character(0)),
-                                                     yes = "[\"\"]",
-                                                     no = RJSONIO::toJSON(sapply(rvest::html_children(rvest::html_nodes(x, "affected_resources")), rvest::html_text)))
+  if (verbose) print("Parsing Affected Resources...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  ids <- xml2::xml_text(xml2::xml_find_all(doc, "//weakness/affected_resources/parent::*/@id"))
+  vals <- sapply(xml2::xml_find_all(doc, "//weakness/affected_resources"),
+                 function(x) RJSONIO::toJSON(sapply(rvest::html_children(x), rvest::html_text))
   )
+  df <- data.frame(ID = ids, Affected_Resources = vals, stringsAsFactors = F)
+  cwes <- dplyr::left_join(cwes, df, by = c("ID"))
 
-  print("Parsing Taxonomy Mappings...")
-
-  cwes$Taxonomy_Mappings <- sapply(raw.cwes,
-                                   function(x) ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "taxonomy_mappings")), character(0)),
-                                                      yes = "[\"\"]",
-                                                      no = RJSONIO::toJSON({w <- lapply(
-                                                                                        lapply(rvest::html_children(rvest::html_nodes(x, "taxonomy_mappings")),
-                                                                                               function(x) rvest::html_children(x)),
-                                                                                        function(y) {
-                                                                                          z <- rvest::html_text(y)
-                                                                                          names(z) <- rvest::html_name(y)
-                                                                                          z
-                                                                                        })
-                                                                            names(w) <- unlist(rvest::html_attrs(rvest::html_children(rvest::html_nodes(x, "taxonomy_mappings"))))
-                                                                            w}, pretty = T))
+  if (verbose) print("Parsing Taxonomy Mappings...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  ids <- xml2::xml_text(xml2::xml_find_all(doc, "//weakness/taxonomy_mappings/parent::*/@id"))
+  vals <- sapply(xml2::xml_find_all(doc, "//weakness/taxonomy_mappings"),
+                 function(x) RJSONIO::toJSON({w <- lapply(
+                   lapply(rvest::html_children(x),
+                          function(x) rvest::html_children(x)),
+                   function(y) {
+                     z <- rvest::html_text(y)
+                     names(z) <- rvest::html_name(y)
+                     z
+                   })
+                 names(w) <- unlist(rvest::html_attrs(rvest::html_children(x)))
+                 w}, pretty = T)
   )
+  df <- data.frame(ID = ids, Taxonomy_Mappings = vals, stringsAsFactors = F)
+  cwes <- dplyr::left_join(cwes, df, by = c("ID"))
 
-  print("Parsing Related Attack Patterns...")
-
-  cwes$Related_Attack_Patterns <- sapply(raw.cwes,
-                                    function(x) ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, "related_attack_patterns")), character(0)),
-                                                       yes = "[\"\"]",
-                                                       no = RJSONIO::toJSON(sapply(rvest::html_children(rvest::html_nodes(x, "related_attack_patterns")), rvest::html_attrs)))
+  if (verbose) print("Parsing Related Attack Patterns...")
+  if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  ids <- xml2::xml_text(xml2::xml_find_all(doc, "//weakness/related_attack_patterns/parent::*/@id"))
+  vals <- sapply(xml2::xml_find_all(doc, "//weakness/related_attack_patterns"),
+                 function(x) RJSONIO::toJSON(sapply(rvest::html_children(x), rvest::html_attrs))
   )
+  df <- data.frame(ID = ids, Related_Attack_Patterns = vals, stringsAsFactors = F)
+  cwes <- dplyr::left_join(cwes, df, by = c("ID"))
 
+  close(pb)
   return(cwes)
 }
