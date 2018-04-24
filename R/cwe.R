@@ -17,17 +17,17 @@ DownloadCWEData <- function(savepath) {
   if (!dir.exists(paste(savepath, "cwe", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
     dir.create(paste(savepath, "cwe", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
   }
-  cwe.url  <- "https://cwe.mitre.org/data/xml/views/2000.xml.zip"
-  destfile <- paste(savepath, "cwe", "2000.xml.zip",sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
+  cwe.url  <- "https://cwe.mitre.org/data/xml/cwec_v3.1.xml.zip"
+  destfile <- paste(savepath, "cwe", "cwec_v3.1.xml.zip",sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
   utils::download.file(url = cwe.url, destfile = destfile)
 }
 
 ExtractCWEFiles <- function(savepath) {
   # Uncompress gzip XML files
-  cwes.zip <- paste(savepath, "cwe", "2000.xml.zip", sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
-  cwes.xml <- paste(savepath, "cwe", "2000.xml", sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
+  cwes.zip <- paste(savepath, "cwe", "cwec_v3.1.xml.zip", sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
+  cwes.xml <- paste(savepath, "cwe", "cwec_v3.1.xml", sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
   utils::unzip(zipfile = cwes.zip, exdir = cwes.xml)
-  cwes.xml <- paste(cwes.xml, "2000.xml", sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
+  cwes.xml <- paste(cwes.xml, "cwec_v3.1.xml", sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
   return(cwes.xml)
 }
 
