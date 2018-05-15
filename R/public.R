@@ -105,6 +105,23 @@ DataSetStatus <- function(ds = "all") {
       # }
     }
   }
+  if (tolower(ds) %in% c("caret", "all")) {
+    # Get Status from local caret data.frame
+    if (DataSetAvailable("caret")) {
+      print("-: CARET dataset:")
+      caret.timestamp <- strptime(netsec.data[[1]][["caret.ini"]], format = "%Y-%m-%d")
+      print(paste(" |- Last update for CARET dataset at", as.character(caret.timestamp)))
+      print(paste(" |- Data set with", as.character(nrow(netsec.data[[2]][["caret"]])), "rows and",
+                  as.character(ncol(netsec.data[[2]][["caret"]])), "variables."))
+      # caretonline <- strptime(LastDownloadCARETDate(), format = "%Y-%m-%d")
+      # print(paste(" |- Online RAW data updated at", caretonline))
+      # if ((caretonline-caret.timestamp)<=0) {
+      #   print(paste(" |- No updates needed for CARET dataset."))
+      # } else {
+      #   print(paste(" |- CARET dataset", as.character(caretonline-caret.timestamp), "days outdated."))
+      # }
+    }
+  }
   return(status)
 }
 
@@ -191,12 +208,13 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
   }
 
   ds <- tolower(ds)
-  if (ds %in% c("all", "cves", "cpes", "cwes", "capec", "sard")) {
+  if (ds %in% c("all", "cves", "cpes", "cwes", "capec", "sard", "caret")) {
     cves.ini <- Sys.Date()
     cpes.ini <- Sys.Date()
     cwes.ini <- Sys.Date()
     capec.ini <- Sys.Date()
     sard.ini <- Sys.Date()
+    caret.ini <- Sys.Date()
     timestamp <- list()
     datasets <- netsec.data$datasets
     cves.nrow <- nrow(netsec.data$datasets$cves)
@@ -204,6 +222,7 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
     cwes.nrow <- nrow(netsec.data$datasets$cwes)
     capec.nrow <- nrow(netsec.data$datasets$capec)
     sard.nrow <- nrow(netsec.data$datasets$sard)
+    caret.nrow <- nrow(netsec.data$datasets$caret)
 
     # Get updated data.frames
     if (use.remote) {
@@ -236,6 +255,11 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
         sard <- netsec.data$datasets$sard
         sard.ini <- netsec.data$dwinfo[["sard.ini"]]
       }
+      if (tolower(ds) %in% c("caret", "all")) {
+        #  Update local caret data.frame from r-net-tools
+        caret <- netsec.data$datasets$caret
+        caret.ini <- netsec.data$dwinfo[["caret.ini"]]
+      }
       rm(netsec.data)
     } else {
       if (tolower(ds) %in% c("cves", "all")) {
@@ -261,7 +285,12 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
       if (tolower(ds) %in% c("sard", "all")) {
         print("[*] Updating SARD data.frame...")
         sard <- GetSARDData(savepath = tempdir(), verbose = T)
-        print("CAPEC data.frame UPDATED!")
+        print("SARD data.frame UPDATED!")
+      }
+      if (tolower(ds) %in% c("caret", "all")) {
+        print("[*] Updating CARET data.frame...")
+        caret <- GetCARETData(savepath = tempdir(), verbose = T)
+        print("CARET data.frame UPDATED!")
       }
     }
 
@@ -306,6 +335,14 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
       new.sard <- as.character(nrow(sard) - sard.nrow)
       print(paste("Updated SARD data.frame has", new.sard, "new observations."))
     }
+    if (tolower(ds) %in% c("caret", "all")) {
+      #  Update package datasets with updated sard data.frame
+      netsec.data$dwinfo[["caret.ini"]] <- caret.ini
+      netsec.data$dwinfo[["caret.fin"]] <- caret.ini
+      datasets[["caret"]] <- caret
+      new.caret <- as.character(nrow(caret) - caret.nrow)
+      print(paste("Updated CARET data.frame has", new.caret, "new observations."))
+    }
     netsec.data$datasets <- datasets
 
     # Save samples if needed
@@ -344,6 +381,13 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
         sard.sample <- sard[sample(nrow(sard), 1000), ]
         sard.sample[] <- lapply(sard.sample, as.character)
         save(object = sard.sample, file = "data/sard.sample.rda", compress = "xz")
+      }
+      if (tolower(ds) %in% c("caret", "all")) {
+        #  Update local caret data.frame from official sources
+        # Save sample caret data frame
+        caret.sample <- caret[sample(nrow(caret), 1000), ]
+        caret.sample[] <- lapply(caret.sample, as.character)
+        save(object = caret.sample, file = "data/caret.sample.rda", compress = "xz")
       }
     }
     print("Compressing and saving data sets to local file...")
@@ -413,6 +457,12 @@ DataSetList <- function(){
     ifelse(datasets == "",
            yes = datasets <- "sard",
            no = datasets[length(datasets) + 1] <- "sard")
+  }
+  # Search CARET dataset
+  if (DataSetAvailable(ds = "caret")) {
+    ifelse(datasets == "",
+           yes = datasets <- "caret",
+           no = datasets[length(datasets) + 1] <- "caret")
   }
 
   # Check if no datasets available
