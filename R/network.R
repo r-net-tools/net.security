@@ -4,8 +4,6 @@
 #'
 #' @return data.frame
 #' @export
-#'
-#' @examples
 GetSecurityNetwork <- function(as.igraph = F) {
   # CVEs --> CWEs
   cves2cwes <- GetRelationCVE2CWE()
@@ -104,8 +102,6 @@ GetRelationCWE2CAPEC <- function() {
 #' @param as_numbers if TRUE src and target are numbers, if FALSE as character starting with "CWE-"
 #'
 #' @return data.frame
-#'
-#' @examples
 GetCWEHierarcy <- function(as_numbers = T) {
   cwes <- GetDataFrame(ds = "cwes")
   cwes.weaknesses <- cwes[cwes$CWE_Type == "Weakness", ]

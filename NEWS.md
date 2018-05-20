@@ -1,5 +1,10 @@
 # net.security 0.3.6
 
+ * Added network algorithms relating standards.
+ * Multiple minor improvements.
+ 
+# net.security 0.3.6
+
  * Added SARD standard  
 
 # net.security 0.3.5
