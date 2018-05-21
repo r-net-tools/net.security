@@ -6,7 +6,7 @@ Authors@R: c(
     person("Arnau", "Sangra", email = "arnsangra@gmail.com", role = "ctb"))
 Description: Provides functions for security standards data management. It comes with data frames of 1000 observations for each security standard and updates are possible from official sources to build updated data sets.
 URL: https://github.com/r-net-tools/net.security
-Depends: R (>= 3.4.2)
+Depends: R (>= 3.5.0)
 License: GPL-3 
 Encoding: UTF-8
 LazyData: true
