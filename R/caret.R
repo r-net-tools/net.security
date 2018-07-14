@@ -1,6 +1,6 @@
 GetCARETData <- function(savepath = tempdir(), verbose = T) {
   print("Downloading raw data from MITRE...")
-  DownloadCARETData(savepath)
+  caret.file <- DownloadCARETData(savepath)
   print("Processing CARET raw data...")
   caret <- ParseCARETData(caret.file, verbose)
   print(paste("CARET data frame building process finished."))
@@ -11,9 +11,11 @@ DownloadCARETData <- function(savepath) {
   if (!dir.exists(paste(savepath, "caret", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
     dir.create(paste(savepath, "caret", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
   }
-  caret.url  <- "blob:https://car.mitre.org/d6d94237-1c76-4a40-a0a6-37bfae799806"
-  destfile <- paste(savepath, "caret", "caret-data.json",sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
-  utils::download.file(url = caret.url, destfile = destfile)
+  # caret.url  <- "blob:https://car.mitre.org/d6d94237-1c76-4a40-a0a6-37bfae799806"
+  # destfile <- paste(savepath, "caret", "caret-data.json",sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
+  # utils::download.file(url = caret.url, destfile = destfile)
+  caret.file <- "inst/schemas/caret-data.json"
+  return(caret.file)
 }
 
 ParseCARETData <- function(caret.file, verbose) {
