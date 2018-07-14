@@ -94,5 +94,17 @@ ParseCARETData <- function(caret.file, verbose) {
                 sensors = car.sensors,
                 techniques = car.techniques,
                 analytics = car.analytics)
+
+  car.url <- "https://car.mitre.org/wiki/Full_Analytic_List"
+  doc <- rvest::html(car.url)
+
+  caret$analytics <- dplyr::left_join(x = caret$analytics,
+                                      y = as.data.frame(cbind(car.id = rvest::html_text(rvest::xml_nodes(doc,
+                                                                                                         xpath = '//div[@id="mw-content-text"]/table/tr/td[@class="Analytic smwtype_wpg"]/a/@title')),
+                                                              car.hypothesis = rvest::html_text(rvest::xml_nodes(doc,
+                                                                                                                 xpath = '//div[@id="mw-content-text"]/table/tr/td[@class="Hypothesis smwtype_txt"]'))),
+                                                        stringsAsFactors = F),
+                                      by = c("id" = "car.id"))
+
   return(caret)
 }
