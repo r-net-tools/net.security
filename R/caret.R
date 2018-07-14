@@ -55,7 +55,7 @@ ParseCARETData <- function(caret.file, verbose) {
                                 function(x) {
                                   plyr::ldply(x$tactics,
                                               function(y) {
-                                                data.frame(name = x$name,
+                                                data.frame(url = paste("https://attack.mitre.org/wiki", x$name, sep = "/"),
                                                            tactic = y,
                                                            id = x$ID,
                                                            display_name = x$display_name,
@@ -63,7 +63,35 @@ ParseCARETData <- function(caret.file, verbose) {
                                               }
                                   )
                                 })
-  # car.analytics <- caret.raw$analytics
+
+  tech.url <- "https://attack.mitre.org/wiki/All_Techniques"
+  tech.doc <- xml2::read_html(tech.url)
+  tech.descr <- sapply(X = rvest::html_nodes(x = tech.doc, xpath = '//td[@class="Technical-Description smwtype_txt"]'),
+                       function(x) {
+                         if (length(xml2::xml_children(x))) {
+                           paste(as.character(xml2::xml_children(x)), collapse = "<br>")
+                         } else {
+                           as.character(xml2::xml_contents(x))
+                         }
+
+                       })
+  tech.id <- sapply(X = rvest::html_nodes(x = tech.doc, xpath = '//td[@class="ID smwtype_txt"]'),
+                       function(x) {
+                         rvest::html_text(x)
+                       })
+  tech.extra <- as.data.frame(cbind(id = tech.id, description = tech.descr), stringsAsFactors = F)
+  kk <- dplyr::left_join(car.techniques, tech.extra, c("id"="id"))
+
+  # # Parse all techniques wiki info
+  # car.techniques <- caret$techniques
+  # tech.url <- unique(car.techniques$url)[2]
+  # tech.doc <- xml2::read_html(tech.url)
+  # tech.extra <- rvest::html_nodes(x = tech.doc, xpath = '//div[@id="toc"]')
+  # if (length(tech.extra > 1)) {
+  #   columns <- rvest::html_text(rvest::html_nodes(x = tech.doc, xpath = '//div[@id="toc"]/ul/li/a/span[2]'))
+  # }
+
+
   car.analytics <- plyr::ldply(caret.raw$analytics,
                                function(x) {
                                  plyr::ldply(x[[2]],
