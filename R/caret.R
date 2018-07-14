@@ -8,9 +8,9 @@ GetCARETData <- function(savepath = tempdir(), verbose = T) {
 }
 
 DownloadCARETData <- function(savepath) {
-  if (!dir.exists(paste(savepath, "caret", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
-    dir.create(paste(savepath, "caret", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
-  }
+  # if (!dir.exists(paste(savepath, "caret", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
+  #   dir.create(paste(savepath, "caret", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
+  # }
   # caret.url  <- "blob:https://car.mitre.org/d6d94237-1c76-4a40-a0a6-37bfae799806"
   # destfile <- paste(savepath, "caret", "caret-data.json",sep = ifelse(.Platform$OS.type == "windows", "\\", "/"))
   # utils::download.file(url = caret.url, destfile = destfile)
@@ -20,14 +20,13 @@ DownloadCARETData <- function(savepath) {
 
 
 ParseCARETData <- function(caret.file, verbose) {
-  # caret.file <- "inst/tmpdata/caret-data.json"
   caret.raw <- RJSONIO::fromJSON(caret.file)
 
   car.data.model <- plyr::ldply(caret.raw$dataModel,
                                 function(x) {
                                   plyr::ldply(x$actions,
                                               function(y) {
-                                                data.frame(name = rep(x$name, length(x$fields)),
+                                                data.frame(object = rep(x$name, length(x$fields)),
                                                            action = rep(y, length(x$fields)),
                                                            field = x$fields,
                                                            stringsAsFactors = F)
