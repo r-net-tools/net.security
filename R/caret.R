@@ -18,6 +18,7 @@ DownloadCARETData <- function(savepath) {
   return(caret.file)
 }
 
+
 ParseCARETData <- function(caret.file, verbose) {
   # caret.file <- "inst/tmpdata/caret-data.json"
   caret.raw <- RJSONIO::fromJSON(caret.file)
@@ -63,5 +64,36 @@ ParseCARETData <- function(caret.file, verbose) {
                                               }
                                   )
                                 })
-  car.analytics <- caret.raw$analytics
+  # car.analytics <- caret.raw$analytics
+  car.analytics <- plyr::ldply(caret.raw$analytics,
+                               function(x) {
+                                 plyr::ldply(x[[2]],
+                                             function(y) {
+                                               if (length(y$tactics) > 1) {
+                                                 plyr::ldply(y$tactics, function(z) {
+                                                   data.frame(id = x$name,
+                                                              name = x$shortName,
+                                                              tactic = z,
+                                                              cover = y$coverage,
+                                                              tech = y$technique,
+                                                              stringsAsFactors = F)
+                                                 })
+                                               } else {
+                                                 data.frame(id = x$name,
+                                                            name = x$shortName,
+                                                            tactic = y$tactics,
+                                                            cover = y$coverage,
+                                                            tech = y$technique,
+                                                            stringsAsFactors = F)
+                                               }
+                                             }
+                                 )
+                               })
+
+  caret <- list(data.model = car.data.model,
+                groups = car.groups,
+                sensors = car.sensors,
+                techniques = car.techniques,
+                analytics = car.analytics)
+  return(caret)
 }
