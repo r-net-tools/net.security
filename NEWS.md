@@ -1,4 +1,8 @@
-# net.security 0.3.6
+# net.security 0.3.8
+
+ * Added CARET data sets.
+ 
+# net.security 0.3.7
 
  * Added network algorithms relating standards.
  * Multiple minor improvements.
