@@ -1,9 +1,9 @@
 GetCARETData <- function(savepath = tempdir(), verbose = T) {
-  print("Downloading raw data from MITRE...")
+  if (verbose) print("Downloading raw data from MITRE...")
   caret.file <- DownloadCARETData(savepath)
-  print("Processing CARET raw data...")
+  if (verbose) print("Processing CARET raw data...")
   caret <- ParseCARETData(caret.file, verbose)
-  print(paste("CARET data frame building process finished."))
+  if (verbose) print(paste("CARET data frame building process finished."))
   return(caret)
 }
 
@@ -66,31 +66,22 @@ ParseCARETData <- function(caret.file, verbose) {
 
   tech.url <- "https://attack.mitre.org/wiki/All_Techniques"
   tech.doc <- xml2::read_html(tech.url)
-  tech.descr <- sapply(X = rvest::html_nodes(x = tech.doc, xpath = '//td[@class="Technical-Description smwtype_txt"]'),
+  tech.descr <- plyr::ldply(rvest::html_nodes(x = tech.doc, xpath = '//td[@class="Technical-Description smwtype_txt"]'),
                        function(x) {
-                         if (length(xml2::xml_children(x))) {
-                           paste(as.character(xml2::xml_children(x)), collapse = "<br>")
-                         } else {
-                           as.character(xml2::xml_contents(x))
-                         }
-
+                           paste(as.character(xml2::xml_contents(x)), collapse = "<br>")
                        })
   tech.id <- sapply(X = rvest::html_nodes(x = tech.doc, xpath = '//td[@class="ID smwtype_txt"]'),
                        function(x) {
                          rvest::html_text(x)
                        })
-  tech.extra <- as.data.frame(cbind(id = tech.id, description = tech.descr), stringsAsFactors = F)
-  kk <- dplyr::left_join(car.techniques, tech.extra, c("id"="id"))
+  tech.description <- as.data.frame(cbind(id = tech.id, description = tech.descr), stringsAsFactors = F)
+  car.techniques <- dplyr::left_join(car.techniques, tech.description, c("id" = "id"))
+  names(car.techniques)[5] <- "descr.html"
 
-  # # Parse all techniques wiki info
-  # car.techniques <- caret$techniques
-  # tech.url <- unique(car.techniques$url)[2]
-  # tech.doc <- xml2::read_html(tech.url)
-  # tech.extra <- rvest::html_nodes(x = tech.doc, xpath = '//div[@id="toc"]')
-  # if (length(tech.extra > 1)) {
-  #   columns <- rvest::html_text(rvest::html_nodes(x = tech.doc, xpath = '//div[@id="toc"]/ul/li/a/span[2]'))
-  # }
-
+  require("purrr")
+  techniques.wiki <- lapply(unique(car.techniques$url), function(x) getTechniqueWikiInfo(x))
+  techniques.wiki <- plyr::ldply(techniques.wiki, data.frame, stringsAsFactors = FALSE)
+  car.techniques <- dplyr::left_join(car.techniques, techniques.wiki, c("id" = "id"))
 
   car.analytics <- plyr::ldply(caret.raw$analytics,
                                function(x) {
@@ -124,7 +115,7 @@ ParseCARETData <- function(caret.file, verbose) {
                 analytics = car.analytics)
 
   car.url <- "https://car.mitre.org/wiki/Full_Analytic_List"
-  doc <- rvest::html(car.url)
+  doc <- xml2::read_html(car.url)
 
   caret$analytics <- dplyr::left_join(x = caret$analytics,
                                       y = as.data.frame(cbind(car.id = rvest::html_text(rvest::xml_nodes(doc,
@@ -135,4 +126,33 @@ ParseCARETData <- function(caret.file, verbose) {
                                       by = c("id" = "car.id"))
 
   return(caret)
+}
+
+getTechniqueWikiInfo <- function(tech.url = "https://attack.mitre.org/wiki/Technique/T1156") {
+  # Parse all techniques wiki info
+  # tech.extra <- rvest::html_nodes(x = tech.doc, xpath = '//div[@id="toc"]')
+  #
+  # # Get TOC info
+  # if (length(tech.extra > 1)) {
+  #   columns <- rvest::html_text(rvest::html_nodes(x = tech.doc, xpath = '//div[@id="toc"]/ul/li/a/span[2]'))
+  # } else {
+  #   columns <- c()
+  # }
+
+  # Get Wiki info
+  tech.doc <- xml2::read_html(tech.url)
+  content <- rvest::html_nodes(x = tech.doc, xpath = '//div[@id="content"]')
+  headlines <- rvest::html_nodes(content, xpath = "//*[self::h1 or self::h2]")
+  xpath <- sprintf("//p[count(preceding-sibling::h2)=%d]", seq_along(headlines)-1)
+  techwiki <- purrr::map(xpath, ~rvest::html_nodes(x = content, xpath = .x)) %>% # Get the text inside the headlines
+    purrr::map(rvest::html_text, trim = TRUE) %>% # get per node in between
+    purrr::map_chr(paste, collapse = "\n") %>% # collapse the text inbetween
+    purrr::set_names(headlines %>% rvest::html_node("span") %>% rvest::html_text())
+  techwiki <- as.data.frame(t(techwiki[techwiki != ""]))
+  names(techwiki)[1] <- "Description"
+  id <- stringr::str_split(string = tech.url, pattern = "/")[[1]]
+  techwiki$id <- id[length(id)]
+
+  return(techwiki)
+
 }
