@@ -49,6 +49,7 @@ ParseMatrix <- function() {
     df <- as.data.frame(t(df[df != ""]), stringsAsFactors = FALSE)
 
     m.pre <- rvest::html_nodes(x = doc, xpath = "//div/table")
+    # TODO: m.pre extract info from other headers
 
     # Extract tactic and techniques relationship
     m.pre <- rvest::html_nodes(x = doc, xpath = "//div/table/tr")
@@ -80,16 +81,55 @@ ParseMatrix <- function() {
     df <- dplyr::left_join(df, df.tactic.urls, by = c("tactic"))
     df <- dplyr::left_join(df, df.technique.urls, by = c("technique"))
 
-    df$tactic <- as.factor(df$tactic)
+    df$matrix <- rep("PRE-ATT&CK", nrow(df))
+
+    # df$tactic <- as.factor(df$tactic)
 
     return(df)
   }
 
   ParseEntAll <- function(entall.url = "https://attack.mitre.org/wiki/Main_Page") {
-    m <- xml2::read_html(entall.url)
-    df <- data.frame(stringsAsFactors = FALSE)
+    doc <- xml2::read_html(entall.url)
+
+    # Extract tactic and techniques relationship
+    m.entall <- rvest::html_nodes(x = doc, xpath = "//div/table/tr")
+    m.entall <- m.entall[2:length(m.entall)]
+    tnt <- lapply(m.entall, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td/@id")))
+    names(tnt) <- rvest::html_text(rvest::html_nodes(x = doc, xpath = "//div/table/tr/th"))
+
+    df <- data.frame(tactic = character(),
+                     technique = character(),
+                     stringsAsFactors = FALSE)
+    for (tactic in names(tnt)) {
+      df <- rbind(df, data.frame(tactic = rep(stringr::str_replace_all(string = tactic, pattern = " ", replacement = "_"),
+                                              length(tnt[[tactic]])),
+                                 technique = tnt[[tactic]],
+                                 stringsAsFactors = FALSE))
+    }
+
+    # Add tactics attributes
+    df.tactic.urls <- data.frame(tactic = stringr::str_replace_all(string = names(tnt), pattern = " ", replacement = "_"),
+                                 tactic.name = names(tnt),
+                                 tactic.url = rvest::html_text(rvest::html_nodes(x = doc, xpath = "//div/table/tr/th/a/@href")),
+                                 stringsAsFactors = FALSE)
+    # Add techniques attributes
+    df.technique.urls <- plyr::ldply(m.entall, function(x) data.frame(technique = rvest::html_text(rvest::html_nodes(x, xpath = "./td/@id")),
+                                                                      technique.name = rvest::html_text(rvest::html_nodes(x, xpath = "./td")),
+                                                                      technique.url = rvest::html_text(rvest::html_nodes(x, xpath = "./td/a/@href")),
+                                                                      stringsAsFactors = FALSE))
+
+    # Tidy data
+    df <- dplyr::left_join(df, df.tactic.urls, by = c("tactic"))
+    df <- dplyr::left_join(df, df.technique.urls, by = c("technique"))
+
+    df$matrix <- rep("Enterprise", nrow(df))
+
+    # df$tactic <- as.factor(df$tactic)
+
+
     return(df)
   }
+
   ParseEntWin <- function(entwin.url = "https://attack.mitre.org/wiki/Windows_Technique_Matrix") {
     m <- xml2::read_html(entwin.url)
     df <- data.frame(stringsAsFactors = FALSE)
@@ -118,9 +158,9 @@ ParseMatrix <- function() {
   m.ent.lnx <- ParseEntLnx()
   m.mobile  <- ParseMobile()
 
-  matrix <- list(m.pre, m.ent.all, m.ent.win, m.ent.mac, m.ent.lnx, m.mobile)
+  m <- rbind(m.pre, m.ent.all, m.ent.win, m.ent.mac, m.ent.lnx, m.mobile)
 
-  return(matrix)
+  return(m)
 }
 
 ParseTactics <- function() {
