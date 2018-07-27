@@ -24,7 +24,7 @@ GetATTCKData <- function(savepath = tempdir(), verbose = T) {
 
 ParseATTCKData <- function(savepath, verbose) {
   amatrix <- ParseMatrix()
-  tactics <- ParseTactics()
+  tactics <- ParseTactics(tactic.urls = unique(amatrix$tactic.url))
   techniques <- ParseTechniques()
   groups <- ParseGroups()
   software <- ParseSoftware()
@@ -83,8 +83,6 @@ ParseMatrix <- function() {
 
     df$matrix <- rep("PRE-ATT&CK", nrow(df))
 
-    # df$tactic <- as.factor(df$tactic)
-
     return(df)
   }
 
@@ -124,30 +122,158 @@ ParseMatrix <- function() {
 
     df$matrix <- rep("Enterprise", nrow(df))
 
-    # df$tactic <- as.factor(df$tactic)
-
-
     return(df)
   }
 
   ParseEntWin <- function(entwin.url = "https://attack.mitre.org/wiki/Windows_Technique_Matrix") {
-    m <- xml2::read_html(entwin.url)
-    df <- data.frame(stringsAsFactors = FALSE)
+    doc <- xml2::read_html(entwin.url)
+
+    # Extract tactic and techniques relationship
+    m.entwin <- rvest::html_nodes(x = doc, xpath = "//div/table/tr")
+    tnt <- lapply(m.entwin, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td/@id")))
+    names(tnt) <- rvest::html_text(rvest::html_nodes(x = doc, xpath = "//div/table/tr/th"))
+
+    df <- data.frame(tactic = character(),
+                     technique = character(),
+                     stringsAsFactors = FALSE)
+    for (tactic in names(tnt)) {
+      df <- rbind(df, data.frame(tactic = rep(stringr::str_replace_all(string = tactic, pattern = " ", replacement = "_"),
+                                              length(tnt[[tactic]])),
+                                 technique = tnt[[tactic]],
+                                 stringsAsFactors = FALSE))
+    }
+
+    # Add tactics attributes
+    df.tactic.urls <- data.frame(tactic = stringr::str_replace_all(string = names(tnt), pattern = " ", replacement = "_"),
+                                 tactic.name = names(tnt),
+                                 tactic.url = rvest::html_text(rvest::html_nodes(x = doc, xpath = "//div/table/tr/th/a/@href")),
+                                 stringsAsFactors = FALSE)
+    # Add techniques attributes
+    df.technique.urls <- plyr::ldply(m.entwin, function(x) data.frame(technique = rvest::html_text(rvest::html_nodes(x, xpath = "./td/@id")),
+                                                                      technique.name = rvest::html_text(rvest::html_nodes(x, xpath = "./td")),
+                                                                      technique.url = rvest::html_text(rvest::html_nodes(x, xpath = "./td/a/@href")),
+                                                                      stringsAsFactors = FALSE))
+
+    # Tidy data
+    df <- dplyr::left_join(df, df.tactic.urls, by = c("tactic"))
+    df <- dplyr::left_join(df, df.technique.urls, by = c("technique"))
+
+    df$matrix <- rep("Windows", nrow(df))
+
     return(df)
   }
+
   ParseEntMac <- function(entmac.url = "https://attack.mitre.org/wiki/Mac_Technique_Matrix") {
-    m <- xml2::read_html(entmac.url)
-    df <- data.frame(stringsAsFactors = FALSE)
+    doc <- xml2::read_html(entmac.url)
+
+    # Extract tactic and techniques relationship
+    m.entmac <- rvest::html_nodes(x = doc, xpath = "//div/table/tr")
+    tnt <- lapply(m.entmac, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td/@id")))
+    names(tnt) <- rvest::html_text(rvest::html_nodes(x = doc, xpath = "//div/table/tr/th"))
+
+    df <- data.frame(tactic = character(),
+                     technique = character(),
+                     stringsAsFactors = FALSE)
+    for (tactic in names(tnt)) {
+      df <- rbind(df, data.frame(tactic = rep(stringr::str_replace_all(string = tactic, pattern = " ", replacement = "_"),
+                                              length(tnt[[tactic]])),
+                                 technique = tnt[[tactic]],
+                                 stringsAsFactors = FALSE))
+    }
+
+    # Add tactics attributes
+    df.tactic.urls <- data.frame(tactic = stringr::str_replace_all(string = names(tnt), pattern = " ", replacement = "_"),
+                                 tactic.name = names(tnt),
+                                 tactic.url = rvest::html_text(rvest::html_nodes(x = doc, xpath = "//div/table/tr/th/a/@href")),
+                                 stringsAsFactors = FALSE)
+    # Add techniques attributes
+    df.technique.urls <- plyr::ldply(m.entmac, function(x) data.frame(technique = rvest::html_text(rvest::html_nodes(x, xpath = "./td/@id")),
+                                                                      technique.name = rvest::html_text(rvest::html_nodes(x, xpath = "./td")),
+                                                                      technique.url = rvest::html_text(rvest::html_nodes(x, xpath = "./td/a/@href")),
+                                                                      stringsAsFactors = FALSE))
+
+    # Tidy data
+    df <- dplyr::left_join(df, df.tactic.urls, by = c("tactic"))
+    df <- dplyr::left_join(df, df.technique.urls, by = c("technique"))
+
+    df$matrix <- rep("Mac", nrow(df))
+
     return(df)
   }
+
   ParseEntLnx <- function(entlnx.url = "https://attack.mitre.org/wiki/Linux_Technique_Matrix") {
-    m <- xml2::read_html(entlnx.url)
-    df <- data.frame(stringsAsFactors = FALSE)
+    doc <- xml2::read_html(entlnx.url)
+
+    # Extract tactic and techniques relationship
+    m.entlnx <- rvest::html_nodes(x = doc, xpath = "//div/table/tr")
+    tnt <- lapply(m.entlnx, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td/@id")))
+    names(tnt) <- rvest::html_text(rvest::html_nodes(x = doc, xpath = "//div/table/tr/th"))
+
+    df <- data.frame(tactic = character(),
+                     technique = character(),
+                     stringsAsFactors = FALSE)
+    for (tactic in names(tnt)) {
+      df <- rbind(df, data.frame(tactic = rep(stringr::str_replace_all(string = tactic, pattern = " ", replacement = "_"),
+                                              length(tnt[[tactic]])),
+                                 technique = tnt[[tactic]],
+                                 stringsAsFactors = FALSE))
+    }
+
+    # Add tactics attributes
+    df.tactic.urls <- data.frame(tactic = stringr::str_replace_all(string = names(tnt), pattern = " ", replacement = "_"),
+                                 tactic.name = names(tnt),
+                                 tactic.url = rvest::html_text(rvest::html_nodes(x = doc, xpath = "//div/table/tr/th/a/@href")),
+                                 stringsAsFactors = FALSE)
+    # Add techniques attributes
+    df.technique.urls <- plyr::ldply(m.entlnx, function(x) data.frame(technique = rvest::html_text(rvest::html_nodes(x, xpath = "./td/@id")),
+                                                                      technique.name = rvest::html_text(rvest::html_nodes(x, xpath = "./td")),
+                                                                      technique.url = rvest::html_text(rvest::html_nodes(x, xpath = "./td/a/@href")),
+                                                                      stringsAsFactors = FALSE))
+
+    # Tidy data
+    df <- dplyr::left_join(df, df.tactic.urls, by = c("tactic"))
+    df <- dplyr::left_join(df, df.technique.urls, by = c("technique"))
+
+    df$matrix <- rep("Linux", nrow(df))
+
     return(df)
   }
+
   ParseMobile <- function(entmob.url = "https://attack.mitre.org/mobile/index.php/Main_Page") {
-    m <- xml2::read_html(entmob.url)
-    df <- data.frame(stringsAsFactors = FALSE)
+    doc <- xml2::read_html(entmob.url)
+
+    # Extract tactic and techniques relationship
+    m.entmob <- rvest::html_nodes(x = doc, xpath = "//div/table/tr")
+    tnt <- lapply(m.entmob, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td/@id")))
+    names(tnt) <- rvest::html_text(rvest::html_nodes(x = doc, xpath = "//div/table/tr/th"))
+
+    df <- data.frame(tactic = character(),
+                     technique = character(),
+                     stringsAsFactors = FALSE)
+    for (tactic in names(tnt)) {
+      df <- rbind(df, data.frame(tactic = rep(stringr::str_replace_all(string = tactic, pattern = " ", replacement = "_"),
+                                              length(tnt[[tactic]])),
+                                 technique = tnt[[tactic]],
+                                 stringsAsFactors = FALSE))
+    }
+
+    # Add tactics attributes
+    df.tactic.urls <- data.frame(tactic = stringr::str_replace_all(string = names(tnt), pattern = " ", replacement = "_"),
+                                 tactic.name = names(tnt),
+                                 tactic.url = rvest::html_text(rvest::html_nodes(x = doc, xpath = "//div/table/tr/th/a/@href")),
+                                 stringsAsFactors = FALSE)
+    # Add techniques attributes
+    df.technique.urls <- plyr::ldply(m.entmob, function(x) data.frame(technique = rvest::html_text(rvest::html_nodes(x, xpath = "./td/@id")),
+                                                                      technique.name = rvest::html_text(rvest::html_nodes(x, xpath = "./td")),
+                                                                      technique.url = rvest::html_text(rvest::html_nodes(x, xpath = "./td/a/@href")),
+                                                                      stringsAsFactors = FALSE))
+
+    # Tidy data
+    df <- dplyr::left_join(df, df.tactic.urls, by = c("tactic"))
+    df <- dplyr::left_join(df, df.technique.urls, by = c("technique"))
+
+    df$matrix <- rep("Mobile", nrow(df))
+
     return(df)
   }
 
@@ -160,12 +286,22 @@ ParseMatrix <- function() {
 
   m <- rbind(m.pre, m.ent.all, m.ent.win, m.ent.mac, m.ent.lnx, m.mobile)
 
+  m$tactic.url <- as.character(sapply(m$tactic.url,
+                                      function(x)
+                                        paste("https://attack.mitre.org", x, sep = "")))
+  m$technique.url <- as.character(sapply(m$technique.url,
+                                         function(x)
+                                           paste("https://attack.mitre.org", x, sep = "")))
+  # m$tactic <- as.factor(m$tactic)
+  # m$technique <- as.factor(m$technique)
+  # m$matrix <- as.factor(m$matrix)
+
   return(m)
 }
 
-ParseTactics <- function() {
-  tactics.url <- "https://attack.mitre.org/wiki/All_Techniques"
-  tactics.url <- "https://attack.mitre.org/wiki/Category:Technique"
+ParseTactics <- function(tactic.urls) {
+  src.url <- tactic.urls[1]
+  doc <- xml2::read_html(src.url)
 
   tactics <- data.frame()
 
