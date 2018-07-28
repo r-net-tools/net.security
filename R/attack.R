@@ -174,6 +174,49 @@ ParseTactics <- function() {
 
 ParseTechniques <- function() {
   techniques.url <- "https://attack.mitre.org/wiki/All_Techniques"
+  doc <- xml2::read_html(techniques.url)
+
+  # Extract tactic and techniques relationship
+  t.list <- rvest::html_nodes(x = doc, xpath = "//div/table/tr")
+  t.techniques <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[3]")))
+  t.techniques.name <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[1]/a")))
+  t.techniques.url <- sapply(t.list, function(x) paste("https://attack.mitre.org",
+                                                       rvest::html_text(rvest::html_nodes(x,
+                                                                                          xpath = "./td[1]/a/@href")),
+                                                       sep = ""))
+  t.techniques.descr <- sapply(t.list, function(x) as.character(strcapture(x = as.character(rvest::html_nodes(x, xpath = "./td[4]")), pattern = '>(.*?)</td', proto = data.frame(chr=character()))$chr))
+
+  tnt <- data.frame(technique = t.techniques,
+                    technique.name = t.techniques.name,
+                    technique.descr = t.techniques.descr,
+                    technique.url = t.techniques.url,
+                    stringsAsFactors = FALSE)
+
+  # df <- data.frame(technique = character(),
+  #                  stringsAsFactors = FALSE)
+  # for (t.url in tnt$technique.url) {
+  #   df <- rbind(df, data.frame(technique = tnt[[t.url]],
+  #                              stringsAsFactors = FALSE))
+  # }
+  #
+#   # Add tactics attributes
+#   df.tactic.urls <- data.frame(tactic = stringr::str_replace_all(string = names(tnt), pattern = " ", replacement = "_"),
+#                                tactic.name = names(tnt),
+#                                tactic.url = rvest::html_text(rvest::html_nodes(x = doc, xpath = "//div/table/tr/th/a/@href")),
+#                                stringsAsFactors = FALSE)
+#   # Add techniques attributes
+#   df.technique.urls <- plyr::ldply(m.entall, function(x) data.frame(technique = rvest::html_text(rvest::html_nodes(x, xpath = "./td/@id")),
+#                                                                     technique.name = rvest::html_text(rvest::html_nodes(x, xpath = "./td")),
+#                                                                     technique.url = rvest::html_text(rvest::html_nodes(x, xpath = "./td/a/@href")),
+#                                                                     stringsAsFactors = FALSE))
+#
+#   # Tidy data
+#   df <- dplyr::left_join(df, df.tactic.urls, by = c("tactic"))
+#   df <- dplyr::left_join(df, df.technique.urls, by = c("technique"))
+#
+#   df$matrix <- rep("Enterprise", nrow(df))
+
+  # df$tactic <- as.factor(df$tactic)
 
   techniques <- data.frame()
 
