@@ -319,7 +319,8 @@ ParseTactics <- function(tactic.urls) {
                     stringsAsFactors = FALSE)
 
     # Extract techniques description
-    tact <- rvest::html_nodes(x = doc, xpath = "//div/table/tr")
+    tact <- rvest::html_nodes(x = doc, xpath = "//div/table/tr[@data-row-number]")
+    # TODO: Pagination or API call with limit=300
 
     t.tech.title <- sapply(tact, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td/a/@title")))
     t.tech.title <- as.character(sapply(t.tech.title, function(x) stringr::str_split(x, "/")[[1]][length(stringr::str_split(x, "/")[[1]])]))
@@ -350,6 +351,31 @@ ParseTactics <- function(tactic.urls) {
 }
 
 ParseTechniques <- function() {
+  getTechniqueWikiInfo <- function(tech.url = "https://attack.mitre.org/wiki/Technique/T1156") {
+    doc <- xml2::read_html(tech.url)
+    # Parse headers as list of nodes
+    headlines <- rvest::html_nodes(x = doc, xpath = '//*[self::h2]')
+    xpath <- sprintf("//p[count(preceding-sibling::h2)=%d] | //div[@id='mw-content-text']/ul[count(preceding-sibling::h2)=%d]",
+                     seq_along(headlines) - 1, seq_along(headlines) - 1)
+
+    df <- purrr::set_names(purrr::map_chr(purrr::map(purrr::map(xpath, ~rvest::html_nodes(x = doc, xpath = .x)),
+                                                     as.character, trim = TRUE),
+                                          paste, collapse = "\n")
+                           ,
+                           rvest::html_text(headlines))
+    df <- as.data.frame(t(df[df != ""]), stringsAsFactors = FALSE)
+
+    df2 <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table[1]/tr/td'), trim = T)
+    names(df2) <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table[1]/tr/th[@scope="row"]'), trim = T)
+    df2 <- as.data.frame(t(df2), stringsAsFactors = F)
+
+    df <- cbind.data.frame(df2, df)
+
+    return(df)
+
+  }
+
+
   techniques.url <- "https://attack.mitre.org/wiki/All_Techniques"
   doc <- xml2::read_html(techniques.url)
 
@@ -361,7 +387,9 @@ ParseTechniques <- function() {
                                                        rvest::html_text(rvest::html_nodes(x,
                                                                                           xpath = "./td[1]/a/@href")),
                                                        sep = ""))
-  t.techniques.descr <- sapply(t.list, function(x) as.character(strcapture(x = as.character(rvest::html_nodes(x, xpath = "./td[4]")), pattern = '>(.*?)</td', proto = data.frame(chr=character()))$chr))
+  t.techniques.descr <- sapply(t.list, function(x) as.character(strcapture(x = as.character(rvest::html_nodes(x, xpath = "./td[4]")),
+                                                                           pattern = '>(.*?)</td',
+                                                                           proto = data.frame(chr = character()))$chr))
 
   tnt <- data.frame(technique = t.techniques,
                     technique.name = t.techniques.name,
@@ -369,8 +397,26 @@ ParseTechniques <- function() {
                     technique.url = t.techniques.url,
                     stringsAsFactors = FALSE)
 
-  # df <- data.frame(technique = character(),
-  #                  stringsAsFactors = FALSE)
+  df <- data.frame(technique = character(),
+                   technique.name = character(),
+                   technique.desc = character(),
+                   technique.platform = character(),
+                   technique.sysreq = character(),
+                   technique.permision.required = character(),
+                   technique.effective.permision = character(),
+                   technique.data.source = character(),
+                   technique.support.remote = character(),
+                   technique.defense.bypassed = character(),
+                   technique.capec = character(),
+                   technique.contributor = character(),
+                   technique.examples = character(),
+                   technique.detection = character(),
+                   technique.mitigation = character(),
+                   stringsAsFactors = FALSE)
+
+  kk <- lapply(tnt$technique.url[11:21], function(x) getTechniqueWikiInfo(x))
+  kkk <- do.call(plyr::rbind.fill, kk)
+
   # for (t.url in tnt$technique.url) {
   #   df <- rbind(df, data.frame(technique = tnt[[t.url]],
   #                              stringsAsFactors = FALSE))
