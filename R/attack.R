@@ -25,7 +25,7 @@ GetATTCKData <- function(savepath = tempdir(), verbose = T) {
 ParseATTCKData <- function(savepath, verbose) {
   amatrix <- ParseMatrix()
   tactics <- ParseTactics(tactic.urls = unique(amatrix$tactic.url))
-  techniques <- ParseTechniques()
+  techniques <- ParseTechniquesEnt()
   groups <- ParseGroups()
   software <- ParseSoftware()
 
@@ -326,12 +326,16 @@ ParseTactics <- function(tactic.urls) {
     t.tech.title <- as.character(sapply(t.tech.title, function(x) stringr::str_split(x, "/")[[1]][length(stringr::str_split(x, "/")[[1]])]))
     t.tech.name <- sapply(tact, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[1]")))
     t.tech.descr <- sapply(tact, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[3]")))
+    t.tech.url <- sapply(tact, function(x) paste("https://attack.mitre.org",
+                                               rvest::html_text(rvest::html_nodes(x, xpath = "./td[1]/a/@href")), sep = ""))
 
     t.tech <- data.frame(tactic = rep(t$tactic, length(t.tech.name)),
                          tactic.descr = rep(t$tactic.descr, length(t.tech.name)),
+                         tactic.url = src.url,
                          technique = t.tech.title,
                          technique.name = t.tech.name,
                          technique.desc = t.tech.descr,
+                         technique.url = t.tech.url,
                          stringsAsFactors = FALSE)
 
     return(t.tech)
@@ -339,9 +343,11 @@ ParseTactics <- function(tactic.urls) {
 
   df <- data.frame(tactic = character(),
                    tactic.descr = character(),
+                   tactic.url = character(),
                    technique = character(),
                    technique.name = character(),
                    technique.desc = character(),
+                   technique.url = character(),
                    stringsAsFactors = FALSE)
   for (src.url in tactic.urls) {
     df <- rbind(df, ExtractTactic(src.url))
@@ -350,13 +356,13 @@ ParseTactics <- function(tactic.urls) {
   return(df)
 }
 
-ParseTechniques <- function() {
+ParseTechniquesEnt <- function(techniques.url = "https://attack.mitre.org/wiki/All_Techniques") {
   getTechniqueWikiInfo <- function(tech.url = "https://attack.mitre.org/wiki/Technique/T1156") {
     doc <- xml2::read_html(tech.url)
     # Parse headers as list of nodes
-    headlines <- rvest::html_nodes(x = doc, xpath = '//*[self::h2]')
-    xpath <- sprintf("//p[count(preceding-sibling::h2)=%d] | //div[@id='mw-content-text']/ul[count(preceding-sibling::h2)=%d]",
-                     seq_along(headlines) - 1, seq_along(headlines) - 1)
+    headlines <- rvest::html_nodes(x = doc, xpath = '//*[self::h2]|//*[self::h1]')
+    xpath <- sprintf("//p[count(preceding-sibling::h1)=%d] | //div[@id='mw-content-text']/ul[count(preceding-sibling::h1)=%d] | //p[count(preceding-sibling::h2)=%d] | //div[@id='mw-content-text']/ul[count(preceding-sibling::h2)=%d]",
+                     seq_along(headlines) - 1, seq_along(headlines) - 1, seq_along(headlines) - 1, seq_along(headlines) - 1)
 
     df <- purrr::set_names(purrr::map_chr(purrr::map(purrr::map(xpath, ~rvest::html_nodes(x = doc, xpath = .x)),
                                                      as.character, trim = TRUE),
@@ -371,12 +377,17 @@ ParseTechniques <- function() {
 
     df <- cbind.data.frame(df2, df)
 
-    return(df)
+    good <- c("ID", "Tactic", "Platform", "Permissions Required", "Data Sources",
+              "Mitigation", "Detection", "References", "Effective Permissions",
+              "Contributors", "Contents", "Examples", "CAPEC ID", "System Requirements",
+              "Supports Remote", "Requires Network", "Defense Bypassed")
+    cont <- names(df)[!(names(df) %in% good)]
+    df$Contents <- df[[cont]]
+    df[[cont]] <- NULL
 
+    return(df)
   }
 
-
-  techniques.url <- "https://attack.mitre.org/wiki/All_Techniques"
   doc <- xml2::read_html(techniques.url)
 
   # Extract tactic and techniques relationship
@@ -397,53 +408,52 @@ ParseTechniques <- function() {
                     technique.url = t.techniques.url,
                     stringsAsFactors = FALSE)
 
-  df <- data.frame(technique = character(),
-                   technique.name = character(),
-                   technique.desc = character(),
-                   technique.platform = character(),
-                   technique.sysreq = character(),
-                   technique.permision.required = character(),
-                   technique.effective.permision = character(),
-                   technique.data.source = character(),
-                   technique.support.remote = character(),
-                   technique.defense.bypassed = character(),
-                   technique.capec = character(),
-                   technique.contributor = character(),
-                   technique.examples = character(),
-                   technique.detection = character(),
-                   technique.mitigation = character(),
-                   stringsAsFactors = FALSE)
+  # df <- data.frame(technique = character(),
+  #                  technique.name = character(),
+  #                  technique.desc = character(),
+  #                  technique.platform = character(),
+  #                  technique.sysreq = character(),
+  #                  technique.permision.required = character(),
+  #                  technique.effective.permision = character(),
+  #                  technique.data.source = character(),
+  #                  technique.support.remote = character(),
+  #                  technique.defense.bypassed = character(),
+  #                  technique.capec = character(),
+  #                  technique.contributor = character(),
+  #                  technique.examples = character(),
+  #                  technique.detection = character(),
+  #                  technique.mitigation = character(),
+  #                  stringsAsFactors = FALSE)
 
-  kk <- lapply(tnt$technique.url[11:21], function(x) getTechniqueWikiInfo(x))
-  kkk <- do.call(plyr::rbind.fill, kk)
+  df <- lapply(tnt$technique.url, function(x) getTechniqueWikiInfo(x))
+  df <- do.call(plyr::rbind.fill, df)
 
-  # for (t.url in tnt$technique.url) {
-  #   df <- rbind(df, data.frame(technique = tnt[[t.url]],
-  #                              stringsAsFactors = FALSE))
-  # }
-  #
-#   # Add tactics attributes
-#   df.tactic.urls <- data.frame(tactic = stringr::str_replace_all(string = names(tnt), pattern = " ", replacement = "_"),
-#                                tactic.name = names(tnt),
-#                                tactic.url = rvest::html_text(rvest::html_nodes(x = doc, xpath = "//div/table/tr/th/a/@href")),
-#                                stringsAsFactors = FALSE)
-#   # Add techniques attributes
-#   df.technique.urls <- plyr::ldply(m.entall, function(x) data.frame(technique = rvest::html_text(rvest::html_nodes(x, xpath = "./td/@id")),
-#                                                                     technique.name = rvest::html_text(rvest::html_nodes(x, xpath = "./td")),
-#                                                                     technique.url = rvest::html_text(rvest::html_nodes(x, xpath = "./td/a/@href")),
-#                                                                     stringsAsFactors = FALSE))
-#
-#   # Tidy data
-#   df <- dplyr::left_join(df, df.tactic.urls, by = c("tactic"))
-#   df <- dplyr::left_join(df, df.technique.urls, by = c("technique"))
-#
-#   df$matrix <- rep("Enterprise", nrow(df))
+  df <- tidyr::separate_rows(
+    tidyr::separate_rows(
+      tidyr::separate_rows(
+        tidyr::separate_rows(
+          tidyr::separate_rows(
+            tidyr::separate_rows(
+              tidyr::separate_rows(
+                tidyr::separate_rows(df,
+                                     `Defense Bypassed`, sep = ","),
+                Contributors, sep = ","),
+              `Effective Permissions`, sep = ","),
+            Tactic, sep = ","),
+          Platform, sep = ","),
+        `Permissions Required`, sep = ","),
+      `Data Sources`, sep = ","),
+    `CAPEC ID`, sep = ",")
 
-  # df$tactic <- as.factor(df$tactic)
+  return(df)
+}
 
-  techniques <- data.frame()
+ParseTechniquesPRE <- function(techniques.url = "https://attack.mitre.org/pre-attack/index.php/All_Techniques") {
+  return(techniques.url)
+}
 
-  return(techniques)
+ParseTechniquesMob <- function(techniques.url = "https://attack.mitre.org/mobile/index.php/All_Techniques") {
+  return(techniques.url)
 }
 
 ParseGroups <- function() {
