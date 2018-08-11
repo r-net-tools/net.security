@@ -668,7 +668,7 @@ ParseGroups <- function() {
 #'
 #' @examples
 ParseSoftware <- function(software.url = "https://attack.mitre.org/wiki/Software") {
-  getSoftwareWikiInfo <- function(soft.url = "https://attack.mitre.org/wiki/Software/S0204") {
+  getSoftwareWikiInfo <- function(soft.url = "https://attack.mitre.org/wiki/Software/S0045") {
     print(soft.url)
     doc <- xml2::read_html(soft.url)
     # Remove toc
@@ -684,8 +684,25 @@ ParseSoftware <- function(software.url = "https://attack.mitre.org/wiki/Software
                            ,
                            rvest::html_text(headlines))
     df <- as.data.frame(t(df[df != ""]), stringsAsFactors = FALSE)
+    df$Name <- rvest::html_text(headlines[[1]])
     if (c("Techniques Used") %in% names(df)) {
       tup <- which(names(df) %in% "Techniques Used")
+    }
+    if (c("Groups") %in% names(df)) {
+      gup <- which(names(df) %in% "Groups")
+    }
+
+    df2 <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table[1]/tr/td'), trim = T)
+    names(df2) <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table[1]/tr/th[@scope="row"]'), trim = T)
+    df2 <- as.data.frame(t(df2), stringsAsFactors = F)
+
+    df <- cbind.data.frame(df2, df)
+
+    good <- c("ID", "Name", "Aliases", "Type", "Platform", "Techniques Used", "Groups")
+    selected <- names(df)[(names(df) %in% good)]
+    df <- dplyr::select(df, selected)
+
+    if (c("Techniques Used") %in% names(df)) {
       t.used <- rvest::xml_nodes(doc, xpath = xpath[tup])
       tech.used.id <- sapply(t.used, function(x) stringr::str_extract(string = as.character(x), pattern = "T\\d\\d\\d\\d"))
       tech.used.id <- tech.used.id[!is.na(tech.used.id)]
@@ -707,26 +724,15 @@ ParseSoftware <- function(software.url = "https://attack.mitre.org/wiki/Software
     }
 
     if (c("Groups") %in% names(df)) {
-      group.used.id <- rvest::xml_nodes(doc, xpath = xpath[which(names(df) %in% "Groups")])
-      group.used.id <- sapply(group.used.id, function(x) stringr::str_extract(string = as.character(x), pattern = "T\\d\\d\\d\\d"))
+      group.used.id <- rvest::xml_nodes(doc, xpath = xpath[gup])
+      group.used.id <- sapply(group.used.id, function(x) stringr::str_extract(string = as.character(x), pattern = "G\\d\\d\\d\\d"))
       group.used.id <- group.used.id[!is.na(group.used.id)]
       df$groups.using <- paste(group.used.id, collapse = ",")
+      df <- dplyr::select(df, -Groups)
       df <- tidyr::separate_rows(df, groups.using, sep = ",")
     } else {
       df$groups.using <- NA
     }
-
-    df2 <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table[1]/tr/td'), trim = T)
-    names(df2) <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table[1]/tr/th[@scope="row"]'), trim = T)
-    df2 <- as.data.frame(t(df2), stringsAsFactors = F)
-
-    df <- cbind.data.frame(df2, df)
-
-    good <- c("ID", "Aliases", "Type", "Platform", "tech.used", "tech.used.name",
-              "tech.used.desc", "groups.using", "Contents")
-    cont <- names(df)[!(names(df) %in% good)]
-    df$Contents <- as.character(jsonlite::toJSON(dplyr::select(df, cont)))
-    df <- dplyr::select(df, -cont, Contents)
 
     return(df)
   }
