@@ -667,10 +667,119 @@ ParseGroups <- function() {
 #' @export
 #'
 #' @examples
-ParseSoftware <- function() {
-  software.url <- "https://attack.mitre.org/wiki/Software"
+ParseSoftware <- function(software.url = "https://attack.mitre.org/wiki/Software") {
+  getSoftwareWikiInfo <- function(soft.url = "https://attack.mitre.org/wiki/Software/S0066") {
+    print(soft.url)
+    doc <- xml2::read_html(soft.url)
+    # Remove toc
+    xml2::xml_remove(rvest::html_nodes(doc, ".toc"))
+    # Parse headers as list of nodes
+    headlines <- rvest::html_nodes(x = doc, xpath = '//*[self::h2]|//*[self::h1]')
+    xpath <- sprintf("//p[count(preceding-sibling::h1)=%d] | //div[@id='mw-content-text']/ul[count(preceding-sibling::h1)=%d] | //p[count(preceding-sibling::h2)=%d] | //div[@id='mw-content-text']/ul[count(preceding-sibling::h2)=%d]",
+                     seq_along(headlines) - 1, seq_along(headlines) - 1, seq_along(headlines) - 1, seq_along(headlines) - 1)
 
-  software <- data.frame()
+    df <- purrr::set_names(purrr::map_chr(purrr::map(purrr::map(xpath, ~rvest::html_nodes(x = doc, xpath = .x)),
+                                                     as.character, trim = TRUE),
+                                          paste, collapse = "\n")
+                           ,
+                           rvest::html_text(headlines))
+    df <- as.data.frame(t(df[df != ""]), stringsAsFactors = FALSE)
+    tup <- which(names(df) %in% "Techniques Used")
 
-  return(software)
+    df2 <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table[1]/tr/td'), trim = T)
+    names(df2) <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table[1]/tr/th[@scope="row"]'), trim = T)
+    df2 <- as.data.frame(t(df2), stringsAsFactors = F)
+
+    df <- cbind.data.frame(df2, df)
+
+    good <- c("ID", "Aliases", "Type", "Platform", "Techniques Used", "Groups",
+              "Contents", "Alias Descriptions")
+    cont <- names(df)[!(names(df) %in% good)]
+    df$Contents <- jsonlite::toJSON(dplyr::select(df, cont))
+    df <- dplyr::select(df, -cont, Contents)
+
+    if (c("Techniques Used") %in% names(df)) {
+      tech.used.id <- rvest::xml_nodes(doc, xpath = xpath[tup])
+      tech.used.id <- sapply(tech.used.id, function(x) stringr::str_extract(string = as.character(x), pattern = "T\\d\\d\\d\\d"))
+      tech.used.id <- tech.used.id[!is.na(tech.used.id)]
+      df$tech.used <- paste(tech.used.id, collapse = ",")
+      tech.used.desc <- sapply(tech.used.id,
+                               function(x)
+                                 as.character(
+                                   strcapture(x = as.character(rvest::html_nodes(doc,
+                                                                                 xpath = paste('//*/li/a[@title="Technique/', x, '"]/..', sep = ""))),
+                                              pattern = '/a>(.*?)</li',
+                                              proto = data.frame(chr = character()))$chr))
+      tech.used.name <- unlist(sapply(tech.used.id,
+                                      function(x)
+                                        rvest::html_text(
+                                          rvest::html_nodes(doc,
+                                                            xpath = paste('(//*/li/a[@title="Technique/',
+                                                                          x,
+                                                                          '"]/../a)[1]',
+                                                                          sep = ""))
+                                        )))
+      techu <- data.frame(tech.used.id = tech.used.id,
+                          tech.used.name = tech.used.name,
+                          tech.used.desc = tech.used.desc,
+                          stringsAsFactors = F)
+      row.names(techu) <- NULL
+      df <- dplyr::select(df, -`Techniques Used`)
+      df <- tidyr::separate_rows(df, tech.used, sep = ",")
+      df <- dplyr::left_join(df, techu, by = c("tech.used" = "tech.used.id"))
+
+    } else {
+      df$tech.used <- NA
+    }
+
+    if (c("Groups") %in% names(df)) {
+      group.used.id <- rvest::xml_nodes(doc, xpath = xpath[which(names(df) %in% "Groups")])
+      group.used.id <- sapply(group.used.id, function(x) stringr::str_extract(string = as.character(x), pattern = "T\\d\\d\\d\\d"))
+      group.used.id <- group.used.id[!is.na(group.used.id)]
+      df$groups.using <- paste(group.used.id, collapse = ",")
+      df <- tidyr::separate_rows(df, groups.using, sep = ",")
+    } else {
+      df$groups.using <- NA
+    }
+
+    return(df)
+  }
+
+  doc <- xml2::read_html(software.url)
+
+  # Extract software and aliases relationship
+  s.list <- rvest::html_nodes(x = doc, xpath = "//div/table/tr")
+  s.software.name <- sapply(s.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[1]/a"), trim = T))
+  s.software.aliases <- stringr::str_replace_all(sapply(s.list, function(x) as.character(strcapture(x = as.character(rvest::html_nodes(x, xpath = "./td[2]")),
+                                                                                                       pattern = '>(.*?)</td',
+                                                                                                       proto = data.frame(chr = character()))$chr)),
+                                                    pattern = "<br>",
+                                                    replacement = ",")
+  s.software.url <- sapply(s.list, function(x) paste("https://attack.mitre.org",
+                                                       rvest::html_text(rvest::html_nodes(x,
+                                                                                          xpath = "./td[1]/a/@href"),
+                                                                        trim = T),
+                                                       sep = ""))
+  s.software.descr <- sapply(s.list, function(x) as.character(strcapture(x = as.character(rvest::html_nodes(x, xpath = "./td[3]")),
+                                                                           pattern = '>(.*?)</td',
+                                                                           proto = data.frame(chr = character()))$chr))
+  s.software <- sapply(s.software.url, function(x) stringr::str_split(x, "/")[[1]][length(stringr::str_split(x, "/")[[1]])])
+  names(s.software) <- NULL
+
+  tnt <- data.frame(software = s.software,
+                    software.name = s.software.name,
+                    software.aliases = s.software.aliases,
+                    software.descr = s.software.descr,
+                    software.url = s.software.url,
+                    stringsAsFactors = FALSE)
+
+  df <- lapply(unique(tnt$software.url), function(x) getSoftwareWikiInfo(x))
+  df <- do.call(plyr::rbind.fill, df)
+
+  df <- dplyr::left_join(df, tnt, by = c("ID" = "software"))
+  df <- tidyr::separate_rows(tidyr::separate_rows(df,
+                                                  `groups.using`, sep = ","),
+                             `tech.used`, sep = ",")
+
+  return(df)
 }
