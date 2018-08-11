@@ -668,7 +668,7 @@ ParseGroups <- function() {
 #'
 #' @examples
 ParseSoftware <- function(software.url = "https://attack.mitre.org/wiki/Software") {
-  getSoftwareWikiInfo <- function(soft.url = "https://attack.mitre.org/wiki/Software/S0066") {
+  getSoftwareWikiInfo <- function(soft.url = "https://attack.mitre.org/wiki/Software/S0204") {
     print(soft.url)
     doc <- xml2::read_html(soft.url)
     # Remove toc
@@ -684,50 +684,24 @@ ParseSoftware <- function(software.url = "https://attack.mitre.org/wiki/Software
                            ,
                            rvest::html_text(headlines))
     df <- as.data.frame(t(df[df != ""]), stringsAsFactors = FALSE)
-    tup <- which(names(df) %in% "Techniques Used")
-
-    df2 <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table[1]/tr/td'), trim = T)
-    names(df2) <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table[1]/tr/th[@scope="row"]'), trim = T)
-    df2 <- as.data.frame(t(df2), stringsAsFactors = F)
-
-    df <- cbind.data.frame(df2, df)
-
-    good <- c("ID", "Aliases", "Type", "Platform", "Techniques Used", "Groups",
-              "Contents", "Alias Descriptions")
-    cont <- names(df)[!(names(df) %in% good)]
-    df$Contents <- jsonlite::toJSON(dplyr::select(df, cont))
-    df <- dplyr::select(df, -cont, Contents)
-
     if (c("Techniques Used") %in% names(df)) {
-      tech.used.id <- rvest::xml_nodes(doc, xpath = xpath[tup])
-      tech.used.id <- sapply(tech.used.id, function(x) stringr::str_extract(string = as.character(x), pattern = "T\\d\\d\\d\\d"))
+      tup <- which(names(df) %in% "Techniques Used")
+      t.used <- rvest::xml_nodes(doc, xpath = xpath[tup])
+      tech.used.id <- sapply(t.used, function(x) stringr::str_extract(string = as.character(x), pattern = "T\\d\\d\\d\\d"))
       tech.used.id <- tech.used.id[!is.na(tech.used.id)]
       df$tech.used <- paste(tech.used.id, collapse = ",")
-      tech.used.desc <- sapply(tech.used.id,
-                               function(x)
-                                 as.character(
-                                   strcapture(x = as.character(rvest::html_nodes(doc,
-                                                                                 xpath = paste('//*/li/a[@title="Technique/', x, '"]/..', sep = ""))),
-                                              pattern = '/a>(.*?)</li',
-                                              proto = data.frame(chr = character()))$chr))
-      tech.used.name <- unlist(sapply(tech.used.id,
-                                      function(x)
-                                        rvest::html_text(
-                                          rvest::html_nodes(doc,
-                                                            xpath = paste('(//*/li/a[@title="Technique/',
-                                                                          x,
-                                                                          '"]/../a)[1]',
-                                                                          sep = ""))
-                                        )))
+      tech.used.desc <- sapply(t.used, function(x) rvest::html_text(x, trim = T))
+      tech.used.desc <- tech.used.desc[which(sapply(tech.used.desc, nchar) > 3)]
+      tech.used.name <- sapply(t.used, function(x) rvest::html_text(rvest::html_node(x, xpath = './/a'), trim = T))
+      tech.used.name <- tech.used.name[!is.na(tech.used.name)]
+
       techu <- data.frame(tech.used.id = tech.used.id,
                           tech.used.name = tech.used.name,
                           tech.used.desc = tech.used.desc,
                           stringsAsFactors = F)
-      row.names(techu) <- NULL
       df <- dplyr::select(df, -`Techniques Used`)
       df <- tidyr::separate_rows(df, tech.used, sep = ",")
       df <- dplyr::left_join(df, techu, by = c("tech.used" = "tech.used.id"))
-
     } else {
       df$tech.used <- NA
     }
@@ -741,6 +715,18 @@ ParseSoftware <- function(software.url = "https://attack.mitre.org/wiki/Software
     } else {
       df$groups.using <- NA
     }
+
+    df2 <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table[1]/tr/td'), trim = T)
+    names(df2) <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table[1]/tr/th[@scope="row"]'), trim = T)
+    df2 <- as.data.frame(t(df2), stringsAsFactors = F)
+
+    df <- cbind.data.frame(df2, df)
+
+    good <- c("ID", "Aliases", "Type", "Platform", "tech.used", "tech.used.name",
+              "tech.used.desc", "groups.using", "Contents")
+    cont <- names(df)[!(names(df) %in% good)]
+    df$Contents <- as.character(jsonlite::toJSON(dplyr::select(df, cont)))
+    df <- dplyr::select(df, -cont, Contents)
 
     return(df)
   }
