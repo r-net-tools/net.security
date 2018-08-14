@@ -478,6 +478,7 @@ ParseTechniquesEnt <- function(techniques.url = "https://attack.mitre.org/wiki/A
     `CAPEC ID`, sep = ",")
 
   df$Platform <- stringr::str_trim(df$Platform)
+  df$Tactic <- stringr::str_trim(df$Tactic)
 
   df <- dplyr::left_join(df, tnt, by = c("ID" = "technique"))
 
@@ -628,6 +629,7 @@ ParseTechniquesMob <- function(techniques.url = "https://attack.mitre.org/mobile
                                                   `Platform`, sep = ","),
                              `Tactic`, sep = ",")
   df$Platform <- stringr::str_trim(df$Platform)
+  df$Tactic <- stringr::str_trim(df$Tactic)
 
   return(df)
 }
