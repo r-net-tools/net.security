@@ -457,23 +457,6 @@ ParseTechniquesEnt <- function(techniques.url = "https://attack.mitre.org/wiki/A
                     technique.url = t.techniques.url,
                     stringsAsFactors = FALSE)
 
-  # df <- data.frame(technique = character(),
-  #                  technique.name = character(),
-  #                  technique.desc = character(),
-  #                  technique.platform = character(),
-  #                  technique.sysreq = character(),
-  #                  technique.permision.required = character(),
-  #                  technique.effective.permision = character(),
-  #                  technique.data.source = character(),
-  #                  technique.support.remote = character(),
-  #                  technique.defense.bypassed = character(),
-  #                  technique.capec = character(),
-  #                  technique.contributor = character(),
-  #                  technique.examples = character(),
-  #                  technique.detection = character(),
-  #                  technique.mitigation = character(),
-  #                  stringsAsFactors = FALSE)
-
   df <- lapply(unique(tnt$technique.url), function(x) getTechniqueWikiInfo(x))
   df <- do.call(plyr::rbind.fill, df)
 
@@ -565,6 +548,8 @@ ParseTechniquesPRE <- function(techniques.url = "https://attack.mitre.org/pre-at
   df <- do.call(plyr::rbind.fill, df)
 
   df <- dplyr::left_join(df, tnt, by = c("ID" = "technique"))
+  df <- tidyr::separate_rows(df, `Tactic`, sep = ",")
+  df$Tactic <- stringr::str_trim(df$Tactic)
 
   return(df)
 }
@@ -640,8 +625,9 @@ ParseTechniquesMob <- function(techniques.url = "https://attack.mitre.org/mobile
 
   df <- dplyr::left_join(df, tnt, by = c("ID" = "technique"))
   df <- tidyr::separate_rows(tidyr::separate_rows(df,
-                                                  `technique.platform`, sep = ","),
+                                                  `Platform`, sep = ","),
                              `Tactic`, sep = ",")
+  df$Platform <- stringr::str_trim(df$Platform)
 
   return(df)
 }
