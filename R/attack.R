@@ -10,26 +10,56 @@
 #'
 #' @examples
 GetATTCKData <- function(savepath = tempdir(), verbose = T) {
-  # if (verbose) print("Downloading raw data from MITRE...")
-  # attck.files <- DownloadATTCKData(savepath, verbose)
   if (verbose) print("Processing ATT&CK raw data...")
-  attck <- ParseATTCKData(savepath, verbose)
-  if (verbose) print(paste("ATT&CK data frame building process finished."))
+  attck.pre <- ParseATTCKpre(savepath, verbose)
+  attck.ent <- ParseATTCKent(savepath, verbose)
+  attck.mob <- ParseATTCKmob(savepath, verbose)
+  if (verbose) print(paste("All ATT&CK data sets created."))
   return(attck)
 }
 
-# DownloadATTCKData <- function(savepath, verbose) {
-#   # Download ATT&CK matrix
-#
-#   # Download Tactics raw data
-#
-#   # Download Techniques raw data
-#
-#   # Download Groups raw data
-#
-#   # Download Software raw data
-#
-# }
+ParseATTCKpre <- function(savepath, verbose) {
+  if (verbose) print("Processing ATT&CK PRE raw data...")
+  tactics <- data.frame()
+  techniques <- data.frame()
+  software <- data.frame()
+  groups <- data.frame()
+  relations <- data.frame()
+
+  attck <- list(tactics, techniques, software, groups, relations)
+  if (verbose) print("ATT&CK PRE data sets created.")
+
+  return(attck)
+}
+
+ParseATTCKent <- function(savepath, verbose) {
+  if (verbose) print("Processing ATT&CK Enterprise raw data...")
+  tactics <- data.frame()
+  techniques <- data.frame()
+  software <- data.frame()
+  groups <- data.frame()
+  relations <- data.frame()
+
+  attck <- list(tactics, techniques, software, groups, relations)
+  if (verbose) print("ATT&CK Enterprise data sets created.")
+
+  return(attck)
+}
+
+ParseATTCKmob <- function(savepath, verbose) {
+  if (verbose) print("Processing ATT&CK Mobile raw data...")
+  tactics <- data.frame()
+  techniques <- data.frame()
+  software <- data.frame()
+  groups <- data.frame()
+  relations <- data.frame()
+
+  attck <- list(tactics, techniques, software, groups, relations)
+  if (verbose) print("ATT&CK Mobile data sets created.")
+
+  return(attck)
+}
+
 
 ParseATTCKData <- function(savepath, verbose) {
   amatrix <- ParseMatrix()
