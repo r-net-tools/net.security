@@ -56,8 +56,7 @@ ParseATTCKent <- function(verbose) {
   if (verbose) print("[ENT] Processing Groups raw data...")
   groups.raw <- ParseGroupsEnt(verbose)
   if (verbose) print("[ENT] Building data sets relationships...")
-  relations <- ParseRelationsEnt(tactics.raw, techniques.raw, groups.raw,
-                                 software.raw, verbose)
+  relations <- ParseRelationsEnt(tactics.raw, techniques.raw, groups.raw, software.raw, verbose)
 
   # Tidy data sets
   tactics <- tactics.raw
@@ -303,14 +302,11 @@ ParseTechniquesPRE <- function(verbose = TRUE) {
   }
 
   # Tidy data
-  good <- names(which(apply(df, 2, function(x) sum(is.na(x))) < nrow(df.basic)/2))
-  df <- dplyr::select(df, good)
   names(df) <- tolower(names(df))
 
   df <- dplyr::left_join(df.basic, df, by = c("id"))
 
   return(df)
-
 }
 
 ExtractTechniquePRE <- function(source.url = "https://attack.mitre.org/pre-attack/index.php/Technique/PRE-T1043") {
@@ -349,6 +345,74 @@ ExtractTechniquePRE <- function(source.url = "https://attack.mitre.org/pre-attac
 }
 
 ParseTechniquesEnt <- function(verbose = TRUE) {
+  if (verbose) print("[ENT]  - Processing Techniques basic information...")
+  source.url <- "https://attack.mitre.org/wiki/All_Techniques"
+  doc <- xml2::read_html(source.url)
+
+  # Extract tactic and techniques relationship
+  t.list <- rvest::html_nodes(x = doc, xpath = "//div/table/tr")
+  tech.id <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[3]"), trim = T))
+  tech.name <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[1]/a"), trim = T))
+  tech.url <- sapply(t.list, function(x) paste("https://attack.mitre.org",
+                                               rvest::html_text(rvest::html_nodes(x,
+                                                                                  xpath = "./td[1]/a/@href"),
+                                                                trim = T),
+                                               sep = ""))
+
+  df.basic <- data.frame(id = tech.id,
+                         name = tech.name,
+                         source = tech.url,
+                         stringsAsFactors = FALSE)
+
+  if (verbose) print("[ENT]  - Processing Techniques details and relationships...")
+  if (verbose) {pb <- utils::txtProgressBar(min = 0, max = nrow(df.basic), style = 3); i <- 1}
+
+  df <- data.frame(ID = character(),
+                   Tactic = character(),
+                   Definition = character(),
+                   Detection = character(),
+                   stringsAsFactors = FALSE)
+
+  for (src.url in unique(df.basic$source)) {
+    df <- plyr::rbind.fill(df, ExtractTechniqueEnt(src.url))
+    if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  }
+
+  # Tidy data
+  good <- names(which(apply(df, 2, function(x) sum(is.na(x))) < nrow(df.basic)/2))
+  df <- dplyr::select(df, good)
+  names(df) <- tolower(names(df))
+
+  df <- dplyr::left_join(df.basic, df, by = c("id"))
+
+  return(df)
+}
+
+ExtractTechniqueEnt <- function(source.url = "https://attack.mitre.org/wiki/Technique/T1156") {
+  doc <- xml2::read_html(source.url)
+  # Parse headers as list of nodes
+  headlines <- rvest::html_nodes(x = doc, xpath = '//*[self::h2]|//*[self::h1]')
+  xpath <- sprintf("//p[count(preceding-sibling::h1)=%d] | //div[@id='mw-content-text']/ul[count(preceding-sibling::h1)=%d] | //p[count(preceding-sibling::h2)=%d] | //div[@id='mw-content-text']/ul[count(preceding-sibling::h2)=%d]",
+                   seq_along(headlines) - 1, seq_along(headlines) - 1, seq_along(headlines) - 1, seq_along(headlines) - 1)
+
+  df <- purrr::set_names(purrr::map_chr(purrr::map(purrr::map(xpath, ~rvest::html_nodes(x = doc, xpath = .x)),
+                                                   as.character, trim = TRUE),
+                                        paste, collapse = "\n")
+                         ,
+                         rvest::html_text(headlines))
+  df <- as.data.frame(t(df[df != ""]), stringsAsFactors = FALSE)
+
+  df2 <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table[1]/tr/td'), trim = T)
+  names(df2) <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table[1]/tr/th[@scope="row"]'), trim = T)
+  df2 <- as.data.frame(t(df2), stringsAsFactors = F)
+
+  df <- cbind.data.frame(df2, df)
+
+  tech.name <- rvest::html_text(rvest::html_node(x = doc, css = ".firstHeading"))
+  df$description <- df[, tech.name]
+  df <- df[, !(names(df) %in% tech.name)]
+
+  return(df)
 
 }
 
@@ -888,95 +952,6 @@ ParseTactics <- function(tactic.urls) {
   }
 
   df <- dplyr::left_join(df, tactic.urls)
-
-  return(df)
-}
-
-#' Title
-#'
-#' @param techniques.url
-#'
-#' @return
-#' @export
-#'
-#' @examples
-ParseTechniquesEnt <- function(techniques.url = "https://attack.mitre.org/wiki/All_Techniques") {
-  getTechniqueWikiInfo <- function(tech.url = "https://attack.mitre.org/wiki/Technique/T1156") {
-    doc <- xml2::read_html(tech.url)
-    # Parse headers as list of nodes
-    headlines <- rvest::html_nodes(x = doc, xpath = '//*[self::h2]|//*[self::h1]')
-    xpath <- sprintf("//p[count(preceding-sibling::h1)=%d] | //div[@id='mw-content-text']/ul[count(preceding-sibling::h1)=%d] | //p[count(preceding-sibling::h2)=%d] | //div[@id='mw-content-text']/ul[count(preceding-sibling::h2)=%d]",
-                     seq_along(headlines) - 1, seq_along(headlines) - 1, seq_along(headlines) - 1, seq_along(headlines) - 1)
-
-    df <- purrr::set_names(purrr::map_chr(purrr::map(purrr::map(xpath, ~rvest::html_nodes(x = doc, xpath = .x)),
-                                                     as.character, trim = TRUE),
-                                          paste, collapse = "\n")
-                           ,
-                           rvest::html_text(headlines))
-    df <- as.data.frame(t(df[df != ""]), stringsAsFactors = FALSE)
-
-    df2 <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table[1]/tr/td'), trim = T)
-    names(df2) <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table[1]/tr/th[@scope="row"]'), trim = T)
-    df2 <- as.data.frame(t(df2), stringsAsFactors = F)
-
-    df <- cbind.data.frame(df2, df)
-
-    good <- c("ID", "Tactic", "Platform", "Permissions Required", "Data Sources",
-              "Mitigation", "Detection", "References", "Effective Permissions",
-              "Contributors", "Contents", "Examples", "CAPEC ID", "System Requirements",
-              "Supports Remote", "Requires Network", "Defense Bypassed")
-    cont <- names(df)[!(names(df) %in% good)]
-    df$Contents <- df[[cont]]
-    df[[cont]] <- NULL
-
-    return(df)
-  }
-
-  doc <- xml2::read_html(techniques.url)
-
-  # Extract tactic and techniques relationship
-  t.list <- rvest::html_nodes(x = doc, xpath = "//div/table/tr")
-  t.techniques <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[3]"), trim = T))
-  t.techniques.name <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[1]/a"), trim = T))
-  t.techniques.url <- sapply(t.list, function(x) paste("https://attack.mitre.org",
-                                                       rvest::html_text(rvest::html_nodes(x,
-                                                                                          xpath = "./td[1]/a/@href"),
-                                                                        trim = T),
-                                                       sep = ""))
-  t.techniques.descr <- sapply(t.list, function(x) as.character(strcapture(x = as.character(rvest::html_nodes(x, xpath = "./td[4]")),
-                                                                           pattern = '>(.*?)</td',
-                                                                           proto = data.frame(chr = character()))$chr))
-
-  tnt <- data.frame(technique = t.techniques,
-                    technique.name = t.techniques.name,
-                    technique.descr = t.techniques.descr,
-                    technique.url = t.techniques.url,
-                    stringsAsFactors = FALSE)
-
-  df <- lapply(unique(tnt$technique.url), function(x) getTechniqueWikiInfo(x))
-  df <- do.call(plyr::rbind.fill, df)
-
-  df <- tidyr::separate_rows(
-    tidyr::separate_rows(
-      tidyr::separate_rows(
-        tidyr::separate_rows(
-          tidyr::separate_rows(
-            tidyr::separate_rows(
-              tidyr::separate_rows(
-                tidyr::separate_rows(df,
-                                     `Defense Bypassed`, sep = ","),
-                Contributors, sep = ","),
-              `Effective Permissions`, sep = ","),
-            Tactic, sep = ","),
-          Platform, sep = ","),
-        `Permissions Required`, sep = ","),
-      `Data Sources`, sep = ","),
-    `CAPEC ID`, sep = ",")
-
-  df$Platform <- stringr::str_trim(df$Platform)
-  df$Tactic <- stringr::str_trim(df$Tactic)
-
-  df <- dplyr::left_join(df, tnt, by = c("ID" = "technique"))
 
   return(df)
 }
