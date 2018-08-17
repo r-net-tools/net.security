@@ -9,30 +9,47 @@
 #' @export
 #'
 #' @examples
-GetATTCKData <- function(savepath = tempdir(), verbose = T) {
+GetATTCKData <- function(verbose = TRUE) {
   if (verbose) print("Processing ATT&CK raw data...")
-  attck.pre <- ParseATTCKpre(savepath, verbose)
-  attck.ent <- ParseATTCKent(savepath, verbose)
-  attck.mob <- ParseATTCKmob(savepath, verbose)
-  if (verbose) print(paste("All ATT&CK data sets created."))
+  if (verbose) print("ATT&CK's PRE DOMAIN...")
+  attck.pre <- ParseATTCKpre(verbose)
+  if (verbose) print("ATT&CK's ENTERPRISE DOMAIN...")
+  attck.ent <- ParseATTCKent(verbose)
+  if (verbose) print("ATT&CK's MOBILE DOMAIN...")
+  attck.mob <- ParseATTCKmob(verbose)
+  attck <- list(attck.pre, attck.ent, attck.mob)
+  if (verbose) print(paste("ATT&CK data sets created."))
   return(attck)
 }
 
-ParseATTCKpre <- function(savepath, verbose) {
-  if (verbose) print("Processing ATT&CK PRE raw data...")
-  tactics <- data.frame()
-  techniques <- data.frame()
-  software <- data.frame()
-  groups <- data.frame()
-  relations <- data.frame()
+ParseATTCKpre <- function(verbose = TRUE) {
+  if (verbose) print("[PRE] Processing Tactics raw data...")
+  tactics.raw <- ParseTacticsPRE(verbose)
+  if (verbose) print("[PRE] Processing Techniques raw data...")
+  techniques.raw <- ParseTechniquesPRE(verbose)
+  if (verbose) print("[PRE] Processing Software raw data...")
+  software.raw <- ParseSoftwarePRE(verbose)
+  if (verbose) print("[PRE] Processing Groups raw data...")
+  groups.raw <- ParseGroupsPRE(verbose)
+  if (verbose) print("[PRE] Building data sets relationships...")
+  relations.raw <- ParseRelationsPRE(verbose)
+
+  # Tidy data sets
+  if (verbose) print("[PRE] Tidy raw data...")
+  tactics <- tactics.raw
+  techniques <- techniques.raw
+  software <- software.raw
+  groups <- groups.raw
+  relations <- relations.raw
 
   attck <- list(tactics, techniques, software, groups, relations)
-  if (verbose) print("ATT&CK PRE data sets created.")
+
+  if (verbose) print("[PRE] ATT&CK PRE data sets created.")
 
   return(attck)
 }
 
-ParseATTCKent <- function(savepath, verbose) {
+ParseATTCKent <- function(verbose) {
   if (verbose) print("Processing ATT&CK Enterprise raw data...")
   tactics <- data.frame()
   techniques <- data.frame()
@@ -46,7 +63,7 @@ ParseATTCKent <- function(savepath, verbose) {
   return(attck)
 }
 
-ParseATTCKmob <- function(savepath, verbose) {
+ParseATTCKmob <- function(verbose) {
   if (verbose) print("Processing ATT&CK Mobile raw data...")
   tactics <- data.frame()
   techniques <- data.frame()
@@ -60,6 +77,123 @@ ParseATTCKmob <- function(savepath, verbose) {
   return(attck)
 }
 
+
+#############
+# Tactics
+##
+
+ParseTacticsPRE <- function(verbose = TRUE) {
+  if (verbose) print("[PRE]  - Processing Tactics basic information...")
+  source.url <- "https://attack.mitre.org/pre-attack/index.php/Tactics"
+  doc <- xml2::read_html(source.url)
+
+  # Extract basic information
+  t.list <- rvest::html_nodes(x = doc, xpath = "//div/table/tr")
+  tactic.ids <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x,xpath = "./td[1]/a/@href"), trim = T))
+  tactic.ids <- sapply(tactic.ids, function(x) stringr::str_split(x, "/")[[1]][length(stringr::str_split(x, "/")[[1]])])
+  names(tactic.ids) <- NULL
+  tactic.names <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[1]/a"), trim = T))
+  tactic.urls <- sapply(t.list, function(x) paste("https://attack.mitre.org",
+                                                       rvest::html_text(rvest::html_nodes(x,
+                                                                                          xpath = "./td[1]/a/@href"),
+                                                                        trim = T),
+                                                       sep = ""))
+  df.basic <- data.frame(id = tactic.ids,
+                         name = tactic.names,
+                         source = tactic.urls,
+                         stringsAsFactors = FALSE)
+
+  if (verbose) print("[PRE]  - Processing Tactics details and relationships...")
+  df <- data.frame(id = character(),
+                   description = character(),
+                   deprecated = character(),
+                   technique.id = character(),
+                   technique.name = character(),
+                   technique.desc = character(),
+                   technique.url = character(),
+                   stringsAsFactors = FALSE)
+
+  if (verbose) {pb <- utils::txtProgressBar(min = 0, max = nrow(df.basic), style = 3); i <- 1}
+
+  for (src.url in unique(df.basic$source)) {
+    df <- rbind(df, ExtractTacticPRE(src.url))
+    if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  }
+
+  df <- dplyr::left_join(df.basic, df, by = c("id"))
+
+  return(df)
+}
+
+ExtractTacticPRE <- function(source.url = "https://attack.mitre.org/pre-attack/index.php/Adversary_OPSEC") {
+  doc <- xml2::read_html(source.url)
+
+  # Parse headers as list of nodes
+  headlines <- rvest::html_nodes(x = doc, xpath = '//*[self::h2]')
+  xpath <- sprintf("//p[count(preceding-sibling::h2)=%d]", seq_along(headlines) - 1)
+
+  df <- purrr::set_names(purrr::map_chr(purrr::map(purrr::map(xpath, ~rvest::html_nodes(x = doc, xpath = .x)),
+                                                   rvest::html_text, trim = TRUE),
+                                        paste, collapse = "\n")
+                         ,
+                         rvest::html_text(rvest::html_node(headlines, "span")))
+  df <- as.data.frame(t(df[df != ""]), stringsAsFactors = FALSE)
+
+  # Detect deprecated tactic
+  deprecated <- "Deprecated" %in% rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table/th'))
+
+  tactic <- data.frame(tactic.id = stringr::str_split(source.url, "/")[[1]][length(stringr::str_split(source.url, "/")[[1]])],
+                       tactic.descr = df[,1],
+                       deprecated = deprecated,
+                       stringsAsFactors = FALSE)
+
+  # Extract related techniques
+  t.list <- rvest::html_nodes(x = doc, xpath = "//div/table/tr[@data-row-number]")
+
+  tech.id <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[1]/a/@title")))
+  tech.url <- sapply(tech.id, function(x) paste("https://attack.mitre.org/pre-attack/index.php/", x, sep = ""))
+  names(tech.url) <- NULL
+  tech.id <- as.character(sapply(tech.id, function(x) stringr::str_split(x, "/")[[1]][length(stringr::str_split(x, "/")[[1]])]))
+  tech.name <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[1]")))
+  tech.descr <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[3]")))
+
+  # Build tactic raw data.frame
+  df <- data.frame(id = rep(tactic$tactic.id, length(tech.name)),
+                   description = rep(tactic$tactic.descr, length(tech.name)),
+                   deprecated = rep(tactic$deprecated, length(tech.name)),
+                   technique.id = tech.id,
+                   technique.name = tech.name,
+                   technique.desc = tech.descr,
+                   technique.url = tech.url,
+                   stringsAsFactors = FALSE)
+
+  return(df)
+}
+
+
+#############
+# Techniques
+##
+
+ParseTechniquesPRE <- function(verbose = TRUE) {
+
+}
+
+#############
+# Software
+##
+
+#############
+# Groups
+##
+
+#############
+# Relations
+##
+
+################################################################################
+##### OLD_CODE
+################################################################################
 
 ParseATTCKData <- function(savepath, verbose) {
   amatrix <- ParseMatrix()
