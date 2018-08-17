@@ -179,7 +179,85 @@ ExtractTacticPRE <- function(source.url = "https://attack.mitre.org/pre-attack/i
 }
 
 ParseTacticsEnt <- function(verbose = TRUE) {
+  if (verbose) print("[ENT]  - Processing Tactics basic information...")
+  source.url <- "https://attack.mitre.org/wiki/Category:Tactic"
+  doc <- xml2::read_html(source.url)
 
+  t.list <- rvest::html_nodes(x = doc, css = "#mw-pages > div > div > div > ul > li > a")
+  df.basic <- as.data.frame(t(as.matrix(as.data.frame(rvest::html_attrs(t.list)))),
+                            row.names = FALSE, stringsAsFactors = FALSE)
+  df.basic$id <- sapply(stringr::str_split(df.basic$href, "/"), function(x) x[3])
+  df.basic$href <- sapply(df.basic$href, function(x) paste("https://attack.mitre.org", x, sep = ""))
+  names(df.basic) <- c("source", "name", "id")
+
+  df.basic <- df.basic[, c("id", "name", "source")]
+
+  if (verbose) print("[PRE]  - Processing Tactics details and relationships...")
+  df <- data.frame(id = character(),
+                   description = character(),
+                   deprecated = character(),
+                   source = character(),
+                   technique.id = character(),
+                   technique.name = character(),
+                   technique.desc = character(),
+                   technique.url = character(),
+                   stringsAsFactors = FALSE)
+
+  if (verbose) {pb <- utils::txtProgressBar(min = 0, max = nrow(df.basic), style = 3); i <- 1}
+
+  for (src.url in unique(df.basic$source)) {
+    df <- rbind(df, ExtractTacticEnt(src.url))
+    if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  }
+
+  df <- dplyr::left_join(df.basic, df, by = c("id"))
+
+  return(df)
+}
+
+ExtractTacticEnt <- function(source.url = "https://attack.mitre.org/wiki/Collection") {
+  doc <- xml2::read_html(source.url)
+
+  # Parse headers as list of nodes
+  headlines <- rvest::html_nodes(x = doc, xpath = '//*[self::h2]')
+  xpath <- sprintf("//p[count(preceding-sibling::h2)=%d]", seq_along(headlines) - 1)
+
+  df <- purrr::set_names(purrr::map_chr(purrr::map(purrr::map(xpath, ~rvest::html_nodes(x = doc, xpath = .x)),
+                                                   rvest::html_text, trim = TRUE),
+                                        paste, collapse = "\n")
+                         ,
+                         rvest::html_text(rvest::html_node(headlines, ".mw-headline")))
+  df <- as.data.frame(t(df[df != ""]), stringsAsFactors = FALSE)
+
+  # Detect deprecated tactic
+  deprecated <- "Deprecated" %in% rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table/th'))
+
+  tactic <- data.frame(id = stringr::str_split(source.url, "/")[[1]][length(stringr::str_split(source.url, "/")[[1]])],
+                       description = df[,2],
+                       deprecated = deprecated,
+                       stringsAsFactors = FALSE)
+
+  # Extract related techniques
+  t.list <- rvest::html_nodes(x = doc, xpath = "//div/table/tr[@data-row-number]")
+
+  tech.id <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[1]/a/@title")))
+  tech.url <- sapply(tech.id, function(x) paste("https://attack.mitre.org/wiki/", x, sep = ""))
+  names(tech.url) <- NULL
+  tech.id <- as.character(sapply(tech.id, function(x) stringr::str_split(x, "/")[[1]][length(stringr::str_split(x, "/")[[1]])]))
+  tech.name <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[1]")))
+  tech.descr <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[3]")))
+
+  # Build tactic raw data.frame
+  df <- data.frame(id = rep(tactic$id, length(tech.name)),
+                   description = rep(tactic$description, length(tech.name)),
+                   deprecated = rep(tactic$deprecated, length(tech.name)),
+                   technique.id = tech.id,
+                   technique.name = tech.name,
+                   technique.desc = tech.descr,
+                   technique.url = tech.url,
+                   stringsAsFactors = FALSE)
+
+  return(tactic)
 }
 
 #############
@@ -441,7 +519,7 @@ ParseRelationsPRE <- function(tactics.raw, techniques.raw, groups.raw, verbose =
   return(df)
 }
 
-ParseRelationsEnt <- function(verbose = TRUE) {
+ParseRelationsEnt <- function(tactics.raw, techniques.raw, groups.raw, software.raw, verbose = TRUE) {
 
 }
 
