@@ -30,16 +30,16 @@ ParseATTCKpre <- function(verbose = TRUE) {
   if (verbose) print("[PRE] Processing Software raw data...")
   groups.raw <- ParseGroupsPRE(verbose)
   if (verbose) print("[PRE] Building data sets relationships...")
-  relations.raw <- ParseRelationsPRE(verbose)
+  relations <- ParseRelationsPRE(tactics.raw, techniques.raw, groups.raw, verbose)
 
   # Tidy data sets
   if (verbose) print("[PRE] Tidy raw data...")
-  tactics <- tactics.raw
-  techniques <- techniques.raw
-  groups <- groups.raw
-  relations <- relations.raw
+  tactics <- unique(dplyr::select(tactics.raw, id, name, description, source, deprecated))
+  techniques <- unique(dplyr::select(techniques.raw, -tactic))
+  groups <- unique(dplyr::select(groups.raw, id, name, aliases, description, source))
 
-  attck <- list(tactics, techniques, groups, relations)
+  attck <- list(tactics = tactics, techniques = techniques,
+                groups = groups, relations = relations)
 
   if (verbose) print("[PRE] ATT&CK PRE data sets created.")
 
@@ -354,6 +354,67 @@ ExtractGroupPRE <- function(source.url = "https://attack.mitre.org/pre-attack/in
 #############
 # Relations
 ##
+
+ParseRelationsPRE <- function(tactics.raw, techniques.raw, groups.raw, verbose = TRUE) {
+  tactics <- dplyr::select(tactics.raw, id, name, technique.id)
+  techniques <- dplyr::select(techniques.raw, id, name, tactic)
+  groups <- dplyr::select(groups.raw, id, tech.name, tactic.name)
+
+  df <- data.frame(from = character(),
+                   to = character(),
+                   source = character(),
+                   target = character(),
+                   info = character(),
+                   stringsAsFactors = FALSE)
+
+  # Groups - Techniques
+  rg <- dplyr::left_join(groups.raw,
+                        unique(dplyr::select(techniques, id, name)),
+                        by = c("tech.name" = "name"))
+  rg <- dplyr::select(rg, -aliases, -description, -source, -name)
+  names(rg) <- c("group.id", "tech.name", "tactic.name", "relation.descr", "tech.id")
+  r <- unique(dplyr::select(rg, group.id, tech.id, relation.descr))
+  names(r) <- c("from", "to", "info")
+  r$source <- rep("group", nrow(r))
+  r$target <- rep("technique", nrow(r))
+  df <- rbind(df, r)
+
+  # Groups - Tactics
+  rg <- dplyr::left_join(rg,
+                        unique(dplyr::select(tactics, id, name)),
+                        by = c("tactic.name" = "name"))
+  names(rg) <- c("group.id", "tech.name", "tactic.name", "relation.descr", "tech.id", "tactic.id")
+  r <- unique(dplyr::select(rg, group.id, tactic.id, relation.descr))
+  names(r) <- c("from", "to", "info")
+  r$source <- rep("group", nrow(r))
+  r$target <- rep("tactic", nrow(r))
+  df <- rbind(df, r)
+
+  # Techniques - Tactics
+  r <- dplyr::left_join(techniques,
+                        unique(dplyr::select(tactics, id, name)),
+                        by = c("tactic" = "name"))
+  names(r) <- c("tech.id", "tech.name", "tactic.name", "tactic.id")
+  r <- unique(dplyr::select(r, tech.id, tactic.id))
+  names(r) <- c("from", "to")
+  r$source <- rep("technique", nrow(r))
+  r$target <- rep("tactic", nrow(r))
+  r$info <- rep(NA, nrow(r))
+  df <- rbind(df, r)
+
+  # Tactics - Techniques
+  r <- unique(dplyr::select(tactics.raw, id, technique.id, technique.desc))
+  names(r) <- c("from", "to", "info")
+  r$source <- rep("tactic", nrow(r))
+  r$target <- rep("technique", nrow(r))
+  df <- rbind(df, r)
+
+  df$domain <- rep("PRE", nrow(df))
+
+  df <- unique(df)
+
+  return(df)
+}
 
 ################################################################################
 ##### OLD_CODE
