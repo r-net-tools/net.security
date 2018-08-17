@@ -27,7 +27,7 @@ ParseATTCKpre <- function(verbose = TRUE) {
   tactics.raw <- ParseTacticsPRE(verbose)
   if (verbose) print("[PRE] Processing Techniques raw data...")
   techniques.raw <- ParseTechniquesPRE(verbose)
-  if (verbose) print("[PRE] Processing Software raw data...")
+  if (verbose) print("[PRE] Processing Groups raw data...")
   groups.raw <- ParseGroupsPRE(verbose)
   if (verbose) print("[PRE] Building data sets relationships...")
   relations <- ParseRelationsPRE(tactics.raw, techniques.raw, groups.raw, verbose)
@@ -47,15 +47,26 @@ ParseATTCKpre <- function(verbose = TRUE) {
 }
 
 ParseATTCKent <- function(verbose) {
-  if (verbose) print("Processing ATT&CK Enterprise raw data...")
-  tactics <- data.frame()
-  techniques <- data.frame()
-  software <- data.frame()
-  groups <- data.frame()
-  relations <- data.frame()
+  if (verbose) print("[ENT] Processing Tactics raw data...")
+  tactics.raw <- ParseTacticsEnt(verbose)
+  if (verbose) print("[ENT] Processing Techniques raw data...")
+  techniques.raw <- ParseTechniquesEnt(verbose)
+  if (verbose) print("[ENT] Processing Software raw data...")
+  software.raw <- ParseSoftwareEnt(verbose)
+  if (verbose) print("[ENT] Processing Groups raw data...")
+  groups.raw <- ParseGroupsEnt(verbose)
+  if (verbose) print("[ENT] Building data sets relationships...")
+  relations <- ParseRelationsEnt(tactics.raw, techniques.raw, groups.raw,
+                                 software.raw, verbose)
+
+  # Tidy data sets
+  tactics <- tactics.raw
+  techniques <- techniques.raw
+  software <- software.raw
+  groups <- groups.raw
 
   attck <- list(tactics, techniques, software, groups, relations)
-  if (verbose) print("ATT&CK Enterprise data sets created.")
+  if (verbose) print("[ENT] ATT&CK Enterprise data sets created.")
 
   return(attck)
 }
@@ -167,6 +178,9 @@ ExtractTacticPRE <- function(source.url = "https://attack.mitre.org/pre-attack/i
   return(df)
 }
 
+ParseTacticsEnt <- function(verbose = TRUE) {
+
+}
 
 #############
 # Techniques
@@ -256,9 +270,17 @@ ExtractTechniquePRE <- function(source.url = "https://attack.mitre.org/pre-attac
   return(df)
 }
 
+ParseTechniquesEnt <- function(verbose = TRUE) {
+
+}
+
 #############
 # Software
 ##
+
+ParseSoftwareEnt <- function(verbose = TRUE) {
+
+}
 
 #############
 # Groups
@@ -350,6 +372,9 @@ ExtractGroupPRE <- function(source.url = "https://attack.mitre.org/pre-attack/in
   return(df)
 }
 
+ParseGroupsEnt <- function(verbose = TRUE) {
+
+}
 
 #############
 # Relations
@@ -414,6 +439,10 @@ ParseRelationsPRE <- function(tactics.raw, techniques.raw, groups.raw, verbose =
   df <- unique(df)
 
   return(df)
+}
+
+ParseRelationsEnt <- function(verbose = TRUE) {
+
 }
 
 ################################################################################
