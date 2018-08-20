@@ -61,7 +61,8 @@ ParseATTCKent <- function(verbose) {
   # Tidy data sets
   tactics <- tactics.raw
   techniques <- techniques.raw
-  software <- software.raw
+  good <- names(software.raw)[apply(software.raw, 2, function(x) length(unique(x)) < nrow(software.raw)*0.7)]
+  software <- dplyr::select(software.raw, good)
   groups <- groups.raw
 
   attck <- list(tactics, techniques, software, groups, relations)
@@ -421,7 +422,117 @@ ExtractTechniqueEnt <- function(source.url = "https://attack.mitre.org/wiki/Tech
 ##
 
 ParseSoftwareEnt <- function(verbose = TRUE) {
+  if (verbose) print("[ENT]  - Processing Software basic information...")
+  source.url <- "https://attack.mitre.org/wiki/Software"
+  doc <- xml2::read_html(source.url)
 
+  # Extract basic information
+  s.list <- rvest::html_nodes(x = doc, xpath = "//div/table/tr")
+  software.ids <- sapply(s.list, function(x) rvest::html_text(rvest::html_nodes(x,xpath = "./td[1]/a/@href"), trim = T))
+  software.urls <- sapply(software.ids, function(x) paste("https://attack.mitre.org", x, sep = ""))
+  names(software.urls) <- NULL
+  software.ids <- sapply(software.ids, function(x) stringr::str_split(x, "/")[[1]][length(stringr::str_split(x, "/")[[1]])])
+  names(software.ids) <- NULL
+  software.names <- sapply(s.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[1]/a"), trim = T))
+  software.descr <- sapply(s.list, function(x) as.character(strcapture(x = as.character(rvest::html_nodes(x, xpath = "./td[3]")),
+                                                                       pattern = '>(.*?)</td',
+                                                                       proto = data.frame(chr = character()))$chr))
+
+  df.basic <- data.frame(id = software.ids,
+                         name = software.names,
+                         description = software.descr,
+                         source = software.urls,
+                         stringsAsFactors = FALSE)
+
+  if (verbose) print("[ENT]  - Processing Software details and relationships...")
+  if (verbose) {pb <- utils::txtProgressBar(min = 0, max = nrow(df.basic), style = 3); i <- 1}
+
+  df <- data.frame(ID = character(),
+                   Name = character(),
+                   Aliases = character(),
+                   stringsAsFactors = FALSE)
+
+  for (src.url in unique(df.basic$source)) {
+    df <- plyr::rbind.fill(df, ExtractSoftwareEnt(src.url))
+    if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  }
+
+  # Tidy data
+  good <- names(which(apply(df, 2, function(x) sum(is.na(x))) < nrow(df)*0.9))
+  df <- dplyr::select(df, good)
+  names(df) <- tolower(names(df))
+
+  df <- dplyr::left_join(df.basic, df, by = c("id"))
+
+  return(df)
+
+}
+
+ExtractSoftwareEnt <- function(source.url = "https://attack.mitre.org/wiki/Software/S0045") {
+  doc <- xml2::read_html(source.url)
+  # Remove toc
+  xml2::xml_remove(rvest::html_nodes(doc, ".toc"))
+  # Parse headers as list of nodes
+  headlines <- rvest::html_nodes(x = doc, xpath = '//*[self::h2]|//*[self::h1]')
+  xpath <- sprintf("//p[count(preceding-sibling::h1)=%d] | //div[@id='mw-content-text']/ul[count(preceding-sibling::h1)=%d] | //p[count(preceding-sibling::h2)=%d] | //div[@id='mw-content-text']/ul[count(preceding-sibling::h2)=%d]",
+                   seq_along(headlines) - 1, seq_along(headlines) - 1, seq_along(headlines) - 1, seq_along(headlines) - 1)
+
+  df <- purrr::set_names(purrr::map_chr(purrr::map(purrr::map(xpath, ~rvest::html_nodes(x = doc, xpath = .x)),
+                                                   as.character, trim = TRUE),
+                                        paste, collapse = "\n")
+                         ,
+                         rvest::html_text(headlines))
+  df <- as.data.frame(t(df[df != ""]), stringsAsFactors = FALSE)
+
+  # Detect relationship on headers: techniques used and groups
+  if (c("Techniques Used") %in% names(df)) {
+    tup <- xpath[which(names(df) %in% "Techniques Used")]
+  }
+  if (c("Groups") %in% names(df)) {
+    gup <- xpath[which(names(df) %in% "Groups")]
+  }
+
+  df2 <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table[1]/tr/td'), trim = T)
+  names(df2) <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table[1]/tr/th[@scope="row"]'), trim = T)
+  df2 <- as.data.frame(t(df2), stringsAsFactors = F)
+
+  df <- cbind.data.frame(df2, df)
+
+  # Extract details for techniques used
+  if (c("Techniques Used") %in% names(df)) {
+    t.used <- rvest::xml_nodes(doc, xpath = tup)
+    tech.used.id <- sapply(t.used, function(x) stringr::str_extract(string = as.character(x), pattern = "T\\d\\d\\d\\d"))
+    tech.used.id <- tech.used.id[!is.na(tech.used.id)]
+    df$tech.used <- paste(tech.used.id, collapse = ",")
+    tech.used.desc <- sapply(t.used, function(x) rvest::html_text(x, trim = T))
+    tech.used.desc <- tech.used.desc[which(sapply(tech.used.desc, nchar) > 3)]
+    tech.used.name <- sapply(t.used, function(x) rvest::html_text(rvest::html_node(x, xpath = './/a'), trim = T))
+    tech.used.name <- tech.used.name[!is.na(tech.used.name)]
+
+    techu <- data.frame(tech.used.id = tech.used.id,
+                        tech.used.name = tech.used.name,
+                        tech.used.desc = tech.used.desc,
+                        stringsAsFactors = F)
+    # df <- dplyr::select(df, -`Techniques Used`)
+    df <- tidyr::separate_rows(df, tech.used, sep = ",")
+    df <- dplyr::left_join(df, techu, by = c("tech.used" = "tech.used.id"))
+  } else {
+    df$tech.used <- NA
+  }
+
+  # Extract details for groups using this software
+  if (c("Groups") %in% names(df)) {
+    group.used.id <- rvest::xml_nodes(doc, xpath = gup)
+    group.used.id <- sapply(group.used.id, function(x) stringr::str_extract(string = as.character(x), pattern = "G\\d\\d\\d\\d"))
+    group.used.id <- group.used.id[!is.na(group.used.id)]
+    df$groups.using <- paste(group.used.id, collapse = ",")
+    # df <- dplyr::select(df, -Groups)
+    df <- tidyr::separate_rows(df, groups.using, sep = ",")
+  } else {
+    df$groups.using <- NA
+  }
+
+  return(df)
 }
 
 #############
