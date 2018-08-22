@@ -87,11 +87,11 @@ ParseATTCKmob <- function(verbose) {
   relations <- ParseRelationsMob(tactics.raw, techniques.raw, groups.raw, software.raw, mitigations.raw, verbose)
 
   # Tidy data sets
-  tactics <- tactics.raw
-  techniques <- techniques.raw
-  software <- software.raw
+  tactics <- unique(dplyr::select(tactics.raw, id, name, description, source))
+  techniques <- unique(dplyr::select(techniques.raw, id, name, description, platform, detection, mitigation, examples, mtc.id))
+  software <- unique(dplyr::select(software.raw, id, name, description, type, aliases, source))
   groups <- groups.raw
-  mitigations <- mitigations.raw
+  mitigations <- unique(dplyr::select(mitigations.raw, id, name, description, source))
 
   attck <- list(tactics = tactics, techniques = techniques, software = software,
                 groups = groups, mitigations = mitigations, relations = relations)
@@ -288,9 +288,10 @@ ParseTacticsMob <- function(verbose = TRUE) {
   df.basic.pre.exploit <- data.frame(id = tactic.id,
                                      name = tactic.name,
                                      source = tactic.url,
+                                     tactic.type = rep("Pre-Adversary Device Access", length(tactic.id)),
                                      stringsAsFactors = FALSE)
 
-  if (verbose) print("[MOB]  - Processing Common Tactics basic information...")
+  if (verbose) print("[MOB]  - Processing Post-Exploit Tactics basic information...")
   source.url <- "https://attack.mitre.org/mobile/index.php/Category:Tactic"
   doc <- xml2::read_html(source.url)
   t.list <- rvest::html_nodes(x = doc, xpath = '//*[@id="mw-pages"]/div/div/div/ul/li')
@@ -302,6 +303,7 @@ ParseTacticsMob <- function(verbose = TRUE) {
   df.basic.common <- data.frame(id = tactic.id,
                                 name = tactic.name,
                                 source = tactic.url,
+                                tactic.type = rep("Post-Adversary Device Access", length(tactic.id)),
                                 stringsAsFactors = FALSE)
 
   if (verbose) print("[MOB]  - Processing Off-Device Tactics basic information...")
@@ -316,6 +318,7 @@ ParseTacticsMob <- function(verbose = TRUE) {
   df.basic.off.device <- data.frame(id = tactic.id,
                                     name = tactic.name,
                                     source = tactic.url,
+                                    tactic.type = rep("Without Adversary Device Access", length(tactic.id)),
                                     stringsAsFactors = FALSE)
 
   df.basic <- rbind(df.basic.pre.exploit, df.basic.common, df.basic.off.device)
@@ -339,7 +342,6 @@ ParseTacticsMob <- function(verbose = TRUE) {
 }
 
 ExtractTacticMob <- function(source.url = "https://attack.mitre.org/mobile/index.php/App_Delivery_via_Authorized_App_Store") {
-  print(source.url)
   doc <- xml2::read_html(source.url)
 
   # Detect deprecated tactic
@@ -594,8 +596,6 @@ ParseTechniquesMob <- function(verbose = TRUE) {
 }
 
 ExtractTechniqueMob <- function(source.url = "https://attack.mitre.org/mobile/index.php/Technique/MOB-T1046") {
-  print(source.url)
-
   doc <- xml2::read_html(source.url)
   xml2::xml_remove(rvest::html_nodes(doc, ".toc"))
 
@@ -784,8 +784,6 @@ ParseSoftwareMob <- function(verbose = TRUE) {
 }
 
 ExtractSoftwareMob <- function(source.url = "https://attack.mitre.org/mobile/index.php/Software/MOB-S0026") {
-  print(source.url)
-
   doc <- xml2::read_html(source.url)
   # Remove toc
   xml2::xml_remove(rvest::html_nodes(doc, ".toc"))
@@ -1339,7 +1337,87 @@ ParseRelationsEnt <- function(tactics.raw, techniques.raw, groups.raw, software.
 }
 
 ParseRelationsMob <- function(tactics.raw, techniques.raw, groups.raw, software.raw, mitigations.raw, verbose = TRUE) {
+  tactics <- dplyr::select(tactics.raw, id, name, technique.id)
+  techniques <- dplyr::select(techniques.raw, id, tactic, platform)
+  groups <- dplyr::select(groups.raw, id, soft.id)
+  software <- dplyr::select(software.raw, id, type, tech.used, groups.using)
+  mitigations <- dplyr::select(mitigations.raw, id, tech.id)
 
+  # Expand data.frames: one observation in one row
+  techniques <- tidyr::separate_rows(tidyr::separate_rows(techniques,
+                                                          platform, sep = ", "),
+                                     tactic, sep = ", ")
+
+  df <- data.frame(from = character(),
+                   to = character(),
+                   source = character(),
+                   target = character(),
+                   info = character(),
+                   stringsAsFactors = FALSE)
+
+  # Tactics - Techniques
+  r <- unique(dplyr::select(tactics.raw, id, technique.id, technique.desc))
+  names(r) <- c("from", "to", "info")
+  r$source <- rep("tactic", nrow(r))
+  r$target <- rep("technique", nrow(r))
+  df <- rbind(df, r)
+
+  # Groups - Software
+  r <- unique(dplyr::select(groups, id, soft.id))
+  names(r) <- c("from", "to")
+  r$source <- rep("group", nrow(r))
+  r$target <- rep("software", nrow(r))
+  r$info <- rep(NA, nrow(r))
+  df <- rbind(df, r)
+
+  # Mitigations - Techniques
+  r <- unique(mitigations)
+  names(r) <- c("from", "to")
+  r$source <- rep("mitigation", nrow(r))
+  r$target <- rep("technique", nrow(r))
+  r$info <- rep(NA, nrow(r))
+  df <- rbind(df, r)
+
+  # Software - Technique
+  r <- unique(dplyr::select(software, id, tech.used))
+  names(r) <- c("from", "to")
+  r$source <- rep("software", nrow(r))
+  r$target <- rep("technique", nrow(r))
+  r$info <- rep(NA, nrow(r))
+  df <- rbind(df, r)
+
+  # Software - Groups
+  r <- unique(dplyr::select(software, id, groups.using))
+  names(r) <- c("from", "to")
+  r$source <- rep("software", nrow(r))
+  r$target <- rep("groups", nrow(r))
+  r$info <- rep(NA, nrow(r))
+  df <- rbind(df, r)
+
+  # Techniques - Tactics
+  r <- dplyr::left_join(unique(dplyr::select(techniques, id, tactic)),
+                        unique(dplyr::select(tactics, id, name)),
+                        by = c("tactic" = "name"))
+  names(r) <- c("tech.id", "tactic.name", "tactic.id")
+  r <- unique(dplyr::select(r, tech.id, tactic.id))
+  names(r) <- c("from", "to")
+  r$source <- rep("technique", nrow(r))
+  r$target <- rep("tactic", nrow(r))
+  r$info <- rep(NA, nrow(r))
+  df <- rbind(df, r)
+
+  # Techniques - Platform
+  r <- unique(dplyr::select(techniques, id, platform))
+  names(r) <- c("from", "to")
+  r$source <- rep("technique", nrow(r))
+  r$target <- rep("platform", nrow(r))
+  r$info <- rep(NA, nrow(r))
+  df <- rbind(df, r)
+
+  df$domain <- rep("MOB", nrow(df))
+  df <- unique(df)
+
+  return(df)
 }
 
 #############
@@ -1351,4 +1429,85 @@ ParseMitigationsMob <- function(verbose = TRUE) {
   source.url <- "https://attack.mitre.org/mobile/index.php/All_Mitigations"
   doc <- xml2::read_html(source.url)
 
+  # Extract mitigations basic information
+  m.list <- rvest::html_nodes(x = doc, xpath = "//div/table/tr")
+  mitig.ids <- sapply(m.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[2]"), trim = T))
+  mitig.name <- sapply(m.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[1]"), trim = T))
+  mitig.urls <- sapply(m.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[1]/a/@title"), trim = T))
+  mitig.urls <- sapply(mitig.ids, function(x) paste("https://attack.mitre.org/mobile/index.php/Mitigation/", x, sep = ""))
+  names(mitig.urls) <- NULL
+  mitig.descr <- sapply(m.list, function(x) as.character(strcapture(x = as.character(rvest::html_nodes(x, xpath = "./td[3]")),
+                                                                   pattern = '>(.*?)</td',
+                                                                   proto = data.frame(chr = character()))$chr))
+
+  df.basic <- data.frame(id = mitig.ids,
+                         name = mitig.name,
+                         description = mitig.descr,
+                         source = mitig.urls,
+                         stringsAsFactors = FALSE)
+
+  if (verbose) print("[MOB]  - Processing Mitigations details and relationships...")
+  if (verbose) {pb <- utils::txtProgressBar(min = 0, max = nrow(df.basic), style = 3); i <- 1}
+
+  df <- data.frame(ID = character(),
+                   Tactic = character(),
+                   Platform = character(),
+                   Detection = character(),
+                   stringsAsFactors = FALSE)
+
+  for (src.url in unique(df.basic$source)) {
+    df <- plyr::rbind.fill(df, ExtractMitigationMob(src.url))
+    if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  }
+
+  # Tidy data
+  good <- names(which(apply(df, 2, function(x) sum(is.na(x))) < nrow(df.basic)*0.9))
+  df <- dplyr::select(df, good)
+  names(df) <- stringr::str_replace_all(tolower(names(df)), " ", ".")
+
+  df <- dplyr::left_join(df.basic, df, by = c("id"))
+
+  return(df)
+}
+
+ExtractMitigationMob <- function(source.url = "https://attack.mitre.org/mobile/index.php/Mitigation/MOB-M1005") {
+  doc <- xml2::read_html(source.url)
+
+  mitig.id <- stringr::str_split(source.url, "/")[[1]]
+  mitig.id <- mitig.id[length(mitig.id)]
+  headlines <- rvest::html_text(rvest::html_nodes(doc, xpath = '//h2[span[@id!="Navigation menu"]]'))
+
+  # Extract techniques used by the group
+  if ("Techniques Addressed by Mitigation" %in% headlines) {
+    if ((which(headlines == "Techniques Addressed by Mitigation") + 1) <= length(headlines)) {
+      # There are more info after Techniques
+      xpath <- paste('//h2[span[@id="Techniques_Addressed_by_Mitigation"]]',
+                     '/following-sibling::ul[following::h2[span[@id="',
+                     headlines[which(headlines == "Techniques_Addressed_by_Mitigation") + 1],
+                     '"]]]', sep = "")
+    } else {
+      # References is the following info
+      xpath <- paste('//h2[span[@id="Techniques_Addressed_by_Mitigation"]]',
+                     '/following-sibling::ul[following::h2[span[@id!="Techniques_Addressed_by_Mitigation"]]]',
+                     ' | ',
+                     '//h2[span[@id="Techniques_Addressed_by_Mitigation"]]/',
+                     'following-sibling::ul[following::div]',
+                     sep = "")
+    }
+    tech.raw <- rvest::html_nodes(x = doc, xpath = xpath)
+    tech.ids <- sapply(tech.raw, function(x) rvest::html_text(rvest::html_nodes(x, xpath = './li/a[1]/@title'), trim = TRUE))
+    tech.ids <- stringr::str_replace_all(tech.ids, "Technique/", "")
+    df.tech <- data.frame(id = rep(mitig.id, length(tech.ids)),
+                          tech.id = tech.ids,
+                          stringsAsFactors = FALSE)
+  } else {
+    df.tech <- NA
+  }
+
+  df <- data.frame(id = mitig.id, stringsAsFactors = FALSE)
+  if (is.data.frame(df.tech)) {
+    df <- dplyr::left_join(df, df.tech, by = c("id"))
+  }
+
+  return(df)
 }
