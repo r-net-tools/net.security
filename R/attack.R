@@ -61,11 +61,12 @@ ParseATTCKent <- function(verbose) {
   # Tidy data sets
   tactics <- tactics.raw
   techniques <- techniques.raw
-  good <- names(software.raw)[apply(software.raw, 2, function(x) length(unique(x)) < nrow(software.raw)*0.7)]
-  software <- dplyr::select(software.raw, good)
-  groups <- groups.raw
+  good <- c("id", "name", "description", "aliases", "source")
+  software <- unique(dplyr::select(software.raw, good))
+  groups <- unique(dplyr::select(groups.raw, good))
 
-  attck <- list(tactics, techniques, software, groups, relations)
+  attck <- list(tactics = tactics, techniques = techniques, software = software,
+                groups = groups, relations = relations)
   if (verbose) print("[ENT] ATT&CK Enterprise data sets created.")
 
   return(attck)
@@ -192,7 +193,7 @@ ParseTacticsEnt <- function(verbose = TRUE) {
 
   df.basic <- df.basic[, c("id", "name", "source")]
 
-  if (verbose) print("[PRE]  - Processing Tactics details and relationships...")
+  if (verbose) print("[ENT]  - Processing Tactics details and relationships...")
   df <- data.frame(id = character(),
                    description = character(),
                    deprecated = character(),
@@ -303,6 +304,8 @@ ParseTechniquesPRE <- function(verbose = TRUE) {
   }
 
   # Tidy data
+  good <- names(which(apply(df, 2, function(x) sum(is.na(x))) < nrow(df.basic)/2))
+  df <- dplyr::select(df, good)
   names(df) <- tolower(names(df))
 
   df <- dplyr::left_join(df.basic, df, by = c("id"))
@@ -626,7 +629,7 @@ ExtractGroupPRE <- function(source.url = "https://attack.mitre.org/pre-attack/in
 }
 
 ParseGroupsEnt <- function(verbose = TRUE) {
-  if (verbose) print("[PRE]  - Processing Groups basic information...")
+  if (verbose) print("[ENT]  - Processing Groups basic information...")
   source.url <- "https://attack.mitre.org/wiki/Groups"
   doc <- xml2::read_html(source.url)
 
@@ -815,14 +818,118 @@ ParseRelationsPRE <- function(tactics.raw, techniques.raw, groups.raw, verbose =
   df <- rbind(df, r)
 
   df$domain <- rep("PRE", nrow(df))
-
   df <- unique(df)
 
   return(df)
 }
 
 ParseRelationsEnt <- function(tactics.raw, techniques.raw, groups.raw, software.raw, verbose = TRUE) {
+  tactics <- dplyr::select(tactics.raw, id, name)
+  techniques <- dplyr::select(techniques.raw, -source, -mitigation, -description, -contents, -examples)
+  groups <- dplyr::select(groups.raw, id, tech.id, tech.used, soft.id)
+  software <- dplyr::select(software.raw, id, type, platform, tech.used, groups.using)
 
+  # Expand data.frames: one observation in one row
+  names(techniques) <- c("id", "name", "tactic", "platform", "permissions.required", "data.sources")
+  techniques <- tidyr::separate_rows(tidyr::separate_rows(tidyr::separate_rows(tidyr::separate_rows(techniques,
+                                                                                                    platform, sep = ", "),
+                                                                               tactic, sep = ", "),
+                                                          `permissions.required`, sep = ", "),
+                                     data.sources, sep = ", ")
+
+  df <- data.frame(from = character(),
+                   to = character(),
+                   source = character(),
+                   target = character(),
+                   info = character(),
+                   stringsAsFactors = FALSE)
+
+  # Techniques - Tactics
+  r <- dplyr::left_join(unique(dplyr::select(techniques, id, name, tactic)),
+                        tactics,
+                        by = c("tactic" = "name"))
+  names(r) <- c("tech.id", "tech.name", "tactic.name", "tactic.id")
+  r <- unique(dplyr::select(r, tech.id, tactic.id))
+  names(r) <- c("from", "to")
+  r$source <- rep("technique", nrow(r))
+  r$target <- rep("tactic", nrow(r))
+  r$info <- rep(NA, nrow(r))
+  df <- rbind(df, r)
+
+  # Techniques - Platform
+  r <- unique(dplyr::select(techniques, id, platform))
+  names(r) <- c("from", "to")
+  r$source <- rep("technique", nrow(r))
+  r$target <- rep("platform", nrow(r))
+  r$info <- rep(NA, nrow(r))
+  df <- rbind(df, r)
+
+  # Techniques - Permissions required
+  r <- unique(dplyr::select(techniques, id, permissions.required))
+  names(r) <- c("from", "to")
+  r$source <- rep("technique", nrow(r))
+  r$target <- rep("permissions.required", nrow(r))
+  r$info <- rep(NA, nrow(r))
+  df <- rbind(df, r)
+
+  # Techniques - Data sources
+  r <- unique(dplyr::select(techniques, id, data.sources))
+  names(r) <- c("from", "to")
+  r$source <- rep("technique", nrow(r))
+  r$target <- rep("data.sources", nrow(r))
+  r$info <- rep(NA, nrow(r))
+  df <- rbind(df, r)
+
+  # Tactics - Techniques
+  # r <- unique(dplyr::select(tactics.raw, id, technique.id, technique.desc))
+  # names(r) <- c("from", "to", "info")
+  # r$source <- rep("tactic", nrow(r))
+  # r$target <- rep("technique", nrow(r))
+  # df <- rbind(df, r)
+
+  # Groups - Techniques
+  r <- unique(dplyr::select(groups, id, tech.id, tech.used))
+  names(r) <- c("from", "to", "info")
+  r$source <- rep("group", nrow(r))
+  r$target <- rep("technique", nrow(r))
+  df <- rbind(df, r)
+
+  # Groups - Software
+  r <- unique(dplyr::select(groups, id, soft.id))
+  names(r) <- c("from", "to")
+  r$source <- rep("group", nrow(r))
+  r$target <- rep("software", nrow(r))
+  r$info <- rep(NA, nrow(r))
+  df <- rbind(df, r)
+
+  # Software - Technique
+  r <- unique(dplyr::select(software, id, tech.used))
+  names(r) <- c("from", "to")
+  r$source <- rep("software", nrow(r))
+  r$target <- rep("technique", nrow(r))
+  r$info <- rep(NA, nrow(r))
+  df <- rbind(df, r)
+
+  # Software - Groups
+  r <- unique(dplyr::select(software, id, groups.using))
+  names(r) <- c("from", "to")
+  r$source <- rep("software", nrow(r))
+  r$target <- rep("groups", nrow(r))
+  r$info <- rep(NA, nrow(r))
+  df <- rbind(df, r)
+
+  # Software - Platform
+  r <- unique(dplyr::select(software, id, platform))
+  names(r) <- c("from", "to")
+  r$source <- rep("software", nrow(r))
+  r$target <- rep("platform", nrow(r))
+  r$info <- rep(NA, nrow(r))
+  df <- rbind(df, r)
+
+  df$domain <- rep("Enterprise", nrow(df))
+  df <- unique(df)
+
+  return(df)
 }
 
 ################################################################################
