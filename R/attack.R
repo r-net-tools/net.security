@@ -73,15 +73,16 @@ ParseATTCKent <- function(verbose) {
 }
 
 ParseATTCKmob <- function(verbose) {
-  if (verbose) print("Processing ATT&CK Mobile raw data...")
-  tactics <- data.frame()
-  techniques <- data.frame()
-  software <- data.frame()
-  groups <- data.frame()
-  relations <- data.frame()
-
-  attck <- list(tactics, techniques, software, groups, relations)
-  if (verbose) print("ATT&CK Mobile data sets created.")
+  if (verbose) print("[MOB] Processing Tactics raw data...")
+  tactics.raw <- ParseTacticsMob(verbose)
+  if (verbose) print("[MOB] Processing Techniques raw data...")
+  techniques.raw <- ParseTechniquesMob(verbose)
+  if (verbose) print("[MOB] Processing Software raw data...")
+  software.raw <- ParseSoftwareMob(verbose)
+  if (verbose) print("[MOB] Processing Groups raw data...")
+  groups.raw <- ParseGroupsMob(verbose)
+  if (verbose) print("[MOB] Building data sets relationships...")
+  relations <- ParseRelationsEnt(tactics.raw, techniques.raw, groups.raw, software.raw, verbose)
 
   return(attck)
 }
@@ -257,6 +258,119 @@ ExtractTacticEnt <- function(source.url = "https://attack.mitre.org/wiki/Collect
                    technique.desc = tech.descr,
                    technique.url = tech.url,
                    stringsAsFactors = FALSE)
+
+  return(tactic)
+}
+
+ParseTacticsMob <- function(verbose = TRUE) {
+  if (verbose) print("[MOB]  - Processing Pre-Exploit Tactics basic information...")
+  source.url <- "https://attack.mitre.org/mobile/index.php/Category:Pre-Exploit_Tactic"
+  doc <- xml2::read_html(source.url)
+  t.list <- rvest::html_nodes(x = doc, xpath = '//*[@id="mw-pages"]/div/ul/li')
+  tactic.id <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./a/@href"), trim = TRUE))
+  tactic.url <- sapply(tactic.id, function(x) paste("https://attack.mitre.org", x, sep = ""))
+  names(tactic.url) <- NULL
+  tactic.id <- as.character(sapply(tactic.id, function(x) stringr::str_split(x, "/")[[1]][length(stringr::str_split(x, "/")[[1]])]))
+  tactic.name <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./a/@title"), trim = TRUE))
+  df.basic.pre.exploit <- data.frame(id = tactic.id,
+                                     name = tactic.name,
+                                     source = tactic.url,
+                                     stringsAsFactors = FALSE)
+
+  if (verbose) print("[MOB]  - Processing Common Tactics basic information...")
+  source.url <- "https://attack.mitre.org/mobile/index.php/Category:Tactic"
+  doc <- xml2::read_html(source.url)
+  t.list <- rvest::html_nodes(x = doc, xpath = '//*[@id="mw-pages"]/div/div/div/ul/li')
+  tactic.id <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./a/@href"), trim = TRUE))
+  tactic.url <- sapply(tactic.id, function(x) paste("https://attack.mitre.org", x, sep = ""))
+  names(tactic.url) <- NULL
+  tactic.id <- as.character(sapply(tactic.id, function(x) stringr::str_split(x, "/")[[1]][length(stringr::str_split(x, "/")[[1]])]))
+  tactic.name <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./a/@title"), trim = TRUE))
+  df.basic.common <- data.frame(id = tactic.id,
+                                name = tactic.name,
+                                source = tactic.url,
+                                stringsAsFactors = FALSE)
+
+  if (verbose) print("[MOB]  - Processing Off-Device Tactics basic information...")
+  source.url <- "https://attack.mitre.org/mobile/index.php/Category:Off_Device_Tactic"
+  doc <- xml2::read_html(source.url)
+  t.list <- rvest::html_nodes(x = doc, xpath = '//*[@id="mw-pages"]/div/ul/li')
+  tactic.id <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./a/@href"), trim = TRUE))
+  tactic.url <- sapply(tactic.id, function(x) paste("https://attack.mitre.org", x, sep = ""))
+  names(tactic.url) <- NULL
+  tactic.id <- as.character(sapply(tactic.id, function(x) stringr::str_split(x, "/")[[1]][length(stringr::str_split(x, "/")[[1]])]))
+  tactic.name <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./a/@title"), trim = TRUE))
+  df.basic.off.device <- data.frame(id = tactic.id,
+                                    name = tactic.name,
+                                    source = tactic.url,
+                                    stringsAsFactors = FALSE)
+
+  df.basic <- rbind(df.basic.pre.exploit, df.basic.common, df.basic.off.device)
+
+  if (verbose) print("[MOB]  - Processing Tactics details and relationships...")
+  df <- data.frame(id = character(),
+                   description = character(),
+                   source = character(),
+                   stringsAsFactors = FALSE)
+
+  if (verbose) {pb <- utils::txtProgressBar(min = 0, max = nrow(df.basic), style = 3); i <- 1}
+
+  for (src.url in unique(df.basic$source)) {
+    df <- rbind(df, ExtractTacticMob(src.url))
+    if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  }
+
+  df <- dplyr::left_join(df.basic, df, by = c("id"))
+
+  return(df)
+}
+
+ExtractTacticMob <- function(source.url = "https://attack.mitre.org/mobile/index.php/App_Delivery_via_Authorized_App_Store") {
+  print(source.url)
+  doc <- xml2::read_html(source.url)
+
+  # Detect deprecated tactic
+  deprecated <- "Deprecated" %in% rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-content-text"]/table/th'))
+
+  tactic.id <- stringr::str_split(source.url, "/")[[1]]
+  tactic.id <- tactic.id[length(tactic.id)]
+
+  # Parse headers as list of nodes
+  headlines <- rvest::html_nodes(x = doc, xpath = '//*[self::h2]|//*[self::h1]')
+  xpath <- sprintf("//p[count(preceding-sibling::h1)=%d] | //div[@id='mw-content-text']/ul[count(preceding-sibling::h1)=%d] | //p[count(preceding-sibling::h2)=%d] | //div[@id='mw-content-text']/ul[count(preceding-sibling::h2)=%d]",
+                   seq_along(headlines) - 1, seq_along(headlines) - 1, seq_along(headlines) - 1, seq_along(headlines) - 1)
+  tactic <- purrr::set_names(purrr::map_chr(purrr::map(purrr::map(xpath, ~rvest::html_nodes(x = doc, xpath = .x)),
+                                                   rvest::html_text, trim = TRUE),
+                                        paste, collapse = "\n")
+                         ,
+                         rvest::html_text(rvest::html_node(headlines, ".mw-headline")))
+  tactic <- as.data.frame(t(tactic[tactic != ""]), stringsAsFactors = FALSE)
+  tactic <- tactic[,!is.na(names(tactic))]
+  names(tactic) <- c("description", "techniques.header")
+  tactic$id <- rep(tactic.id, nrow(tactic))
+  tactic <- tactic[, c("id", "description")]
+  tactic$source <- rep(source.url, nrow(tactic))
+  tactic$deprecated <- deprecated
+
+  # Extract related techniques
+  t.list <- rvest::html_nodes(x = doc, xpath = "//div/table/tr[@data-row-number]")
+
+  tech.id <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[1]/a/@title")))
+  tech.url <- sapply(tech.id, function(x) paste("https://attack.mitre.org/mobile/index.php/", x, sep = ""))
+  names(tech.url) <- NULL
+  tech.id <- as.character(sapply(tech.id, function(x) stringr::str_split(x, "/")[[1]][length(stringr::str_split(x, "/")[[1]])]))
+  tech.name <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[1]")))
+  tech.descr <- sapply(t.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[3]")))
+
+  # Build tactic raw data.frame
+  tactic <- data.frame(id = rep(tactic$id, length(tech.id)),
+                       description = rep(tactic$description, length(tech.id)),
+                       deprecated = rep(tactic$deprecated, length(tech.id)),
+                       technique.id = tech.id,
+                       technique.name = tech.name,
+                       technique.desc = tech.descr,
+                       technique.url = tech.url,
+                       stringsAsFactors = FALSE)
 
   return(tactic)
 }
@@ -479,7 +593,6 @@ ExtractSoftwareEnt <- function(source.url = "https://attack.mitre.org/wiki/Softw
   headlines <- rvest::html_nodes(x = doc, xpath = '//*[self::h2]|//*[self::h1]')
   xpath <- sprintf("//p[count(preceding-sibling::h1)=%d] | //div[@id='mw-content-text']/ul[count(preceding-sibling::h1)=%d] | //p[count(preceding-sibling::h2)=%d] | //div[@id='mw-content-text']/ul[count(preceding-sibling::h2)=%d]",
                    seq_along(headlines) - 1, seq_along(headlines) - 1, seq_along(headlines) - 1, seq_along(headlines) - 1)
-
   df <- purrr::set_names(purrr::map_chr(purrr::map(purrr::map(xpath, ~rvest::html_nodes(x = doc, xpath = .x)),
                                                    as.character, trim = TRUE),
                                         paste, collapse = "\n")
