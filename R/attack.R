@@ -626,8 +626,135 @@ ExtractGroupPRE <- function(source.url = "https://attack.mitre.org/pre-attack/in
 }
 
 ParseGroupsEnt <- function(verbose = TRUE) {
+  if (verbose) print("[PRE]  - Processing Groups basic information...")
+  source.url <- "https://attack.mitre.org/wiki/Groups"
+  doc <- xml2::read_html(source.url)
 
+  # Extract basic information
+  g.list <- rvest::html_nodes(x = doc, xpath = "//div/table/tr")
+  group.ids <- sapply(g.list, function(x) rvest::html_text(rvest::html_nodes(x,xpath = "./td[1]/a/@href"), trim = T))
+  group.urls <- sapply(group.ids, function(x) paste("https://attack.mitre.org", x, sep = ""))
+  names(group.urls) <- NULL
+  group.ids <- sapply(group.ids, function(x) stringr::str_split(x, "/")[[1]][length(stringr::str_split(x, "/")[[1]])])
+  names(group.ids) <- NULL
+  group.names <- sapply(g.list, function(x) rvest::html_text(rvest::html_nodes(x, xpath = "./td[1]/a"), trim = T))
+  group.aliases <- sapply(g.list, function(x) as.character(strcapture(x = as.character(rvest::html_nodes(x, xpath = "./td[2]")),
+                                                                       pattern = '>(.*?)</td',
+                                                                       proto = data.frame(chr = character()))$chr))
+  group.descr <- sapply(g.list, function(x) as.character(strcapture(x = as.character(rvest::html_nodes(x, xpath = "./td[3]")),
+                                                                     pattern = '>(.*?)</td',
+                                                                     proto = data.frame(chr = character()))$chr))
+
+  df.basic <- data.frame(id = group.ids,
+                         name = group.names,
+                         source = group.urls,
+                         aliases = group.aliases,
+                         description = group.descr,
+                         stringsAsFactors = FALSE)
+
+  if (verbose) print("[ENT]  - Processing Groups details and relationships...")
+  if (verbose) {pb <- utils::txtProgressBar(min = 0, max = nrow(df.basic), style = 3); i <- 1}
+
+  df <- data.frame(id = character(),
+                   stringsAsFactors = FALSE)
+
+  for (src.url in unique(df.basic$source)) {
+    df <- plyr::rbind.fill(df, ExtractGroupEnt(src.url))
+    if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  }
+
+  df <- dplyr::left_join(df.basic, df, by = c("id"))
+
+  return(df)
 }
+
+ExtractGroupEnt <- function(source.url = "https://attack.mitre.org/wiki/Group/G0007") {
+  doc <- xml2::read_html(source.url)
+
+  xml2::xml_remove(rvest::html_nodes(doc, ".toc"))
+  xml2::xml_remove(rvest::html_nodes(doc, "#mw-content-text > ul > li > span > a"))
+
+  # Detect Deprecated
+  deprecated <- FALSE
+  if (length(rvest::html_nodes(x = doc, xpath = '//*[@id="DEPRECATION_WARNING"]/parent::*')) > 0) {
+    xml2::xml_remove(rvest::html_nodes(doc, xpath = '//*[@id="DEPRECATION_WARNING"]/parent::*'))
+    deprecated <- TRUE
+  }
+
+  group.id <- stringr::str_split(source.url, "/")[[1]]
+  group.id <- group.id[length(group.id)]
+  headlines <- rvest::html_text(rvest::html_nodes(doc, xpath = '//h2[span[@id!="Navigation menu"]]'))
+
+  # Extract techniques used by the group
+  if ("Techniques Used" %in% headlines) {
+    if ((which(headlines == "Techniques Used") + 1) >= length(headlines)) {
+      # There are more info after Techniques
+      xpath <- paste('//h2[span[@id="Techniques_Used"]]',
+                     '/following-sibling::ul[following::h2[span[@id="',
+                     headlines[which(headlines == "Techniques Used") + 1],
+                     '"]]]', sep = "")
+    } else {
+      # References is the following info
+      xpath <- paste('//h2[span[@id="Techniques Used"]]',
+                     '/following-sibling::ul[following::h2[span[@id!="Techniques Used"]]]',
+                     ' | ',
+                     '//h2[span[@id="Techniques Used"]]/',
+                     'following-sibling::ul[following::div]',
+                     sep = "")
+    }
+    tech.raw <- rvest::html_nodes(x = doc, xpath = xpath)
+    tech.ids <- sapply(tech.raw, function(x) rvest::html_text(rvest::html_nodes(x, xpath = './li/a[1]/@title'), trim = TRUE))
+    tech.ids <- stringr::str_replace_all(tech.ids, "Technique/", "")
+    tech.names <- sapply(tech.raw, function(x) rvest::html_text(rvest::html_nodes(x, xpath = './li/a[1]'), trim = TRUE))
+    tech.used <- sapply(tech.raw, function(x) rvest::html_text(rvest::html_nodes(x, xpath = './li'),trim = TRUE))
+    df.tech <- data.frame(id = rep(group.id, length(tech.names)),
+                          tech.id = tech.ids,
+                          tech.name = tech.names,
+                          tech.used = tech.used,
+                          stringsAsFactors = FALSE)
+  } else {
+    df.tech <- NA
+  }
+
+  # Extract software used by the group
+  if ("Software" %in% headlines) {
+    if ((which(headlines == "Software") + 1) <= length(headlines)) {
+      # There are more info after Software
+      xpath <- paste('//h2[span[@id="Software"]]',
+                     '/following-sibling::ul[following::h2[span[@id="',
+                     headlines[which(headlines == "Software") + 1],
+                     '"]]]', sep = "")
+    } else {
+      # References is the following info
+      xpath <- paste('//h2[span[@id="Software"]]',
+                     '/following-sibling::ul[following::h2[span[@id!="Software"]]]',
+                     ' | ',
+                     '//h2[span[@id="Software"]]/',
+                     'following-sibling::ul[following::div[@class="scite-content"]]',
+                     sep = "")
+    }
+    soft.raw <- rvest::html_nodes(x = doc, xpath = xpath)
+    soft.ids <- sapply(soft.raw, function(x) rvest::html_text(rvest::html_nodes(x, xpath = './li/a[1]/@title'), trim = TRUE))
+    soft.ids <- stringr::str_replace_all(soft.ids, "Software/", "")
+    df.soft <- data.frame(id = rep(group.id, length(soft.ids)),
+                          soft.id = soft.ids,
+                          stringsAsFactors = FALSE)
+  } else {
+    df.soft <- NA
+  }
+
+  df <- data.frame(id = group.id, stringsAsFactors = FALSE)
+  if (is.data.frame(df.tech)) {
+    df <- dplyr::left_join(df, df.tech, by = c("id"))
+  }
+  if (is.data.frame(df.soft)) {
+    df <- dplyr::left_join(df, df.soft, by = c("id"))
+  }
+
+  return(df)
+}
+
+
 
 #############
 # Relations
