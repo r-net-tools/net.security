@@ -17,7 +17,17 @@ GetATTCKData <- function(verbose = TRUE) {
   attck.ent <- ParseATTCKent(verbose)
   if (verbose) print("[+] ATT&CK's MOBILE DOMAIN")
   attck.mob <- ParseATTCKmob(verbose)
-  attck <- list(attck.pre, attck.ent, attck.mob)
+
+  # Join domains
+  tactics <- dplyr::bind_rows(attck.pre$tactics, attck.ent$tactics, attck.mob$tactics)
+  techniques <- dplyr::bind_rows(attck.pre$techniques, attck.ent$techniques, attck.mob$techniques)
+  groups <- dplyr::bind_rows(attck.pre$groups, attck.ent$groups, attck.mob$groups)
+  software <- dplyr::bind_rows(attck.ent$software, attck.mob$software)
+  mitigations <- attck.mob$mitigations
+  relations <- dplyr::bind_rows(attck.pre$relations, attck.ent$relations, attck.mob$relations)
+
+  attck <- list(tactics = tactics, techniques = techniques, groups = groups,
+                software = software, mitigations = mitigations, relations = relations)
   if (verbose) print(paste("ATT&CK data sets created."))
   return(attck)
 }
@@ -35,8 +45,13 @@ ParseATTCKpre <- function(verbose = TRUE) {
   # Tidy data sets
   if (verbose) print("[PRE] Tidy raw data...")
   tactics <- unique(dplyr::select(tactics.raw, id, name, description, source, deprecated))
-  techniques <- unique(dplyr::select(techniques.raw, -tactic))
+  tactics$domain <- rep("PRE", nrow(tactics))
+  # Description is equal to definition, but the second one is in HTML
+  techniques.raw$description <- techniques.raw$definition
+  techniques <- unique(dplyr::select(techniques.raw, -tactic, -definition))
+  techniques$domain <- rep("PRE", nrow(techniques))
   groups <- unique(dplyr::select(groups.raw, id, name, aliases, description, source))
+  groups$domain <- rep("PRE", nrow(groups))
 
   attck <- list(tactics = tactics, techniques = techniques,
                 groups = groups, relations = relations)
@@ -60,10 +75,17 @@ ParseATTCKent <- function(verbose) {
 
   # Tidy data sets
   tactics <- tactics.raw
-  techniques <- techniques.raw
-  good <- c("id", "name", "description", "aliases", "source")
+  tactics$domain <- rep("ENT", nrow(tactics))
+  good <- c("id", "name", "description", "mitigation", "examples", "source")
+  techniques <- unique(dplyr::select(techniques.raw, good))
+  techniques$deprecated <- rep(FALSE, nrow(techniques))
+  techniques$domain <- rep("ENT", nrow(techniques))
+  good <- c("id", "name", "description", "aliases", "type", "source")
   software <- unique(dplyr::select(software.raw, good))
+  software$domain <- rep("ENT", nrow(software))
+  good <- c("id", "name", "description", "aliases", "source")
   groups <- unique(dplyr::select(groups.raw, good))
+  groups$domain <- rep("ENT", nrow(groups))
 
   attck <- list(tactics = tactics, techniques = techniques, software = software,
                 groups = groups, relations = relations)
@@ -88,10 +110,17 @@ ParseATTCKmob <- function(verbose) {
 
   # Tidy data sets
   tactics <- unique(dplyr::select(tactics.raw, id, name, description, source))
-  techniques <- unique(dplyr::select(techniques.raw, id, name, description, platform, detection, mitigation, examples, mtc.id))
+  tactics$domain <- rep("MOB", nrow(tactics))
+  tactics$deprecated <- rep(FALSE, nrow(tactics))
+  techniques <- unique(dplyr::select(techniques.raw, id, name, description, source, detection, mitigation, examples, mtc.id))
+  techniques$deprecated <- rep(FALSE, nrow(techniques))
+  techniques$domain <- rep("MOB", nrow(techniques))
   software <- unique(dplyr::select(software.raw, id, name, description, type, aliases, source))
-  groups <- groups.raw
+  software$domain <- rep("MOB", nrow(software))
+  groups <- unique(dplyr::select(groups.raw, -soft.id))
+  groups$domain <- rep("MOB", nrow(groups))
   mitigations <- unique(dplyr::select(mitigations.raw, id, name, description, source))
+  mitigations$domain <- rep("MOB", nrow(mitigations))
 
   attck <- list(tactics = tactics, techniques = techniques, software = software,
                 groups = groups, mitigations = mitigations, relations = relations)
@@ -435,7 +464,7 @@ ParseTechniquesPRE <- function(verbose = TRUE) {
   # Tidy data
   good <- names(which(apply(df, 2, function(x) sum(is.na(x))) < nrow(df.basic)/2))
   df <- dplyr::select(df, good)
-  names(df) <- tolower(names(df))
+  names(df) <- stringr::str_replace_all(tolower(names(df)), " ", ".")
 
   df <- dplyr::left_join(df.basic, df, by = c("id"))
 
