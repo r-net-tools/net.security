@@ -3,5 +3,6 @@
 export(DataSetList)
 export(DataSetStatus)
 export(DataSetUpdate)
+export(GetATTCKData)
 export(GetDataFrame)
 export(GetSecurityNetwork)
