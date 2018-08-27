@@ -105,6 +105,23 @@ DataSetStatus <- function(ds = "all") {
       # }
     }
   }
+  if (tolower(ds) %in% c("attck", "all")) {
+    # Get Status from local attck data.frame
+    if (DataSetAvailable("attck")) {
+      print("-: ATT&CK dataset:")
+      attck.timestamp <- strptime(netsec.data[[1]][["attck.ini"]], format = "%Y-%m-%d")
+      print(paste(" |- Last update for ATT&CK dataset at", as.character(attck.timestamp)))
+      print(paste(" |- Data set with", as.character(nrow(netsec.data[[2]][["attck"]])), "rows and",
+                  as.character(ncol(netsec.data[[2]][["attck"]])), "variables."))
+      # attckonline <- strptime(LastDownloadATTCKDate(), format = "%Y-%m-%d")
+      # print(paste(" |- Online RAW data updated at", attckonline))
+      # if ((attckonline-attck.timestamp)<=0) {
+      #   print(paste(" |- No updates needed for ATT&CK dataset."))
+      # } else {
+      #   print(paste(" |- ATT&CK dataset", as.character(attckonline-attck.timestamp), "days outdated."))
+      # }
+    }
+  }
   return(status)
 }
 
@@ -191,12 +208,13 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
   }
 
   ds <- tolower(ds)
-  if (ds %in% c("all", "cves", "cpes", "cwes", "capec", "sard")) {
+  if (ds %in% c("all", "cves", "cpes", "cwes", "capec", "sard", "attck")) {
     cves.ini <- Sys.Date()
     cpes.ini <- Sys.Date()
     cwes.ini <- Sys.Date()
     capec.ini <- Sys.Date()
     sard.ini <- Sys.Date()
+    attck.ini <- Sys.Date()
     timestamp <- list()
     datasets <- netsec.data$datasets
     cves.nrow <- nrow(netsec.data$datasets$cves)
@@ -204,6 +222,7 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
     cwes.nrow <- nrow(netsec.data$datasets$cwes)
     capec.nrow <- nrow(netsec.data$datasets$capec)
     sard.nrow <- nrow(netsec.data$datasets$sard)
+    attck.nrow <- nrow(netsec.data$datasets$attck)
 
     # Get updated data.frames
     if (use.remote) {
@@ -236,6 +255,11 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
         sard <- netsec.data$datasets$sard
         sard.ini <- netsec.data$dwinfo[["sard.ini"]]
       }
+      if (tolower(ds) %in% c("attck", "all")) {
+        #  Update local sard data.frame from r-net-tools
+        attck <- netsec.data$datasets$attck
+        attck.ini <- netsec.data$dwinfo[["attck.ini"]]
+      }
       rm(netsec.data)
     } else {
       if (tolower(ds) %in% c("cves", "all")) {
@@ -262,6 +286,11 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
         print("[*] Updating SARD data.frame...")
         sard <- GetSARDData(savepath = tempdir(), verbose = T)
         print("CAPEC data.frame UPDATED!")
+      }
+      if (tolower(ds) %in% c("attck", "all")) {
+        print("[*] Updating ATT&CK data.frame...")
+        attck <- GetATTCKData(savepath = tempdir(), verbose = T)
+        print("ATT&CK data.frame UPDATED!")
       }
     }
 
@@ -306,6 +335,14 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
       new.sard <- as.character(nrow(sard) - sard.nrow)
       print(paste("Updated SARD data.frame has", new.sard, "new observations."))
     }
+    if (tolower(ds) %in% c("attck", "all")) {
+      #  Update package datasets with updated attck data.frame
+      netsec.data$dwinfo[["attck.ini"]] <- sard.ini
+      netsec.data$dwinfo[["attck.fin"]] <- sard.ini
+      datasets[["attck"]] <- attck
+      new.attck <- as.character(nrow(attck) - attck.nrow)
+      print(paste("Updated ATT&CK data.frame has", new.attck, "new observations."))
+    }
     netsec.data$datasets <- datasets
 
     # Save samples if needed
@@ -344,6 +381,13 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
         sard.sample <- sard[sample(nrow(sard), 1000), ]
         sard.sample[] <- lapply(sard.sample, as.character)
         save(object = sard.sample, file = "data/sard.sample.rda", compress = "xz")
+      }
+      if (tolower(ds) %in% c("attck", "all")) {
+        #  Update local attck data.frame from official sources
+        # Save sample attck data frame
+        attck.sample <- attck[sample(nrow(attck), 1000), ]
+        attck.sample[] <- lapply(attck.sample, as.character)
+        save(object = attck.sample, file = "data/attck.sample.rda", compress = "xz")
       }
     }
     print("Compressing and saving data sets to local file...")
@@ -413,6 +457,12 @@ DataSetList <- function(){
     ifelse(datasets == "",
            yes = datasets <- "sard",
            no = datasets[length(datasets) + 1] <- "sard")
+  }
+  # Search ATT&CK dataset
+  if (DataSetAvailable(ds = "attck")) {
+    ifelse(datasets == "",
+           yes = datasets <- "attck",
+           no = datasets[length(datasets) + 1] <- "attck")
   }
 
   # Check if no datasets available
