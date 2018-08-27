@@ -1,4 +1,14 @@
-# net.security 0.3.6
+# net.security 0.3.9
+
+ * Added ATT&CK data sets.
+ * Removed CARET data sets. All data is included in ATT&CK data sets.
+ * Some minor improvements.
+ 
+# net.security 0.3.8
+
+ * Added CARET data sets.
+ 
+# net.security 0.3.7
 
  * Added network algorithms relating standards.
  * Multiple minor improvements.
