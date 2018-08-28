@@ -39,49 +39,30 @@ ParseCARETData <- function(caret.file, verbose) {
                                           field = x$fields,
                                           stringsAsFactors = F)
                              })
-  car.groups <- plyr::ldply(caret.raw$groups,
-                            function(x) {
-                              plyr::ldply(x$techniques,
-                                          function(y) {
-                                            data.frame(name = x$name,
-                                                       technique = y,
-                                                       id = x$ID,
-                                                       aliases = as.character(jsonlite::toJSON(x$aliases)),
-                                                       stringsAsFactors = F)
-                                          }
-                              )
-                            })
-  car.techniques <- plyr::ldply(caret.raw$techniques,
-                                function(x) {
-                                  plyr::ldply(x$tactics,
-                                              function(y) {
-                                                data.frame(url = paste("https://attack.mitre.org/wiki", x$name, sep = "/"),
-                                                           tactic = y,
-                                                           id = x$ID,
-                                                           display_name = x$display_name,
-                                                           stringsAsFactors = F)
-                                              }
-                                  )
-                                })
-
-  tech.url <- "https://attack.mitre.org/wiki/All_Techniques"
-  tech.doc <- xml2::read_html(tech.url)
-  tech.descr <- plyr::ldply(rvest::html_nodes(x = tech.doc, xpath = '//td[@class="Technical-Description smwtype_txt"]'),
-                       function(x) {
-                           paste(as.character(xml2::xml_contents(x)), collapse = "<br>")
-                       })
-  tech.id <- sapply(X = rvest::html_nodes(x = tech.doc, xpath = '//td[@class="ID smwtype_txt"]'),
-                       function(x) {
-                         rvest::html_text(x)
-                       })
-  tech.description <- as.data.frame(cbind(id = tech.id, description = tech.descr), stringsAsFactors = F)
-  car.techniques <- dplyr::left_join(car.techniques, tech.description, c("id" = "id"))
-  names(car.techniques)[5] <- "descr.html"
-
-  require("purrr")
-  techniques.wiki <- lapply(unique(car.techniques$url), function(x) getTechniqueWikiInfo(x))
-  techniques.wiki <- plyr::ldply(techniques.wiki, data.frame, stringsAsFactors = FALSE)
-  car.techniques <- dplyr::left_join(car.techniques, techniques.wiki, c("id" = "id"))
+  # car.groups <- plyr::ldply(caret.raw$groups,
+  #                           function(x) {
+  #                             plyr::ldply(x$techniques,
+  #                                         function(y) {
+  #                                           data.frame(name = x$name,
+  #                                                      technique = y,
+  #                                                      id = x$ID,
+  #                                                      aliases = as.character(jsonlite::toJSON(x$aliases)),
+  #                                                      stringsAsFactors = F)
+  #                                         }
+  #                             )
+  #                           })
+  # car.techniques <- plyr::ldply(caret.raw$techniques,
+  #                               function(x) {
+  #                                 plyr::ldply(x$tactics,
+  #                                             function(y) {
+  #                                               data.frame(url = paste("https://attack.mitre.org/wiki", x$name, sep = "/"),
+  #                                                          tactic = y,
+  #                                                          id = x$ID,
+  #                                                          display_name = x$display_name,
+  #                                                          stringsAsFactors = F)
+  #                                             }
+  #                                 )
+  #                               })
 
   car.analytics <- plyr::ldply(caret.raw$analytics,
                                function(x) {
@@ -91,39 +72,37 @@ ParseCARETData <- function(caret.file, verbose) {
                                                  plyr::ldply(y$tactics, function(z) {
                                                    data.frame(id = x$name,
                                                               name = x$shortName,
-                                                              tactic = z,
+                                                              tactic.name = z,
                                                               cover = y$coverage,
-                                                              tech = y$technique,
+                                                              tech.id = stringr::str_replace(string = y$technique, pattern = "Technique/", replacement = ""),
                                                               stringsAsFactors = F)
                                                  })
                                                } else {
                                                  data.frame(id = x$name,
                                                             name = x$shortName,
-                                                            tactic = y$tactics,
+                                                            tactic.name = y$tactics,
                                                             cover = y$coverage,
-                                                            tech = y$technique,
+                                                            tech.id = stringr::str_replace(string = y$technique, pattern = "Technique/", replacement = ""),
                                                             stringsAsFactors = F)
                                                }
                                              }
                                  )
                                })
+  car.url <- "https://car.mitre.org/wiki/Full_Analytic_List"
+  car.html <- RCurl::getURL(url = car.url, ssl.verifypeer = FALSE)
+  doc <- xml2::read_html(car.html)
+
+  car.analytics <- dplyr::left_join(x = car.analytics,
+                                    y = as.data.frame(cbind(car.id = rvest::html_text(rvest::xml_nodes(doc,
+                                                                                                       xpath = '//div[@id="mw-content-text"]/table/tr/td[@class="Analytic smwtype_wpg"]/a/@title')),
+                                                            car.hypothesis = rvest::html_text(rvest::xml_nodes(doc,
+                                                                                                               xpath = '//div[@id="mw-content-text"]/table/tr/td[@class="Hypothesis smwtype_txt"]'))),
+                                                      stringsAsFactors = F),
+                                    by = c("id" = "car.id"))
 
   caret <- list(data.model = car.data.model,
-                groups = car.groups,
                 sensors = car.sensors,
-                techniques = car.techniques,
                 analytics = car.analytics)
-
-  car.url <- "https://car.mitre.org/wiki/Full_Analytic_List"
-  doc <- xml2::read_html(car.url)
-
-  caret$analytics <- dplyr::left_join(x = caret$analytics,
-                                      y = as.data.frame(cbind(car.id = rvest::html_text(rvest::xml_nodes(doc,
-                                                                                                         xpath = '//div[@id="mw-content-text"]/table/tr/td[@class="Analytic smwtype_wpg"]/a/@title')),
-                                                              car.hypothesis = rvest::html_text(rvest::xml_nodes(doc,
-                                                                                                                 xpath = '//div[@id="mw-content-text"]/table/tr/td[@class="Hypothesis smwtype_txt"]'))),
-                                                        stringsAsFactors = F),
-                                      by = c("id" = "car.id"))
 
   return(caret)
 }

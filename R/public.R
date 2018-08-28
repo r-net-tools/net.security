@@ -435,8 +435,12 @@ DataSetUpdate <- function(ds = "all", samples = FALSE, use.remote = TRUE, force.
       if (tolower(ds) %in% c("caret", "all")) {
         #  Update local caret data.frame from official sources
         # Save sample caret data frame
-        caret.sample <- caret[sample(nrow(caret), 1000), ]
-        caret.sample[] <- lapply(caret.sample, as.character)
+        caret.datamodel.sample <- caret$data.model[sample(nrow(caret$data.model), 100), ]
+        caret.sensors.sample <- caret$sensors[sample(nrow(caret$sensors), 100), ]
+        caret.analytics.sample <- caret$analytics[sample(nrow(caret$analytics), 100), ]
+        caret.sample <- list(data.model = caret.datamodel.sample,
+                             sensors = caret.sensors.sample,
+                             analytics = caret.analytics.sample)
         save(object = caret.sample, file = "data/caret.sample.rda", compress = "xz")
       }
     }
