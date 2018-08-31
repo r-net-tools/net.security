@@ -58,6 +58,7 @@ ParseCARDataModel <- function(verbose) {
   }
 
   df <- dplyr::left_join(df.basic, df, by = c("id"))
+  names(df) <- c("id", "source", "description", "action", "field", "sensor")
 
   return(df)
 }
@@ -113,6 +114,58 @@ ParseCARSensors <- function(verbose) {
   if (verbose) print("[CAR]  - Processing Sensors raw data...")
   source.url <- "https://car.mitre.org/wiki/Category:Sensors"
   doc <- xml2::read_html(RCurl::getURL(url = source.url, ssl.verifypeer = FALSE))
+
+  s.sources <- rvest::html_text(rvest::html_nodes(x = doc, xpath = '//*[@id="mw-pages"]/div/ul/li/a/@href'))
+  s.ids <- stringr::str_replace(s.sources, "/wiki/", "")
+  s.sources <- as.character(sapply(s.sources, function(x) paste("https://car.mitre.org", x, sep = "")))
+
+  df.basic <- data.frame(id = s.ids,
+                         source = s.sources,
+                         stringsAsFactors = FALSE)
+
+  if (verbose) print("[CAR]  - Processing Sensors details and relationships...")
+  df <- data.frame(id = character(),
+                   stringsAsFactors = FALSE)
+
+  if (verbose) {pb <- utils::txtProgressBar(min = 0, max = nrow(df.basic), style = 3); i <- 1}
+
+  for (src.url in unique(df.basic$source)) {
+    df <- rbind(df, ExtractCARSensor(src.url))
+    if (verbose) {utils::setTxtProgressBar(pb, i); i <- i + 1}
+  }
+
+  df <- dplyr::left_join(df.basic, df, by = c("id"))
+  names(df) <- c("id", "source", "description", "action", "field", "sensor")
+
+  return(df)
+
+}
+
+ExtractCARSensor <- function(source.url = "https://car.mitre.org/wiki/Autoruns") {
+  doc <- xml2::read_html(RCurl::getURL(url = source.url, ssl.verifypeer = FALSE))
+
+  # Parse headers as list of nodes
+  headlines <- rvest::html_nodes(x = doc, xpath = '//*[self::h2]')
+  xpath <- sprintf("//p[count(preceding-sibling::h2)=%d]", seq_along(headlines) - 1)
+
+  s <- purrr::set_names(purrr::map_chr(purrr::map(purrr::map(xpath, ~rvest::html_nodes(x = doc, xpath = .x)),
+                                                   rvest::html_text, trim = TRUE),
+                                        paste, collapse = "\n")
+                         ,
+                         rvest::html_text(rvest::html_node(headlines, "span")))
+  s <- as.data.frame(t(s[s != ""]), stringsAsFactors = FALSE)
+
+  s <- data.frame(id = stringr::str_replace(source.url, "https://car.mitre.org/wiki/Data_Model/", ""),
+                   description = s[,1],
+                   stringsAsFactors = FALSE)
+  s$id <- stringr::str_replace(source.url, "https://car.mitre.org/wiki/", "")
+
+  # Extract Data Model coverage
+  headlines <- rvest::html_nodes(x = doc, xpath = '//*[self::h3]')
+  xpath <- sprintf("//table[count(preceding-sibling::h3)=%d]", seq_along(headlines) - 1)
+
+  c <- purrr::map(xpath, ~rvest::html_nodes(x = doc, xpath = .x))
+  names(c) <- rvest::html_text(headlines)
 
 }
 
