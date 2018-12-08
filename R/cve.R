@@ -21,6 +21,22 @@ GetCVEData <- function(savepath = tempdir(), verbose = TRUE,
   return(cves)
 }
 
+#### RAW sources with CVE solution/mitigation/fix/recomendation
+#' https://vuldb.com/?archive
+#' https://www.kb.cert.org/vuls/search/
+#' https://www.kb.cert.org/vulfeed
+#' https://ics-cert.us-cert.gov/advisories/advisories.xml
+#' https://ics-cert.us-cert.gov/advisories
+#' https://jvn.jp/en/report/index.html
+#' https://jvndb.jvn.jp/en/
+#' https://www.viestintavirasto.fi/en/cybersecurity/vulnerabilities.html
+#' https://www.securityfocus.com/vulnerabilities
+#' https://www.zerodayinitiative.com/advisories/published/
+#' https://security-tracker.debian.org/tracker/data/json
+#' https://portal.msrc.microsoft.com/en-us/security-guidance
+#' https://access.redhat.com/security/security-updates/#/cve
+
+
 #### MITRE Private Functions ---------------------------------------------------
 
 ParseCVEMITREData <- function(savepath, verbose) {
