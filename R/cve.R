@@ -14,6 +14,10 @@ GetCVEData <- function(savepath = tempdir(), verbose = TRUE,
   if (verbose) print("Processing NIST raw data...")
   cves.nist <- ParseCVENISTData(savepath, from.year, to.year, verbose)
 
+  # Parse JVNDB data
+  if (verbose) print("Processing JVNDB raw data...")
+  cves.nist <- ParseCVEJVNDBData(savepath, from.year, to.year, verbose)
+
   if (verbose) print("Joining MITRE and NIST data...")
   # cves <- list(cves.mitre, cves.nist)
   cves <- cves.nist
@@ -29,6 +33,7 @@ GetCVEData <- function(savepath = tempdir(), verbose = TRUE,
 #' https://ics-cert.us-cert.gov/advisories
 #' https://jvn.jp/en/report/index.html
 #' https://jvndb.jvn.jp/en/
+#' https://jvndb.jvn.jp/en/feed/detail/jvndb_detail_2002.rdf
 #' https://www.viestintavirasto.fi/en/cybersecurity/vulnerabilities.html
 #' https://www.securityfocus.com/vulnerabilities
 #' https://www.zerodayinitiative.com/advisories/published/
@@ -57,6 +62,45 @@ ParseCVEMITREData <- function(savepath, verbose) {
   return(cves)
 }
 
+##### NIST Private Functions ---------------------------------------------------
+
+ParseCVEJVNDBData <- function(savepath, from.year, to.year, verbose) {
+  cves <- data.frame(id = character(),
+                     solution = character(),
+                     cves = character(),
+                     soltype = character(),
+                     stringsAsFactors = FALSE)
+  for (year in from.year:to.year) {
+    cves <- dplyr::bind_rows(cves, GetJVNDBvulnsByYear(savepath, year, verbose))
+  }
+}
+
+GetJVNDBvulnsByYear <- function(savepath, year, verbose) {
+  if (verbose) print(paste("Parsing cves (year ", year, ") from rdf source...", sep = ""))
+  i <- 1
+  if (verbose) pb <- utils::txtProgressBar(min = 0, max = 15, style = 3, title = "CVE data")
+
+  jvndbfile <- paste("jvndb_detail_", year, ".rdf", sep = "")
+  jvndbpath <- paste(savepath, "cve","jvndb", jvndbfile,
+                     sep = ifelse(.Platform$OS.type == "windows","\\","/"))
+  doc <- rvest::xml(jvndbpath)
+  lvulns <- rvest::xml_nodes(doc, xpath = "//vuldef:Vulinfo")
+
+  df.vulns <- data.frame(
+    id = rvest::html_text(rvest::xml_nodes(doc, xpath = "//vuldef:Vulinfo/vuldef:VulinfoID")),
+    solution = rvest::html_text(rvest::xml_nodes(doc, xpath = "//vuldef:Vulinfo/vuldef:VulinfoData/vuldef:Solution")),
+    cves = sapply(lvulns, function(x) as.character(jsonlite::toJSON(unique(sapply(rvest::xml_nodes(x, xpath = ".//vuldef:VulinfoID[contains(., 'CVE-')]"), rvest::html_text))))),
+    stringsAsFactors = FALSE
+  )
+
+  df.vulns$cves <- sapply(df.vulns$cves,
+                          function(x)
+                            as.character(jsonlite::toJSON(sort(unique(stringr::str_extract_all(x, "CVE-[\\d]+-[\\d]+")[[1]])))), USE.NAMES = F)
+  df.vulns$soltype <- as.character(unlist(sapply(df.vulns$solution,
+                          function(x)
+                            stringr::str_extract(x, "(?<=\\[)(.*?)(?=\\])")[[1]], USE.NAMES = F)))
+  return(df.vulns)
+}
 
 ##### NIST Private Functions ---------------------------------------------------
 
@@ -228,6 +272,20 @@ DownloadCVEData <- function(savepath, verbose, from.year, to.year) {
   }
   if (!dir.exists(paste(savepath, "cve", "nist", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
     dir.create(paste(savepath, "cve", "nist", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
+  }
+  if (!dir.exists(paste(savepath, "cve", "jvndb", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))) {
+    dir.create(paste(savepath, "cve", "jvndb", sep = ifelse(.Platform$OS.type == "windows", "\\", "/")))
+  }
+
+  # Download JVNDB source data
+  # https://jvndb.jvn.jp/en/feed/detail/jvndb_detail_2002.rdf
+  for (year in from.year:to.year) {
+    jvndb.file <- paste("jvndb_detail_", year, ".rdf", sep = "")
+    jvndb.url <- paste("https://jvndb.jvn.jp/en/feed/detail/", jvndb.file, sep = "")
+    utils::download.file(url = jvndb.url,
+                         destfile = paste(savepath, "cve", "jvndb", jvndb.file,
+                                          sep = ifelse(.Platform$OS.type == "windows", "\\", "/")),
+                         quiet = !verbose)
   }
 
   # Download MITRE source data
