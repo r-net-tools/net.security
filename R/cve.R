@@ -16,11 +16,11 @@ GetCVEData <- function(savepath = tempdir(), verbose = TRUE,
 
   # Parse JVNDB data
   if (verbose) print("Processing JVNDB raw data...")
-  cves.nist <- ParseCVEJVNDBData(savepath, from.year, to.year, verbose)
+  cves.jvndb <- ParseCVEJVNDBData(savepath, from.year, to.year, verbose)
 
-  if (verbose) print("Joining MITRE and NIST data...")
-  # cves <- list(cves.mitre, cves.nist)
-  cves <- cves.nist
+  if (verbose) print("Joining sources to one data frame...")
+  cves <- dplyr::full_join(cves.mitre, cves.nist, c("cve" = "cve.id"))
+  cves <- dplyr::full_join(cves, cves.jvndb, "cve")
 
   return(cves)
 }
@@ -62,7 +62,7 @@ ParseCVEMITREData <- function(savepath, verbose) {
   return(cves)
 }
 
-##### NIST Private Functions ---------------------------------------------------
+##### JVNDB Private Functions ---------------------------------------------------
 
 ParseCVEJVNDBData <- function(savepath, from.year, to.year, verbose) {
   cves <- data.frame(id = character(),
@@ -73,6 +73,20 @@ ParseCVEJVNDBData <- function(savepath, from.year, to.year, verbose) {
   for (year in from.year:to.year) {
     cves <- dplyr::bind_rows(cves, GetJVNDBvulnsByYear(savepath, year, verbose))
   }
+
+  fk <- apply(cves, 1,
+               function(x) {
+                 y <- jsonlite::fromJSON(x[["cves"]])
+                 data.frame(id = rep(x[["id"]], length(y)),
+                            cve = y, stringsAsFactors = FALSE)
+                 }
+               )
+  fk <- plyr::ldply(fk, data.frame)
+  cves <- dplyr::full_join(cves, fk, by = "id")
+  cves <- dplyr::select(cves, id, cve, soltype, solution)
+  names(cves) <-  c("jvndb.id", "cve", "soltype", "solution")
+
+  return(cves)
 }
 
 GetJVNDBvulnsByYear <- function(savepath, year, verbose) {
@@ -83,7 +97,7 @@ GetJVNDBvulnsByYear <- function(savepath, year, verbose) {
   jvndbfile <- paste("jvndb_detail_", year, ".rdf", sep = "")
   jvndbpath <- paste(savepath, "cve","jvndb", jvndbfile,
                      sep = ifelse(.Platform$OS.type == "windows","\\","/"))
-  doc <- rvest::xml(jvndbpath)
+  doc <- xml2::read_xml(jvndbpath)
   lvulns <- rvest::xml_nodes(doc, xpath = "//vuldef:Vulinfo")
 
   df.vulns <- data.frame(
@@ -99,6 +113,9 @@ GetJVNDBvulnsByYear <- function(savepath, year, verbose) {
   df.vulns$soltype <- as.character(unlist(sapply(df.vulns$solution,
                           function(x)
                             stringr::str_extract(x, "(?<=\\[)(.*?)(?=\\])")[[1]], USE.NAMES = F)))
+  # df.vulns$solution <- as.character(unlist(sapply(df.vulns$solution,
+  #                                                function(x)
+  #                                                  stringr::str_replace(x, "(?<=\\[)(.*?)(?=\\])", "")[[1]], USE.NAMES = F)))
   return(df.vulns)
 }
 
@@ -125,8 +142,8 @@ ParseCVENISTData <- function(savepath, from.year, to.year, verbose) {
   cves$cvss2.c <- as.factor(cves$cvss2.c)
   cves$cvss2.i <- as.factor(cves$cvss2.i)
   cves$cvss2.a <- as.factor(cves$cvss2.a)
-  cves$published.date <- strptime(cves$published.date, "%Y-%m-%dT%H:%MZ")
-  cves$last.modified <- strptime(cves$last.modified, "%Y-%m-%dT%H:%MZ")
+  cves$published.date <- as.POSIXct.POSIXlt(strptime(cves$published.date, "%Y-%m-%dT%H:%MZ"))
+  cves$last.modified <- as.POSIXct.POSIXlt(strptime(cves$last.modified, "%Y-%m-%dT%H:%MZ"))
 
   if (verbose) print("Parsing NIST data finished.")
   return(cves)
