@@ -1,0 +1,91 @@
+---
+title: "From raw to tidy data (ATT&CK and CAPEC)"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{From raw to tidy data (ATT&CK and CAPEC)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## MITRE ATT&CK Design and Philosophy
+
+[Paper](https://www.mitre.org/publications/technical-papers/mitre-attack-design-and-philosophy)
+
+## MITRE CTI repository analysis
+
+[MITRE CTI](https://github.com/mitre/cti): The Cyber Threat Intelligence Repository of ATT&CK and CAPEC catalogs expressed in STIX 2.0 JSON.
+
+> **[TODO]**   
+> - Add description about standards and CTI repository.  
+> - Why this repository? There are others?  
+> - Analyze schemas: ATT&CL Property, ATT&CK MediaWiki, STIX Properties  
+> - Relationship with other standards? CWE? CAPEC? Others?
+> - Example of use cases?
+>
+
+### ATT&CK source data sets
+
+```{r map_attck_stix}
+a2s <- net.security::attck2stix()
+```
+
+#### Objects
+
+```{r map_attck_objects}
+a2s.objects <- a2s$Objects
+kableExtra::kable(a2s.objects)
+```
+
+#### Common properties
+
+```{r map_attck_common}
+a2s.common <- a2s$`Common properties (on all objects)`
+kableExtra::kable(a2s.common)
+```
+
+#### Techniques
+
+```{r map_attck_techniques}
+a2s.tech <- a2s$Techniques
+kableExtra::kable(a2s.tech)
+```
+
+#### Software
+
+```{r map_attck_software}
+a2s.soft <- a2s$Software
+kableExtra::kable(a2s.soft)
+```
+
+#### Groups
+
+```{r map_attck_groups}
+a2s.groups <- a2s$Groups
+kableExtra::kable(a2s.groups)
+```
+
+### CAPEC source data sets
+
+```{r map_capec_stix}
+doc <- xml2::read_html("https://github.com/mitre/cti/blob/master/USAGE-CAPEC.md")
+capec2stix <- rvest::html_table(doc)[[1]]
+kableExtra::kable(capec2stix)
+```
+
+
+## Package net.security
+
+MITRE CAPEC Community publish a [release archive](https://capec.mitre.org/data/archive.html) that includes previous versions of the core content downloads, schemas, schema documentation, and difference reports. The net.security Rpackage provides functions to download, parse and build data.frame based on CAPEC XML version 2.10.
+
+```{r setup}
+library(net.security)
+capec <- net.security::GetDataFrame(ds = "capec")
+summary(capec)
+```
