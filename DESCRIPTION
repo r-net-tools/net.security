@@ -1,8 +1,7 @@
 Package: net.security
 Title: Security Standards Data Sets
-Version: 0.6.0
-Authors@R: c(
-    person("Humbert", "Costas", email = "humbert.costas@gmail.com", role = c("aut", "cre"))
+Version: 0.6.0.9000
+Authors@R: person("Humbert", "Costas", email = "humbert.costas@gmail.com", role = c("aut", "cre"))
 Description: Provides functions for security standards data management. It comes with data frames of 1000 observations for each security standard and updates are possible from official sources to build updated data sets.
 URL: https://github.com/r-net-tools/net.security
 Depends: R (>= 3.6.0)
