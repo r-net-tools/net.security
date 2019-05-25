@@ -188,7 +188,7 @@ MapCommonPropierties <- function(attack.obj = NA, domain = NA) {
   }
   df.common <- plyr::ldply(attack.obj[["objects"]],
                            function(ap.obj){
-                             if (ap.obj$type == "x-mitre-tactic") {
+                             if (ap.obj$type %in% c("x-mitre-tactic", "intrusion-set")) {
                                domain <- "mitre-attack"
                              }
                              ap.obj.ref <- which(sapply(ap.obj[["external_references"]],
@@ -378,7 +378,8 @@ MapSoftware <- function(software.obj = NA, domain = domain) {
                                                                         no = NA),
                                                        Groups = NA,
                                                        Contributors = ifelse(test = "x_mitre_contributors" %in% names(ap.obj),
-                                                                             yes = ap.obj$x_mitre_contributors,
+                                                                             yes = paste(ap.obj[["x_mitre_contributors"]],
+                                                                                         collapse = ", "),
                                                                              no = NA),
                                                        Labels = ifelse(test = "labels" %in% names(ap.obj),
                                                                        yes = paste(ap.obj[["labels"]],
