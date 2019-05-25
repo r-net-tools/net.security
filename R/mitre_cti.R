@@ -50,6 +50,9 @@ newAttckTechnique <- function(Entry_Title = NA,
                               Description = NA,
                               Mitigation = NA,
                               Detection = NA,
+                              Detection.defenses = NA,
+                              Adversary = NA,
+                              Adversary.easy = NA,
                               Examples = NA,
                               Platform = NA,
                               Data_Sources = NA,
@@ -66,6 +69,9 @@ newAttckTechnique <- function(Entry_Title = NA,
                    description = Description,
                    mitigation = Mitigation,
                    detection = Detection,
+                   detection.defenses = Detection.defenses,
+                   adversary = Adversary,
+                   adversary.easy = Adversary.easy,
                    examples = Examples,
                    platform = Platform,
                    data.sources = Data_Sources,
@@ -85,11 +91,15 @@ newAttckTechnique <- function(Entry_Title = NA,
 newAttckSoftware <- function(Techniques_Used = NA,
                              Aliases = NA,
                              Groups = NA,
-                             Contributors = NA) {
+                             Contributors = NA,
+                             Labels = NA,
+                             Platforms = NA) {
   df <- data.frame(techniques.used = Techniques_Used,
                    aliases = Aliases,
                    groups = Groups,
                    contributors = Contributors,
+                   soft.labels = Labels,
+                   soft.platform = Platforms,
                    stringsAsFactors = FALSE)
   return(df)
 }
@@ -139,9 +149,16 @@ getGitHubCTIfiles <- function(domain = sample(c("pre-attack", "enterprise-attack
   #       - Get directory tree: https://developer.github.com/v3/git/trees/#get-a-tree
   giturl <- paste("https://api.github.com/repos/mitre/cti/contents", domain, object, sep = "/")
   req <- httr::content(httr::GET(giturl))
-  src.files <- data.frame(filename = unlist(lapply(req, "[", "name"), use.names = F),
-                                  src.file = unlist(lapply(req, "[", "download_url"), use.names = F),
-                                  stringsAsFactors = FALSE)
+  if (is.null(names(req))) {
+    src.files <- data.frame(filename = unlist(lapply(req, "[", "name"), use.names = F),
+                            src.file = unlist(lapply(req, "[", "download_url"), use.names = F),
+                            stringsAsFactors = FALSE)
+  } else {
+    src.files <- data.frame(filename = character(),
+                            src.file = character(),
+                            stringsAsFactors = FALSE)
+  }
+
   return(src.files)
 }
 
@@ -171,6 +188,9 @@ MapCommonPropierties <- function(attack.obj = NA, domain = NA) {
   }
   df.common <- plyr::ldply(attack.obj[["objects"]],
                            function(ap.obj){
+                             if (ap.obj$type == "x-mitre-tactic") {
+                               domain <- "mitre-attack"
+                             }
                              ap.obj.ref <- which(sapply(ap.obj[["external_references"]],
                                                         function(x) {
                                                           x[["source_name"]]
@@ -216,14 +236,14 @@ MapTactics <- function(x.mitre.tactic = NA, domain = NA) {
   } else {
     domain <- "mitre-mobile-attack"
   }
-  df.group <- plyr::ldply(x.mitre.tactic[["objects"]],
+  df.tactic <- plyr::ldply(x.mitre.tactic[["objects"]],
                           function(ap.obj){
-                            df.pre <- data.frame(x.mitre.tactic = ifelse(test = "x_mitre_shortname" %in% names(ap.obj),
+                            df.tac <- data.frame(x.mitre.tactic = ifelse(test = "x_mitre_shortname" %in% names(ap.obj),
                                                                            yes = ap.obj$x_mitre_shortname,
                                                                            no = NA),
                                                  stringsAsFactors = FALSE)
                           })
-  return(df.group)
+  return(df.tactic)
 }
 
 #' Extract Technique propierties from attack pattern object (parsed with RJSONIO::fromJSON)
@@ -261,14 +281,23 @@ MapTechniques <- function(attack.pattern = NA, domain = NA) {
                                ap.obj.kch <- NA
                              }
 
-                             # ap.obj.kch <- unique(ap.obj[["kill_chain_phases"]][[ap.obj.kch]]["phase_name"])
-
                              df.pre <- newAttckTechnique(Entry_Title = ap.obj$name,
                                                          Tactic = ap.obj.kch,
                                                          Description = ifelse(test = is.null(ap.obj$description),
                                                                               yes = "-", no = ap.obj$description),
                                                          Mitigation = NA,
-                                                         Detection = NA,
+                                                         Detection = ifelse(test = "x_mitre_detectable_by_common_defenses_explanation" %in% names(ap.obj),
+                                                                            yes = ap.obj$x_mitre_detectable_by_common_defenses_explanation,
+                                                                            no = NA),
+                                                         Detection.defenses = ifelse(test = "x_mitre_detectable_by_common_defenses" %in% names(ap.obj),
+                                                                                     yes = ap.obj$x_mitre_detectable_by_common_defenses,
+                                                                                     no = NA),
+                                                         Adversary = ifelse(test = "x_mitre_difficulty_for_adversary_explanation" %in% names(ap.obj),
+                                                                            yes = ap.obj$x_mitre_difficulty_for_adversary_explanation,
+                                                                            no = NA),
+                                                         Adversary.easy = ifelse(test = "x_mitre_difficulty_for_adversary" %in% names(ap.obj),
+                                                                                 yes = ap.obj$x_mitre_difficulty_for_adversary,
+                                                                                 no = NA),
                                                          Examples = NA,
                                                          Platform = ifelse(test = "x_mitre_platforms" %in% names(ap.obj),
                                                                            yes = ap.obj$x_mitre_platforms,
@@ -332,6 +361,55 @@ MapGroups <- function(intrusion.set = NA, domain = NA) {
   return(df.group)
 }
 
+MapSoftware <- function(software.obj = NA, domain = domain) {
+  if (domain == "pre-attack") {
+    domain <- "mitre-pre-attack"
+  } else if (domain == "enterprise-attack") {
+    domain <- "mitre-attack"
+  } else {
+    domain <- "mitre-mobile-attack"
+  }
+  df.soft <- plyr::ldply(software.obj[["objects"]],
+                          function(ap.obj){
+                            df.pre <- newAttckSoftware(Techniques_Used = NA,
+                                                       Aliases = ifelse(test = "x_mitre_aliases" %in% names(ap.obj),
+                                                                        yes = paste(ap.obj[["x_mitre_aliases"]],
+                                                                                    collapse = ", "),
+                                                                        no = NA),
+                                                       Groups = NA,
+                                                       Contributors = ifelse(test = "x_mitre_contributors" %in% names(ap.obj),
+                                                                             yes = ap.obj$x_mitre_contributors,
+                                                                             no = NA),
+                                                       Labels = ifelse(test = "labels" %in% names(ap.obj),
+                                                                       yes = paste(ap.obj[["labels"]],
+                                                                                   collapse = ", "),
+                                                                       no = NA),
+                                                       Platforms = ifelse(test = "x_mitre_platforms" %in% names(ap.obj),
+                                                                          yes = paste(ap.obj[["x_mitre_platforms"]],
+                                                                                      collapse = ", "),
+                                                                          no = NA))
+                          })
+  return(df.soft)
+
+}
+
+MapMitigation <- function(course.action = NA, domain = domain) {
+  if (domain == "pre-attack") {
+    domain <- "mitre-pre-attack"
+  } else if (domain == "enterprise-attack") {
+    domain <- "mitre-attack"
+  } else {
+    domain <- "mitre-mobile-attack"
+  }
+  df.mitigation <- plyr::ldply(course.action[["objects"]],
+                           function(ap.obj){
+                             df.tac <- data.frame(mitigation = ifelse(test = "description" %in% names(ap.obj),
+                                                                          yes = ap.obj$description,
+                                                                          no = NA),
+                                                  stringsAsFactors = FALSE)
+                           })
+  return(df.mitigation)
+}
 
 MapRelations <- function(relationship = NA, domain = NA) {
   if (domain == "pre-attack") {
@@ -442,6 +520,56 @@ parseAttckmodel.group <- function(domain = sample(c("pre-attack",
   return(df.group)
 }
 
+parseAttckmodel.soft <- function(domain = sample(c("pre-attack",
+                                                   "enterprise-attack",
+                                                   "mobile-attack"), 1)) {
+  # MALWARE
+  sf.maltool <- getGitHubCTIfiles(domain, "malware")
+  sf.maltool <- dplyr::bind_rows(sf.maltool, getGitHubCTIfiles(domain, "tool"))
+
+  # parse each file
+  df.software <- plyr::ldply(sf.maltool$src.file,
+                          function(sf) {
+                            # read source JSON file
+                            maltool <- RJSONIO::fromJSON(sf)
+                            # Map common properties
+                            df.common <- MapCommonPropierties(attack.obj = maltool,
+                                                              domain = domain)
+                            df.soft <- MapSoftware(software.obj = maltool,
+                                                   domain = domain)
+                            dom <- data.frame(domain = domain, stringsAsFactors = FALSE)
+                            dsf <- data.frame(src.file = sf, stringsAsFactors = FALSE)
+                            cbind(dom, df.common, df.soft, dsf)
+                          })
+
+
+  return(df.software)
+}
+
+parseAttckmodel.miti <- function(domain = sample(c("pre-attack",
+                                                   "enterprise-attack",
+                                                   "mobile-attack"), 1)) {
+  sf.course.action <- getGitHubCTIfiles(domain, "course-of-action")
+
+  # parse each file
+  df.miti <- plyr::ldply(sf.course.action$src.file,
+                        function(sf) {
+                          # read source JSON file
+                          courseact <- RJSONIO::fromJSON(sf)
+                          # Map common properties
+                          df.common <- MapCommonPropierties(attack.obj = courseact,
+                                                            domain = domain)
+                          df.mitigation <- MapMitigation(course.action = courseact,
+                                                       domain = domain)
+                          dom <- data.frame(domain = domain, stringsAsFactors = FALSE)
+                          dsf <- data.frame(src.file = sf, stringsAsFactors = FALSE)
+                          cbind(dom, df.common, df.mitigation, dsf)
+                        })
+
+  return(df.miti)
+
+}
+
 #' Read MITRE CTI Repository files retaled to relationship, extract data,
 #' map variables from STIX to ATT&CK model and return tidy data.frame.
 #'
@@ -535,6 +663,47 @@ parseAttck.Groups <- function() {
   return(df)
 }
 
+#' Read MITRE CTI Repository browsing domain directories to extract data from malware and tool files,
+#' build model and return tidy data.frame with Software variables.
+#'
+#' @return data.frame
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' df.software <- parseAttck.Software()
+#' }
+parseAttck.Software <- function() {
+  df.pre <- parseAttckmodel.soft(domain = "pre-attack")
+  df.ent <- parseAttckmodel.soft(domain = "enterprise-attack")
+  df.mob <- parseAttckmodel.soft(domain = "mobile-attack")
+
+  df <- dplyr::bind_rows(df.pre, df.ent, df.mob)
+
+  return(df)
+}
+
+#' Read MITRE CTI Repository browsing domain directories to extract data from course-of-action files,
+#' build model and return tidy data.frame with Mitigation variables.
+#'
+#' @return data.frame
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' df.mitigations <- parseAttck.Mitigation()
+#' }
+parseAttck.Mitigation <- function() {
+  df.pre <- parseAttckmodel.miti(domain = "pre-attack")
+  df.ent <- parseAttckmodel.miti(domain = "enterprise-attack")
+  df.mob <- parseAttckmodel.miti(domain = "mobile-attack")
+
+  df <- dplyr::bind_rows(df.pre, df.ent, df.mob)
+
+  return(df)
+}
+
+
 #' Read MITRE CTI Repository browsing domain directories to extract data from relationship files,
 #' build model and return tidy data.frame with relationship variables.
 #'
@@ -555,4 +724,8 @@ parseAttck.Relationships <- function() {
   return(df)
 }
 
+# BUILD TIDY DATA FRAMES
 
+buildAttckTactics <- function() {
+  df.tactics <- parseAttck.Tactics()
+}
