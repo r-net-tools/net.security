@@ -79,6 +79,22 @@ capec2stix <- rvest::html_table(doc)[[1]]
 kableExtra::kable(capec2stix)
 ```
 
+### Building ATT&CK concepts
+Parsing CTI Repository files and Objects mapping.
+
+#### From attack-pattern (STIX) to Techniques (ATT&CK)
+
+```{r attack_tech}
+attck.tech <- net.security::parseAttckmodel.techniques()
+summary(attck.tech)
+```
+
+#### From intrusion-set (STIX) to Groups (ATT&CK)
+
+```{r attack_group}
+attck.groups <- parseAttckmodel.Groups()
+summary(attck.groups)
+```
 
 ## Package net.security
 
