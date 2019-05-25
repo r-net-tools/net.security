@@ -18,6 +18,7 @@ attck2stix <- function() {
 # ATT&CK DATA MODEL
 
 newAttckCommon <- function(id.cti = NA,
+                           type = NA,
                            modified = NA,
                            created = NA,
                            Entry_ID = NA,
@@ -29,6 +30,7 @@ newAttckCommon <- function(id.cti = NA,
                            Revoked = NA,
                            Old_ATTCK_ID = NA) {
   df <- data.frame(id.cti = id.cti,
+                   type = type,
                    modified = modified,
                    created = created,
                    entry.id = Entry_ID,
@@ -105,6 +107,16 @@ newAttckGroups <- function(Techniques_Used = NA,
 
 }
 
+newAttckRelation <- function(relationship_type = NA,
+                             source_ref = NA,
+                             target_ref = NA) {
+  df <- data.frame(relationship.type = relationship_type,
+                   source.ref = source_ref,
+                   target.ref = target_ref,
+                   stringsAsFactors = FALSE)
+
+  return(df)
+}
 
 #' Function to provide source JSON files by domain and STIX Object type
 #'
@@ -122,6 +134,9 @@ getGitHubCTIfiles <- function(domain = sample(c("pre-attack", "enterprise-attack
                               object = sample(c("attack-pattern", "intrusion-set",
                                                 "malware", "tool", "course-of-action",
                                                 "x-mitre-tactic", "x-mitre-matrix"), 1)) {
+  # TODO: deal with 1000 files limit:
+  #       - Get directory sha: https://developer.github.com/v3/repos/contents/#response-if-content-is-a-directory
+  #       - Get directory tree: https://developer.github.com/v3/git/trees/#get-a-tree
   giturl <- paste("https://api.github.com/repos/mitre/cti/contents", domain, object, sep = "/")
   req <- httr::content(httr::GET(giturl))
   src.files <- data.frame(filename = unlist(lapply(req, "[", "name"), use.names = F),
@@ -162,17 +177,21 @@ MapCommonPropierties <- function(attack.obj = NA, domain = NA) {
                                                         }) == domain)
 
                              if (length(ap.obj.ref) > 0) {
-                               ap.obj.ref <- ap.obj[["external_references"]][[ap.obj.ref]]
+                               ap.obj.ref.id <- ap.obj[["external_references"]][[ap.obj.ref]][["external_id"]]
+                               ap.obj.ref.url <- ap.obj[["external_references"]][[ap.obj.ref]][["url"]]
                              } else {
-                               ap.obj.ref <- NA
+                               ap.obj.ref.id <- NA
+                               ap.obj.ref.url <- NA
                              }
 
                              df.pre <- newAttckCommon(id.cti = ap.obj$id,
+                                                      type = ap.obj$type,
                                                       modified = ap.obj$modified,
                                                       created = ap.obj$created,
-                                                      Entry_ID = ap.obj.ref["external_id"],
-                                                      Entry_URL = ap.obj.ref["url"],
-                                                      Entry_Title = ap.obj$name,
+                                                      Entry_ID = ap.obj.ref.id,
+                                                      Entry_URL = ap.obj.ref.url,
+                                                      Entry_Title = ifelse(test = is.null(ap.obj$name),
+                                                                           yes = "-", no = ap.obj$name),
                                                       Entry_Text = ifelse(test = is.null(ap.obj$description),
                                                                           yes = "-", no = ap.obj$description),
                                                       Citation = jsonlite::base64_enc(jsonlite::toJSON(ap.obj$external_references)),
@@ -296,104 +315,59 @@ MapGroups <- function(intrusion.set = NA, domain = NA) {
 }
 
 
+MapRelations <- function(relationship = NA, domain = NA) {
+  if (domain == "pre-attack") {
+    domain <- "mitre-pre-attack"
+  } else if (domain == "enterprise-attack") {
+    domain <- "mitre-attack"
+  } else {
+    domain <- "mitre-mobile-attack"
+  }
+
+  df.relations <- plyr::ldply(relationship[["objects"]],
+                          function(ap.obj){
+                            df.pre <- newAttckRelation(relationship_type = ap.obj$relationship_type,
+                                                       source_ref = ap.obj$source_ref,
+                                                       target_ref = ap.obj$target_ref)
+                          })
+  return(df.relations)
+
+}
+
 ### BUILD DATA MODELS
 
-#' Read MITRE CTI Repository files in pre-attack directory, extract data,
+#' Read MITRE CTI Repository files retaled to relationship, extract data,
 #' map variables from STIX to ATT&CK model and return tidy data.frame.
+#'
+#' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
 #'
 #' @return data.frame
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' df.pre <- parseAttckPREmodel.tech()
-#' }
-parseAttckPREmodel.tech <- function() {
-  pre.attck.pattern <- getGitHubCTIfiles(domain = "pre-attack",
-                                         object = "attack-pattern")
-
-  # parse each file
-  df.pre <- plyr::ldply(pre.attck.pattern$src.file,
-                        function(sf) {
-                          # read source JSON file
-                          attack.pattern <- RJSONIO::fromJSON(sf)
-                          # Map common properties
-                          df.common <- MapCommonPropierties(attack.obj = attack.pattern,
-                                                            domain = "pre-attack")
-                          df.techniques <- MapTechniques(attack.pattern = attack.pattern,
-                                                         domain = "pre-attack")
-                          dom <- data.frame(domain = "pre-attack", stringsAsFactors = FALSE)
-                          dsf <- data.frame(src.file = sf, stringsAsFactors = FALSE)
-                          cbind(dom, df.common, df.techniques, dsf)
-                        })
-
-  return(df.pre)
-}
-
-#' Read MITRE CTI Repository files in enterprise-attack directory, extract data,
-#' map variables from STIX to ATT&CK model and return tidy data.frame.
-#'
-#' @return data.frame
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' df.ent <- parseAttckENTmodel.tech()
-#' }
-parseAttckENTmodel.tech <- function() {
-  ent.attck.pattern <- getGitHubCTIfiles(domain = "enterprise-attack",
-                                         object = "attack-pattern")
-
-  # parse each file
-  df.ent <- plyr::ldply(ent.attck.pattern$src.file,
-                        function(sf) {
-                          # read source JSON file
-                          attack.pattern <- RJSONIO::fromJSON(sf)
-                          # Map common properties
-                          df.common <- MapCommonPropierties(attack.obj = attack.pattern,
-                                                            domain = "enterprise-attack")
-                          df.techniques <- MapTechniques(attack.pattern = attack.pattern,
-                                                         domain = "enterprise-attack")
-                          dom <- data.frame(domain = "enterprise-attack", stringsAsFactors = FALSE)
-                          dsf <- data.frame(src.file = sf, stringsAsFactors = FALSE)
-                          cbind(dom, df.common, df.techniques, dsf)
-                        })
-
-  return(df.ent)
-}
-
-
-#' Read MITRE CTI Repository files in mobile-attack directory, extract data,
-#' map variables from STIX to ATT&CK model and return tidy data.frame.
-#'
-#' @return data.frame
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' df.mob <- parseAttckMOBmodel.tech()
-#' }
-parseAttckMOBmodel.tech <- function() {
+parseAttckmodel.tech <- function(domain = sample(c("pre-attack",
+                                                   "enterprise-attack",
+                                                   "mobile-attack"), 1)) {
+  sf.attack.pattern <- getGitHubCTIfiles(domain, "attack-pattern")
   mob.attck.pattern <- getGitHubCTIfiles(domain = "mobile-attack",
                                          object = "attack-pattern")
 
   # parse each file
-  df.mob <- plyr::ldply(mob.attck.pattern$src.file,
+  df.tech <- plyr::ldply(sf.attack.pattern$src.file,
                         function(sf) {
                           # read source JSON file
                           attack.pattern <- RJSONIO::fromJSON(sf)
                           # Map common properties
                           df.common <- MapCommonPropierties(attack.obj = attack.pattern,
-                                                            domain = "mobile-attack")
+                                                            domain = domain)
                           df.techniques <- MapTechniques(attack.pattern = attack.pattern,
-                                                         domain = "mobile-attack")
-                          dom <- data.frame(domain = "mobile-attack", stringsAsFactors = FALSE)
+                                                         domain = domain)
+                          dom <- data.frame(domain = domain, stringsAsFactors = FALSE)
                           dsf <- data.frame(src.file = sf, stringsAsFactors = FALSE)
                           cbind(dom, df.common, df.techniques, dsf)
                         })
 
-  return(df.mob)
+  return(df.tech)
 }
+
 
 #' Read MITRE CTI Repository files retaled to intrusion-set, extract data,
 #' map variables from STIX to ATT&CK model and return tidy data.frame.
@@ -424,6 +398,35 @@ parseAttckmodel.group <- function(domain = sample(c("pre-attack",
   return(df.group)
 }
 
+#' Title
+#'
+#' @param domain
+#'
+#' @return data.frame
+parseAttckmodel.rels <- function(domain = sample(c("pre-attack",
+                                                      "enterprise-attack",
+                                                      "mobile-attack"), 1)) {
+  sf.relationship <- getGitHubCTIfiles(domain, "relationship")
+
+  # parse each file
+  df.rel <- plyr::ldply(sf.relationship$src.file,
+                        function(sf) {
+                          # read source JSON file
+                          relationship <- RJSONIO::fromJSON(sf)
+                          # Map common properties
+                          df.common <- MapCommonPropierties(attack.obj = relationship,
+                                                            domain = domain)
+                          df.relations <- MapRelations(relationship = relationship,
+                                                    domain = domain)
+                          dom <- data.frame(domain = domain, stringsAsFactors = FALSE)
+                          dsf <- data.frame(src.file = sf, stringsAsFactors = FALSE)
+                          cbind(dom, df.common, df.relations, dsf)
+                        })
+
+  return(df.rel)
+
+}
+
 
 
 #' Read MITRE CTI Repository browsing domain directories to extract data from attack-pattern files,
@@ -434,12 +437,12 @@ parseAttckmodel.group <- function(domain = sample(c("pre-attack",
 #'
 #' @examples
 #' \dontrun{
-#' df.techniques <- parseAttckmodel.techniques()
+#' df.techniques <- parseAttck.Techniques()
 #' }
-parseAttckmodel.techniques <- function() {
-  df.pre <- parseAttckPREmodel.tech()
-  df.ent <- parseAttckENTmodel.tech()
-  df.mob <- parseAttckMOBmodel.tech()
+parseAttck.Techniques <- function() {
+  df.pre <- parseAttckmodel.tech(domain = "pre-attack")
+  df.ent <- parseAttckmodel.tech(domain = "enterprise-attack")
+  df.mob <- parseAttckmodel.tech(domain = "mobile-attack")
 
   df <- dplyr::bind_rows(df.pre, df.ent, df.mob)
 
@@ -454,9 +457,9 @@ parseAttckmodel.techniques <- function() {
 #'
 #' @examples
 #' \dontrun{
-#' df.groups <- parseAttckmodel.Groups()
+#' df.groups <- parseAttck.Groups()
 #' }
-parseAttckmodel.Groups <- function() {
+parseAttck.Groups <- function() {
   df.pre <- parseAttckmodel.group(domain = "pre-attack")
   df.ent <- parseAttckmodel.group(domain = "enterprise-attack")
   df.mob <- parseAttckmodel.group(domain = "mobile-attack")
@@ -465,3 +468,25 @@ parseAttckmodel.Groups <- function() {
 
   return(df)
 }
+
+#' Read MITRE CTI Repository browsing domain directories to extract data from relationship files,
+#' build model and return tidy data.frame with relationship variables.
+#'
+#' @return data.frame
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' df.relationships <- parseAttck.Relationships()
+#' }
+parseAttck.Relationships <- function() {
+  df.pre <- parseAttckmodel.rels(domain = "pre-attack")
+  df.ent <- parseAttckmodel.rels(domain = "enterprise-attack")
+  df.mob <- parseAttckmodel.rels(domain = "mobile-attack")
+
+  df <- dplyr::bind_rows(df.pre, df.ent, df.mob)
+
+  return(df)
+}
+
+
