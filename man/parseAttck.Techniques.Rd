@@ -3,7 +3,7 @@
 \name{parseAttck.Techniques}
 \alias{parseAttck.Techniques}
 \title{Read MITRE CTI Repository browsing domain directories to extract data from attack-pattern files,
-map variables from STIX to ATT&CK model and return tidy data.frame with technique variables.}
+map variables from STIX to ATT&CK model and return tidy data.frame with Technique variables.}
 \usage{
 parseAttck.Techniques()
 }
@@ -12,7 +12,7 @@ data.frame
 }
 \description{
 Read MITRE CTI Repository browsing domain directories to extract data from attack-pattern files,
-map variables from STIX to ATT&CK model and return tidy data.frame with technique variables.
+map variables from STIX to ATT&CK model and return tidy data.frame with Technique variables.
 }
 \examples{
 \dontrun{

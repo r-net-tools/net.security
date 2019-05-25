@@ -208,6 +208,24 @@ MapCommonPropierties <- function(attack.obj = NA, domain = NA) {
   return(df.common)
 }
 
+MapTactics <- function(x.mitre.tactic = NA, domain = NA) {
+  if (domain == "pre-attack") {
+    domain <- "mitre-pre-attack"
+  } else if (domain == "enterprise-attack") {
+    domain <- "mitre-attack"
+  } else {
+    domain <- "mitre-mobile-attack"
+  }
+  df.group <- plyr::ldply(x.mitre.tactic[["objects"]],
+                          function(ap.obj){
+                            df.pre <- data.frame(x.mitre.tactic = ifelse(test = "x_mitre_shortname" %in% names(ap.obj),
+                                                                           yes = ap.obj$x_mitre_shortname,
+                                                                           no = NA),
+                                                 stringsAsFactors = FALSE)
+                          })
+  return(df.group)
+}
+
 #' Extract Technique propierties from attack pattern object (parsed with RJSONIO::fromJSON)
 #'
 #' @param attack.pattern list based on STIX
@@ -336,19 +354,45 @@ MapRelations <- function(relationship = NA, domain = NA) {
 
 ### BUILD DATA MODELS
 
-#' Read MITRE CTI Repository files retaled to relationship, extract data,
+#' Read MITRE CTI Repository files retaled to x-mitre-tactic, extract data,
 #' map variables from STIX to ATT&CK model and return tidy data.frame.
 #'
 #' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
 #'
 #' @return data.frame
-#' @export
+parseAttckmodel.tact <- function(domain = sample(c("pre-attack",
+                                                   "enterprise-attack",
+                                                   "mobile-attack"), 1)) {
+  sf.x.mitre.tactic <- getGitHubCTIfiles(domain, "x-mitre-tactic")
+
+  # parse each file
+  df.tact <- plyr::ldply(sf.x.mitre.tactic$src.file,
+                         function(sf) {
+                           # read source JSON file
+                           x.mitre.tactic <- RJSONIO::fromJSON(sf)
+                           # Map common properties
+                           df.common <- MapCommonPropierties(attack.obj = x.mitre.tactic,
+                                                             domain = domain)
+                           df.tactics <- MapTactics(x.mitre.tactic = x.mitre.tactic,
+                                                          domain = domain)
+                           dom <- data.frame(domain = domain, stringsAsFactors = FALSE)
+                           dsf <- data.frame(src.file = sf, stringsAsFactors = FALSE)
+                           cbind(dom, df.common, df.tactics, dsf)
+                         })
+
+  return(df.tact)
+}
+
+#' Read MITRE CTI Repository files retaled to attack-pattern, extract data,
+#' map variables from STIX to ATT&CK model and return tidy data.frame.
+#'
+#' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
+#'
+#' @return data.frame
 parseAttckmodel.tech <- function(domain = sample(c("pre-attack",
                                                    "enterprise-attack",
                                                    "mobile-attack"), 1)) {
   sf.attack.pattern <- getGitHubCTIfiles(domain, "attack-pattern")
-  mob.attck.pattern <- getGitHubCTIfiles(domain = "mobile-attack",
-                                         object = "attack-pattern")
 
   # parse each file
   df.tech <- plyr::ldply(sf.attack.pattern$src.file,
@@ -398,9 +442,10 @@ parseAttckmodel.group <- function(domain = sample(c("pre-attack",
   return(df.group)
 }
 
-#' Title
+#' Read MITRE CTI Repository files retaled to relationship, extract data,
+#' map variables from STIX to ATT&CK model and return tidy data.frame.
 #'
-#' @param domain
+#' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
 #'
 #' @return data.frame
 parseAttckmodel.rels <- function(domain = sample(c("pre-attack",
@@ -427,10 +472,31 @@ parseAttckmodel.rels <- function(domain = sample(c("pre-attack",
 
 }
 
+### EXPORTED FUNCTIONS
+
+#' Read MITRE CTI Repository browsing domain directories to extract data from x-mitre-tactic files,
+#' map variables from STIX to ATT&CK model and return tidy data.frame with Tactic variables.
+#'
+#' @return data.frame
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' df.tactics <- parseAttck.Tactics()
+#' }
+parseAttck.Tactics <- function() {
+  df.pre <- parseAttckmodel.tact(domain = "pre-attack")
+  df.ent <- parseAttckmodel.tact(domain = "enterprise-attack")
+  df.mob <- parseAttckmodel.tact(domain = "mobile-attack")
+
+  df <- dplyr::bind_rows(df.pre, df.ent, df.mob)
+
+  return(df)
+}
 
 
 #' Read MITRE CTI Repository browsing domain directories to extract data from attack-pattern files,
-#' map variables from STIX to ATT&CK model and return tidy data.frame with technique variables.
+#' map variables from STIX to ATT&CK model and return tidy data.frame with Technique variables.
 #'
 #' @return data.frame
 #' @export

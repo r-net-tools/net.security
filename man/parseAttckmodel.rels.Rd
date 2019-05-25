@@ -2,17 +2,19 @@
 % Please edit documentation in R/mitre_cti.R
 \name{parseAttckmodel.rels}
 \alias{parseAttckmodel.rels}
-\title{Title}
+\title{Read MITRE CTI Repository files retaled to relationship, extract data,
+map variables from STIX to ATT&CK model and return tidy data.frame.}
 \usage{
 parseAttckmodel.rels(domain = sample(c("pre-attack", "enterprise-attack",
   "mobile-attack"), 1))
 }
 \arguments{
-\item{domain}{}
+\item{domain}{must be "pre-attack", "enterprise-attack" or "mobile-attack"}
 }
 \value{
 data.frame
 }
 \description{
-Title
+Read MITRE CTI Repository files retaled to relationship, extract data,
+map variables from STIX to ATT&CK model and return tidy data.frame.
 }
