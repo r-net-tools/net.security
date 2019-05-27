@@ -17,6 +17,8 @@ attck2stix <- function() {
 
 # ATT&CK DATA MODEL
 
+## RAW data frames adapted to store all CTI/STIX variables
+
 newAttckCommon <- function(id.cti = NA,
                            type = NA,
                            modified = NA,
@@ -28,7 +30,8 @@ newAttckCommon <- function(id.cti = NA,
                            Citation = NA,
                            Deprecated = NA,
                            Revoked = NA,
-                           Old_ATTCK_ID = NA) {
+                           Old_ATTCK_ID = NA,
+                           CVE = NA) {
   df <- data.frame(id.cti = id.cti,
                    type = type,
                    modified = modified,
@@ -41,6 +44,7 @@ newAttckCommon <- function(id.cti = NA,
                    deprecated = Deprecated,
                    revoked = Revoked,
                    old.attck.id = Old_ATTCK_ID,
+                   cve = CVE,
                    stringsAsFactors = FALSE)
   return(df)
 }
@@ -54,6 +58,7 @@ newAttckTechnique <- function(Entry_Title = NA,
                               Adversary = NA,
                               Adversary.easy = NA,
                               Examples = NA,
+                              CAPEC = NA,
                               Platform = NA,
                               Data_Sources = NA,
                               Permissions_Required = NA,
@@ -73,6 +78,7 @@ newAttckTechnique <- function(Entry_Title = NA,
                    adversary = Adversary,
                    adversary.easy = Adversary.easy,
                    examples = Examples,
+                   capec = CAPEC,
                    platform = Platform,
                    data.sources = Data_Sources,
                    permissions.required = Permissions_Required,
@@ -203,6 +209,8 @@ MapCommonPropierties <- function(attack.obj = NA, domain = NA) {
                                ap.obj.ref.id <- NA
                                ap.obj.ref.url <- NA
                              }
+                             cves <- unique(unlist(stringr::str_extract_all(RJSONIO::toJSON(ap.obj), "CVE-\\d+-\\d+")))
+                             cves <- paste(cves, collapse = ", ")
 
                              df.pre <- newAttckCommon(id.cti = ap.obj$id,
                                                       type = ap.obj$type,
@@ -223,11 +231,25 @@ MapCommonPropierties <- function(attack.obj = NA, domain = NA) {
                                                                        no = NA),
                                                       Old_ATTCK_ID = ifelse(test = "x_mitre_old_attack_id" %in% names(ap.obj),
                                                                             yes = ap.obj$x_mitre_old_attack_id,
-                                                                            no = NA))
+                                                                            no = NA),
+                                                      CVE = cves)
                            })
   return(df.common)
 }
 
+#' Extract Tactic propierties from x-mitre-tactic object (parsed with RJSONIO::fromJSON)
+#'
+#' @param x.mitre.tactic list based on STIX
+#' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
+#'
+#' @return data.frame compliant with CTI USAGE document
+#'
+#' @examples
+#' \dontrun{
+#' sf <- "https://github.com/mitre/cti/raw/master/<domain>/<object>/<file>.json"
+#' x.mitre.tactic <- RJSONIO::fromJSON(sf)
+#' df.ent.tact <- MapTactics(x.mitre.tactic, "enerprise-attack")
+#' }
 MapTactics <- function(x.mitre.tactic = NA, domain = NA) {
   if (domain == "pre-attack") {
     domain <- "mitre-pre-attack"
@@ -270,6 +292,18 @@ MapTechniques <- function(attack.pattern = NA, domain = NA) {
 
   df.techniques <- plyr::ldply(attack.pattern[["objects"]],
                            function(ap.obj){
+                             ap.obj.capec <- which(sapply(ap.obj[["external_references"]],
+                                                        function(x) {
+                                                          x[["source_name"]]
+                                                        }) == "capec")
+
+                             if (length(ap.obj.capec) > 0) {
+                               ap.obj.capec <- paste(unique(sapply(ap.obj[["external_references"]][ap.obj.capec],
+                                                                   "[[", "external_id")), collapse = ", ")
+                             } else {
+                               ap.obj.capec <- NA
+                             }
+
                              ap.obj.kch <- which(sapply(ap.obj[["kill_chain_phases"]],
                                                         function(x) {
                                                           x[["kill_chain_name"]]
@@ -299,6 +333,7 @@ MapTechniques <- function(attack.pattern = NA, domain = NA) {
                                                                                  yes = ap.obj$x_mitre_difficulty_for_adversary,
                                                                                  no = NA),
                                                          Examples = NA,
+                                                         CAPEC = ap.obj.capec,
                                                          Platform = ifelse(test = "x_mitre_platforms" %in% names(ap.obj),
                                                                            yes = ap.obj$x_mitre_platforms,
                                                                            no = NA),
@@ -361,6 +396,12 @@ MapGroups <- function(intrusion.set = NA, domain = NA) {
   return(df.group)
 }
 
+#' Extract Software propierties from malware and tool object (parsed with RJSONIO::fromJSON)
+#'
+#' @param software.obj list based on STIX
+#' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
+#'
+#' @return data.frame
 MapSoftware <- function(software.obj = NA, domain = domain) {
   if (domain == "pre-attack") {
     domain <- "mitre-pre-attack"
@@ -394,6 +435,12 @@ MapSoftware <- function(software.obj = NA, domain = domain) {
 
 }
 
+#' Extract Mitigation propierties from course.action object (parsed with RJSONIO::fromJSON)
+#'
+#' @param course.action list based on STIX
+#' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
+#'
+#' @return data.frame
 MapMitigation <- function(course.action = NA, domain = domain) {
   if (domain == "pre-attack") {
     domain <- "mitre-pre-attack"
@@ -412,6 +459,12 @@ MapMitigation <- function(course.action = NA, domain = domain) {
   return(df.mitigation)
 }
 
+#' Extract object relationships from relationship object (parsed with RJSONIO::fromJSON)
+#'
+#' @param relationship list based on STIX
+#' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
+#'
+#' @return data.frame
 MapRelations <- function(relationship = NA, domain = NA) {
   if (domain == "pre-attack") {
     domain <- "mitre-pre-attack"
@@ -521,7 +574,13 @@ parseAttckmodel.group <- function(domain = sample(c("pre-attack",
   return(df.group)
 }
 
-parseAttckmodel.soft <- function(domain = sample(c("pre-attack",
+#' Read MITRE CTI Repository files retaled to malware and tool, extract data,
+#' map variables from STIX to ATT&CK model and return tidy data.frame.
+#'
+#' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
+#'
+#' @return data.frame
+ppparseAttckmodel.soft <- function(domain = sample(c("pre-attack",
                                                    "enterprise-attack",
                                                    "mobile-attack"), 1)) {
   # MALWARE
@@ -547,6 +606,12 @@ parseAttckmodel.soft <- function(domain = sample(c("pre-attack",
   return(df.software)
 }
 
+#' Read MITRE CTI Repository files retaled to course.action, extract data,
+#' map variables from STIX to ATT&CK model and return tidy data.frame.
+#'
+#' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
+#'
+#' @return data.frame
 parseAttckmodel.miti <- function(domain = sample(c("pre-attack",
                                                    "enterprise-attack",
                                                    "mobile-attack"), 1)) {
@@ -601,13 +666,10 @@ parseAttckmodel.rels <- function(domain = sample(c("pre-attack",
 
 }
 
-### EXPORTED FUNCTIONS
-
 #' Read MITRE CTI Repository browsing domain directories to extract data from x-mitre-tactic files,
 #' map variables from STIX to ATT&CK model and return tidy data.frame with Tactic variables.
 #'
 #' @return data.frame
-#' @export
 #'
 #' @examples
 #' \dontrun{
@@ -623,12 +685,10 @@ parseAttck.Tactics <- function() {
   return(df)
 }
 
-
 #' Read MITRE CTI Repository browsing domain directories to extract data from attack-pattern files,
 #' map variables from STIX to ATT&CK model and return tidy data.frame with Technique variables.
 #'
 #' @return data.frame
-#' @export
 #'
 #' @examples
 #' \dontrun{
@@ -643,6 +703,10 @@ parseAttck.Techniques <- function() {
 
   return(df)
 }
+
+
+
+### EXPORTED FUNCTIONS
 
 #' Read MITRE CTI Repository browsing domain directories to extract data from intrusion-set files,
 #' map variables from STIX to ATT&CK model and return tidy data.frame with Group variables.
@@ -721,12 +785,76 @@ parseAttck.Relationships <- function() {
   df.mob <- parseAttckmodel.rels(domain = "mobile-attack")
 
   df <- dplyr::bind_rows(df.pre, df.ent, df.mob)
+  df <- dplyr::select(tidyr::separate(df, source.ref, c("source.type", "b"),
+                                      "--", remove = FALSE), -b)
+  df <- dplyr::select(tidyr::separate(df, target.ref, c("target.type", "b"),
+                                      "--", remove = FALSE), -b)
 
   return(df)
+}
+
+#' Parse ATT&CK source files from MITRE CTI Repository and build raw data sets
+#'
+#' @return list of data.frame objects (tactics, techniques, groups, software and relationships)
+#' @export
+parseAttckdata <- function() {
+  df.tactics <- parseAttck.Tactics()
+  df.techniques <- parseAttck.Techniques()
+  df.groups <- parseAttck.Groups()
+  df.software <- parseAttck.Software()
+  df.mitigations <- parseAttck.Mitigation()
+  df.relationships <- parseAttck.Relationships()
+
+  attck <- list(tactics = df.tactics,
+                techniques = df.techniques,
+                groups = df.groups,
+                software = df.software,
+                relationships = df.relationships)
+  return(attck)
 }
 
 # BUILD TIDY DATA FRAMES
 
 buildAttckTactics <- function() {
-  df.tactics <- parseAttck.Tactics()
+  attck.tact <- parseAttck.Tactics()
+  attck.tact <- dplyr::select(attck.tact, domain, entry.id, entry.title,
+                              entry.text, x.mitre.tactic, created, modified,
+                              id.cti, entry.url, deprecated)
+  attck.tact <- unique(attck.tact)
+  attck.tact$domain <- as.factor(attck.tact$domain)
+  attck.tact$x.mitre.tactic <- as.factor(attck.tact$x.mitre.tactic)
+  attck.tact$modified <- as.POSIXct.POSIXlt(strptime(attck.tact$modified, format = "%Y-%m-%dT%H:%M:%S"))
+  attck.tact$created <- as.POSIXct.POSIXlt(strptime(attck.tact$created, format = "%Y-%m-%dT%H:%M:%S"))
+
+  return(attck.tact)
+}
+
+buildAttckTechniques <- function() {
+  attck.tech <- parseAttck.Techniques()
+  attck.tech <- dplyr::select(attck.tech, domain, entry.id, entry.title,
+                              entry.text, description, platform, data.sources,
+                              permissions.required, effective.permissions,
+                              defense.bypassed, system.requirements,
+                              network.requirements, remote.support, impact.type,
+                              detection.defenses, detection, adversary.easy, adversary,
+                              revoked, tactic, capec, cves, created, modified,
+                              id.cti, entry.url, deprecated)
+  attck.tech$domain <- as.factor(attck.tech$domain)
+  attck.tech$platform <- as.factor(attck.tech$platform)
+  attck.tech$data.sources <- as.factor(attck.tech$data.sources)
+  attck.tech$permissions.required <- as.factor(attck.tech$permissions.required)
+  attck.tech$effective.permissions <- as.factor(attck.tech$effective.permissions)
+  attck.tech$defense.bypassed <- as.factor(attck.tech$defense.bypassed)
+  attck.tech$system.requirements <- as.factor(attck.tech$system.requirements)
+  attck.tech$network.requirements <- as.factor(attck.tech$network.requirements)
+  attck.tech$remote.support <- as.factor(attck.tech$remote.support)
+  attck.tech$impact.type <- as.factor(attck.tech$impact.type)
+  attck.tech$detection.defenses <- as.factor(attck.tech$detection.defenses)
+  attck.tech$adversary.easy <- as.factor(attck.tech$adversary.easy)
+  attck.tech$revoked <- as.factor(attck.tech$revoked)
+  attck.tech$deprecated <- as.factor(attck.tech$deprecated)
+  attck.tech$modified <- as.POSIXct.POSIXlt(strptime(attck.tech$modified, format = "%Y-%m-%dT%H:%M:%S"))
+  attck.tech$created <- as.POSIXct.POSIXlt(strptime(attck.tech$created, format = "%Y-%m-%dT%H:%M:%S"))
+
+  return(attck.tech)
 }

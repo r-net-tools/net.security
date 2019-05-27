@@ -8,10 +8,15 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+library("kableExtra")
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+
+randomSample <- function(df, n) { 
+   return(df[sample(nrow(df), n),])
+}
 ```
 
 ## MITRE ATT&CK Design and Philosophy
@@ -32,7 +37,7 @@ knitr::opts_chunk$set(
 
 ### ATT&CK source data sets
 
-```{r map_attck_stix}
+```{r map_attck_stix, cache=TRUE}
 a2s <- net.security::attck2stix()
 ```
 
@@ -40,61 +45,121 @@ a2s <- net.security::attck2stix()
 
 ```{r map_attck_objects}
 a2s.objects <- a2s$Objects
-kableExtra::kable(a2s.objects)
+kable(a2s.objects)
 ```
 
 #### Common properties
 
 ```{r map_attck_common}
 a2s.common <- a2s$`Common properties (on all objects)`
-kableExtra::kable(a2s.common)
+kable(a2s.common)
 ```
 
 #### Techniques
 
 ```{r map_attck_techniques}
 a2s.tech <- a2s$Techniques
-kableExtra::kable(a2s.tech)
+kable(a2s.tech)
 ```
 
 #### Software
 
 ```{r map_attck_software}
 a2s.soft <- a2s$Software
-kableExtra::kable(a2s.soft)
+kable(a2s.soft)
 ```
 
 #### Groups
 
 ```{r map_attck_groups}
 a2s.groups <- a2s$Groups
-kableExtra::kable(a2s.groups)
+kable(a2s.groups)
 ```
 
 ### CAPEC source data sets
 
-```{r map_capec_stix}
+```{r map_capec_stix, cache=TRUE}
 doc <- xml2::read_html("https://github.com/mitre/cti/blob/master/USAGE-CAPEC.md")
 capec2stix <- rvest::html_table(doc)[[1]]
-kableExtra::kable(capec2stix)
+kable(capec2stix)
 ```
 
-### Building ATT&CK concepts
-Parsing CTI Repository files and Objects mapping.
+## Building ATT&CK concepts
+
+### Parsing CTI Repository files and Objects mapping.
+
+#### From x-mitre-tactic (STIX) to Tactics (ATT&CK)
+
+```{r attack_tact, cache=TRUE}
+attck.tact <- net.security::parseAttck.Tactics()
+summary(attck.tact)
+```
+
+```{r attack_tact_table}
+kable(attck.tact) %>%
+  kable_styling() %>%
+  scroll_box(width = "100%", height = "200px")
+```
 
 #### From attack-pattern (STIX) to Techniques (ATT&CK)
 
-```{r attack_tech}
-attck.tech <- net.security::parseAttckmodel.techniques()
+```{r attack_tech, cache=TRUE}
+attck.tech <- net.security::parseAttck.Techniques()
 summary(attck.tech)
+```
+
+```{r attack_tech_table}
+kable(randomSample(attck.tech, 50)) %>%
+  kable_styling() %>%
+  scroll_box(width = "100%", height = "200px")
 ```
 
 #### From intrusion-set (STIX) to Groups (ATT&CK)
 
-```{r attack_group}
-attck.groups <- parseAttckmodel.Groups()
+```{r attack_group, cache=TRUE}
+attck.groups <- net.security::parseAttck.Groups()
 summary(attck.groups)
 ```
+
+```{r attack_group_table}
+kable(randomSample(attck.groups, 40)) %>%
+  kable_styling() %>%
+  scroll_box(width = "100%", height = "200px")
+```
+
+#### From malware and tool (STIX) to Software (ATT&CK)
+
+```{r attack_software, cache=TRUE}
+attck.soft <- net.security::parseAttck.Software()
+summary(attck.soft)
+```
+
+```{r attack_software_table}
+kable(randomSample(attck.soft, 40)) %>%
+  kable_styling() %>%
+  scroll_box(width = "100%", height = "200px")
+```
+
+#### ATT&CK Relationships
+```{r attack_relations, cache=TRUE}
+attck.relations <- net.security::parseAttck.Relationships()
+summary(attck.relations)
+```
+
+```{r attack_relations_table}
+kable(randomSample(attck.relations, 100)) %>%
+  kable_styling() %>%
+  scroll_box(width = "100%", height = "200px")
+```
+
+### Building Standard Data Sets
+
+#### ATT&CK Tactics tidy data frame
+
+```{r attack_tidy_tactics}
+#attck.tact <- buildAttckTactics()
+```
+
 
 ## Package net.security
 
